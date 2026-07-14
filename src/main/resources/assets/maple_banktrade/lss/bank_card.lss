@@ -1,0 +1,212 @@
+/* 左页银行卡列表项：宽 127 = 页内容宽；贴图由 CardInfo 动态 INLINE 注入 */
+.mbt-bank-card-list-button {
+  width: 127;
+  height: auto;
+  padding-all: 0;
+}
+
+/* ========== 权限管理浮层（BankCardPermissionPanel）========== */
+
+.mbt-card-perm-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 210;
+  height: 130;
+  padding-all: 4;
+  flex-direction: column;
+  gap-all: 1;
+  /* 盖住卡面内容，保证浮层内按钮可点 */
+  z-index: 1000;
+  background: sprite(maple_banktrade:textures/gui/wallet_lining.png, 0, 0, 0, 0, 4, 4, 4, 4);
+}
+
+/* 标题行：左标题，右 删除(可选)+关闭（flex，不 absolute） */
+.mbt-card-perm-header {
+  width: 198;
+  height: auto;
+  /* 右侧留给绝对定位的关闭钮 */
+  padding-right: 12;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap-all: 2;
+}
+
+.mbt-card-perm-header-actions {
+  width: auto;
+  height: auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap-all: 2;
+  flex-shrink: 0;
+}
+
+/* 关闭：绝对定位于面板角，z 高于 header，背景为空 */
+.mbt-card-perm-close {
+  position: absolute;
+  right: 0;
+  top: 2;
+  width: 8;
+  height: 8;
+  z-index: 10;
+  padding-all: 0;
+  base-background: empty;
+  hover-background: empty;
+  pressed-background: empty;
+}
+
+.mbt-card-perm-close > text:internal,
+.mbt-card-perm-close .__button_text__ {
+  font-size: 6;
+  horizontal-align: center;
+  vertical-align: center;
+  text-color: #000000;
+  text-shadow: false;
+}
+
+/* 浮层标题「权限管理」 */
+.mbt-card-perm-title {
+  width: auto;
+  height: auto;
+  font-size: 9;
+  adaptive-height: true;
+  adaptive-width: true;
+}
+
+.mbt-card-perm-section {
+  width: auto;
+  height: auto;
+  margin-top: 1;
+  font-size: 6;
+  adaptive-height: true;
+  adaptive-width: true;
+}
+
+/* 列表 */
+.mbt-card-perm-scroll {
+  width: 198;
+  height: 42;
+  background: empty;
+  scroller-view-mode: vertical;
+  scroller-vertical-display: never;
+  scroller-horizontal-display: never;
+  scroller-view-margin: 0;
+}
+
+.mbt-card-perm-scroll .__scroller_view_view-port__ {
+  background: empty;
+  padding-all: 0;
+}
+
+.mbt-card-perm-scroll-container {
+  width: 100%;
+  flex-direction: column;
+  gap-all: 0;
+  padding-all: 0;
+}
+
+/* 表格行：名(flex) | 权限(固定) | 操作(固定占位) */
+.mbt-card-perm-row {
+  background: empty;
+  width: 100%;
+  height: auto;
+  flex-direction: row;
+  align-items: center;
+  gap-all: 2;
+}
+
+.mbt-card-perm-name {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+  height: auto;
+  font-size: 6;
+  adaptive-height: true;
+  adaptive-width: false;
+  text-wrap: hide;
+  horizontal-align: left;
+}
+
+.mbt-card-perm-perm {
+  width: 40;
+  flex-shrink: 0;
+  height: auto;
+  font-size: 6;
+  adaptive-height: true;
+  adaptive-width: false;
+  text-wrap: hide;
+  horizontal-align: left;
+}
+
+.mbt-card-perm-actions {
+  width: 88;
+  flex-shrink: 0;
+  height: auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap-all: 1;
+}
+
+/*
+ * 权限面板普通按钮三态。
+ * 语法对齐 LDLib2 官方 lss（gdp.lss / mc.lss / ore.lss）：built-in(provider:NAME)
+ * 对应 Sprites.RECT_RD / RECT_RD_LIGHT / RECT_RD_DARK
+ */
+.mbt-card-perm-manage-button,
+.mbt-card-perm-open-button,
+.mbt-card-perm-action-button {
+  base-background: built-in(ui-gdp:RECT_RD);
+  hover-background: built-in(ui-gdp:RECT_RD_LIGHT);
+  pressed-background: built-in(ui-gdp:RECT_RD_DARK);
+}
+
+/* 表头：删除 / 打开管理 — 字号 6 */
+.mbt-card-perm-manage-button {
+  width: auto;
+  height: auto;
+  padding-all: 2;
+  margin-top: 0;
+}
+
+.mbt-card-perm-open-button {
+  position: absolute;
+  right: 6.5;
+  top: 3.75;
+  width: auto;
+  height: auto;
+  padding-all: 1;
+}
+
+.mbt-card-perm-manage-button > text:internal,
+.mbt-card-perm-manage-button .__button_text__,
+.mbt-card-perm-open-button > text:internal,
+.mbt-card-perm-open-button .__button_text__ {
+  font-size: 6;
+  horizontal-align: center;
+  vertical-align: center;
+  adaptive-height: true;
+  adaptive-width: true;
+  text-shadow: false;
+}
+
+/* 列表内操作：授予 / 撤销 — 字号 4 */
+.mbt-card-perm-action-button {
+  width: auto;
+  height: auto;
+  padding-all: 2;
+}
+
+.mbt-card-perm-action-button > text:internal,
+.mbt-card-perm-action-button .__button_text__ {
+  font-size: 4;
+  horizontal-align: center;
+  vertical-align: center;
+  adaptive-height: true;
+  adaptive-width: true;
+  text-shadow: false;
+}
+
+/* S2C 占位统一用 wallet.lss 的 .mbt-ui-sync-hidden */

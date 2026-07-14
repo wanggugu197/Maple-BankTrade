@@ -1,0 +1,133 @@
+/* ========== 钱包根 / 双页容器 ========== */
+/* 尺寸对应 WalletUIRegistration: PAGE 135, UI_H = 4+100 = 104 */
+
+.mbt-wallet-root {
+  width: 270;
+  height: 104;
+  gap-all: 0;
+  align-items: center;
+  justify-content: center;
+  background: empty;
+}
+
+.mbt-wallet-pages {
+  width: 270;
+  height: 104;
+  flex-direction: row;
+  gap-all: 0;
+  align-items: center;
+  justify-content: center;
+  background: empty;
+}
+
+/* 单页：135×85，padding 4；opacity 0 为开启动画初始态（动画会改写） */
+.mbt-wallet-page {
+  width: 135;
+  height: 85;
+  padding-all: 4;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  background: sprite(maple_banktrade:textures/gui/wallet_lining.png, 0, 0, 0, 0, 4, 4, 4, 4);
+}
+
+/* 封面：绝对叠在折叠态 */
+.mbt-wallet-cover {
+  position: absolute;
+  width: 135;
+  height: 85;
+  padding-all: 4;
+  align-items: center;
+  justify-content: flex-end;
+  opacity: 1;
+  background: sprite(maple_banktrade:textures/gui/wallet_cover.png);
+}
+
+/* 打开提示；opacity 0 为呼吸动画起点 */
+.mbt-wallet-cover-prompt {
+  width: 135;
+  height: 18;
+  horizontal-align: center;
+  vertical-align: center;
+  text-shadow: false;
+  opacity: 0;
+}
+
+/* 左页银行卡列表：内容区 = 页宽高 - 2*padding */
+.mbt-wallet-card-list {
+  width: 127;
+  height: 77;
+  padding-all: 0;
+  background: empty;
+  scroller-view-mode: vertical;
+  scroller-vertical-display: never;
+  scroller-horizontal-display: never;
+  scroller-view-margin: 0;
+}
+
+.mbt-wallet-card-list .__scroller_view_view-port__ {
+  background: empty;
+  padding-all: 0;
+}
+
+.mbt-wallet-card-list-container {
+  flex-direction: column;
+  gap-all: 1;
+  padding-all: 0;
+}
+
+/* 通用 S2C 绑定占位（不占布局） */
+.mbt-ui-sync-hidden {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* ========== 银行卡详情独立页（BankCardDetailUIRegistration）========== */
+/* content 260×130，padding 4 → root 268×(130+90)=220 */
+
+.mbt-wallet-detail-page {
+  width: 268;
+  height: 220;
+  padding-all: 4;
+  gap-all: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: empty;
+}
+
+.mbt-wallet-detail-content {
+  width: 260;
+  height: 130;
+}
+
+.mbt-wallet-detail-inventory {
+  padding-all: 4;
+}
+
+.mbt-wallet-detail-page > .mbt-wallet-close-button {
+  position: absolute;
+  right: 4;
+  top: 4;
+  width: 8;
+  height: 8;
+}
+
+/* 关闭按钮通用外观（钱包详情 / 权限面板共用 class） */
+.mbt-wallet-close-button {
+  base-background: empty;
+  hover-background: empty;
+  pressed-background: empty;
+  padding-all: 0;
+}
+
+/* 关闭 × 黑色 */
+.mbt-wallet-close-button > text:internal,
+.mbt-wallet-close-button .__button_text__ {
+  font-size: 6;
+  horizontal-align: center;
+  vertical-align: center;
+  text-color: #000000;
+  text-shadow: false;
+}
