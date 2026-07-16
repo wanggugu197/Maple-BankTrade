@@ -1,11 +1,8 @@
 {
-	"format_version": "1.21.11",
-	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/cube_all",
 	"textures": {
-		"4": "maple_banktrade:block/trading_station/side",
-		"5": "maple_banktrade:block/trading_station/bring",
-		"7": "maple_banktrade:block/trading_station/icon",
-		"particle": "maple_banktrade:block/trading_station/side",
+		"bring": "maple_banktrade:block/trading_station/bring",
+		"icon": "maple_banktrade:block/trading_station/icon",
 		"roof": "maple_banktrade:block/trading_station/roof"
 	},
 	"elements": [
@@ -15,25 +12,10 @@
 			"to": [15.5, 28, 6.5],
 			"rotation": {"angle": 0, "axis": "y", "origin": [14, 0, 0]},
 			"faces": {
-				"north": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"east": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"south": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"west": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"up": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"down": {"uv": [0, 2, 1, 14], "texture": "#4"}
-			}
-		},
-		{
-			"name": "supportFront",
-			"from": [0.5, 16, 5.5],
-			"to": [1.5, 28, 6.5],
-			"faces": {
-				"north": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"east": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"south": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"west": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"up": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"down": {"uv": [0, 2, 1, 14], "texture": "#4"}
+				"north": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"east": {"uv": [15, 2, 16, 14], "texture": "#roof"},
+				"south": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"west": {"uv": [15, 2, 16, 14], "texture": "#roof"}
 			}
 		},
 		{
@@ -42,12 +24,10 @@
 			"to": [15.5, 28, 15.5],
 			"rotation": {"angle": 0, "axis": "y", "origin": [14, 0, 9]},
 			"faces": {
-				"north": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"east": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"south": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"west": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"up": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"down": {"uv": [0, 2, 1, 14], "texture": "#4"}
+				"north": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"east": {"uv": [15, 2, 16, 14], "texture": "#roof"},
+				"south": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"west": {"uv": [15, 2, 16, 14], "texture": "#roof"}
 			}
 		},
 		{
@@ -56,12 +36,21 @@
 			"to": [1.5, 28, 15.5],
 			"rotation": {"angle": 0, "axis": "y", "origin": [0, 0, 9]},
 			"faces": {
-				"north": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"east": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"south": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"west": {"uv": [15, 2, 16, 14], "texture": "#4"},
-				"up": {"uv": [0, 2, 1, 14], "texture": "#4"},
-				"down": {"uv": [0, 2, 1, 14], "texture": "#4"}
+				"north": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"east": {"uv": [15, 2, 16, 14], "texture": "#roof"},
+				"south": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"west": {"uv": [15, 2, 16, 14], "texture": "#roof"}
+			}
+		},
+		{
+			"name": "supportFront",
+			"from": [0.5, 16, 5.5],
+			"to": [1.5, 28, 6.5],
+			"faces": {
+				"north": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"east": {"uv": [15, 2, 16, 14], "texture": "#roof"},
+				"south": {"uv": [0, 2, 1, 14], "texture": "#roof"},
+				"west": {"uv": [15, 2, 16, 14], "texture": "#roof"}
 			}
 		},
 		{
@@ -97,8 +86,8 @@
 			"to": [12, 29.01, 15],
 			"rotation": {"angle": 0, "axis": "y", "origin": [4, 28, 7]},
 			"faces": {
-				"up": {"uv": [0, 0, 16, 16], "texture": "#7"},
-				"down": {"uv": [0, 16, 16, 0], "texture": "#7"}
+				"up": {"uv": [0, 0, 16, 16], "texture": "#icon"},
+				"down": {"uv": [0, 16, 16, 0], "texture": "#icon"}
 			}
 		},
 		{
@@ -107,7 +96,7 @@
 			"to": [12, 16.02, 11],
 			"rotation": {"angle": 0, "axis": "y", "origin": [4, 28, 3]},
 			"faces": {
-				"up": {"uv": [0, 0, 16, 16], "texture": "#7"}
+				"up": {"uv": [0, 0, 16, 16], "texture": "#icon"}
 			}
 		},
 		{
@@ -116,7 +105,7 @@
 			"to": [16, 16.01, 16],
 			"rotation": {"angle": 0, "axis": "y", "origin": [0, 16, 0]},
 			"faces": {
-				"up": {"uv": [0, 0, 16, 16], "texture": "#5"}
+				"up": {"uv": [0, 0, 16, 16], "texture": "#bring"}
 			}
 		},
 		{
@@ -125,7 +114,7 @@
 			"to": [16, 16, -0.01],
 			"rotation": {"angle": 0, "axis": "y", "origin": [0, 4, 0]},
 			"faces": {
-				"north": {"uv": [0, 10, 16, 16], "texture": "#5"}
+				"north": {"uv": [0, 10, 16, 16], "texture": "#bring"}
 			}
 		}
 	],

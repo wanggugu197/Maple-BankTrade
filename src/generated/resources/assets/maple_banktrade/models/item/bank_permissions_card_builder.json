@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "maple_banktrade:item/bank_permissions_card_builder"
+  }
+}

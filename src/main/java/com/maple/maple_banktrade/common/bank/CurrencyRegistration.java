@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.bank.registration;
+package com.maple.maple_banktrade.common.bank;
 
 import net.minecraft.world.item.Items;
 

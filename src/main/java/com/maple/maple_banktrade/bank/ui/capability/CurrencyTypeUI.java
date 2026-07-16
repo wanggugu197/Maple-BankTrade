@@ -40,7 +40,7 @@ public class CurrencyTypeUI {
                         .style(s -> s.background(currencyType.currencyTexture()))
                         .layout(l -> l.height(8 * scale).width(8 * scale)))
                 .addChild(new TextElement()
-                        .setText(Component.translatable(CurrencyType.getTranslationKey(currencyType.id())))
+                        .setText(currencyType.getHoverName())
                         .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).fontSize(9 * scale))
                         .layout(l -> l.heightAuto().widthAuto())
                         .style(s -> s.tooltips(currencyType.description().toArray(new Component[0]))));

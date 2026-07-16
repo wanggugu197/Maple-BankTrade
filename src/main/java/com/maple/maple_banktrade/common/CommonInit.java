@@ -1,41 +1,72 @@
 package com.maple.maple_banktrade.common;
 
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
-import com.maple.maple_banktrade.api.bank.MBTBankStates;
+import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.WalletApiRegistration;
-import com.maple.maple_banktrade.bank.WalletRegistration;
-import com.maple.maple_banktrade.bank.command.MBTBankCommands;
+import com.maple.maple_banktrade.common.bank.BankRegistration;
+import com.maple.maple_banktrade.common.bank.CardRegistration;
+import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
+import com.maple.maple_banktrade.common.bank.TradableTypeRegistration;
+import com.maple.maple_banktrade.common.block.BaseTradingStationBlockEntity;
+import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
+import com.maple.maple_banktrade.common.trade.MachineTradeRegistration;
 import com.maple.maple_banktrade.config.MBTModConfig;
 import com.maple.maple_banktrade.data.lang.MBTLangHandler;
-import com.maple.maple_banktrade.trade.registration.CurrencyItemTradeRegistration;
-import com.maple.maple_banktrade.trade.registration.MachineTradeRegistration;
 
 /**
  * 通用初始化。
+ * <p>
+ * 始终注册 API 层；内置内容（银行/卡/货币/交易站/价目）由
+ * {@link MBTModConfig#enableModContent()} 统一开关。
+ * </p>
  */
 public class CommonInit {
 
     public static void init(IEventBus modBus) {
         MBTModConfig.init();
-        MBTTab.init();
+        MBTDataComponent.init();
         MBTLangHandler.init();
+        MBTTab.init();
 
-        // 初始化银行基础UI
+        // API：钱包物品、UI、银行世界数据、命令
         WalletApiRegistration.init(modBus);
 
-        // 初始化银行注册内容
-        WalletRegistration.init();
-        // 初始化银行系统的世界数据注册入口
-        MBTBankStates.init();
-        // 初始化银行命令
-        if (MBTModConfig.enableBankCommands()) {
-            MBTBankCommands.init();
+        // 内置内容：银行/卡/货币/交易站/价目（可整体关闭，仅保留 API）
+        if (MBTModConfig.enableModContent()) {
+            contentInit(modBus);
+        } else {
+            MapleBankTrade.LOGGER.info(
+                    "[{}] enableModContent=false: skipped built-in content (bankInit / trades / MBTRegistration); API only",
+                    MapleBankTrade.MODID);
         }
-        // 初始化交易项目（惰性 Item/Fluid 引用，不在此处解析 components）
+    }
+
+    /**
+     * 注册模组内置内容（非 API）。
+     */
+    public static void contentInit(IEventBus modBus) {
+        // 初始化内置货币、交易类型显示、银行与银行卡
+        CurrencyRegistration.init();
+        TradableTypeRegistration.init();
+        BankRegistration.init();
+        CardRegistration.init();
+
+        // 内置价目（惰性 Item/Fluid 引用；不在此处解析 components）
         if (MBTModConfig.enableBuiltInTrades()) {
             CurrencyItemTradeRegistration.init();
             MachineTradeRegistration.init();
         }
+
+        // 触发交易站等 DeferredRegister 静态登记
+        MBTRegistration.init();
+        // 两台贸易站：物品 / 流体 / 能量能力（基类统一注册）
+        modBus.addListener(CommonInit::registerTradingStationCapabilities);
+    }
+
+    private static void registerTradingStationCapabilities(RegisterCapabilitiesEvent event) {
+        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.TRADING_STATION_ENTITY.get());
+        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.ITEM_CARD_TRADING_STATION_ENTITY.get());
     }
 }

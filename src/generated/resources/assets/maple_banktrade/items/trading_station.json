@@ -1,0 +1,15 @@
+{
+  "model": {
+    "type": "minecraft:composite",
+    "models": [
+      {
+        "type": "minecraft:model",
+        "model": "minecraft:block/oak_planks"
+      },
+      {
+        "type": "minecraft:model",
+        "model": "maple_banktrade:block/trading_station"
+      }
+    ]
+  }
+}

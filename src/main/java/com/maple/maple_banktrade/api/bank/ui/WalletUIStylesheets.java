@@ -24,13 +24,21 @@ public final class WalletUIStylesheets {
     private static final Identifier BANK_STYLESHEET = MapleBankTrade.id("lss/bank.lss");
     /** 银行卡样式表。 */
     private static final Identifier BANK_CARD_STYLESHEET = MapleBankTrade.id("lss/bank_card.lss");
+    /** 银行权限卡编辑 UI 样式表。 */
+    private static final Identifier BANK_PERMISSIONS_CARD_STYLESHEET = MapleBankTrade.id("lss/bank_permissions_card.lss");
 
     /** 钱包 UI 使用的样式表资源列表（含 MC 合并表）。 */
     private static final List<Identifier> WALLET_STYLESHEET_LOCATIONS = List.of(
             StylesheetManager.MC_MERGED,
             WALLET_STYLESHEET,
             BANK_STYLESHEET,
-            BANK_CARD_STYLESHEET);
+            BANK_CARD_STYLESHEET,
+            BANK_PERMISSIONS_CARD_STYLESHEET);
+
+    /** 权限卡构造器 UI：仅合并表 + 本 UI LSS。 */
+    private static final List<Identifier> PERM_CARD_STYLESHEET_LOCATIONS = List.of(
+            StylesheetManager.MC_MERGED,
+            BANK_PERMISSIONS_CARD_STYLESHEET);
 
     // ==============================================
     // 查询
@@ -38,7 +46,16 @@ public final class WalletUIStylesheets {
 
     /** 加载并返回钱包 UI 可用的样式表实例列表。 */
     public static List<Stylesheet> createWalletStylesheets() {
-        return WalletUIStylesheets.WALLET_STYLESHEET_LOCATIONS.stream()
+        return load(WALLET_STYLESHEET_LOCATIONS);
+    }
+
+    /** 权限卡构造器 UI 样式表。 */
+    public static List<Stylesheet> createPermCardStylesheets() {
+        return load(PERM_CARD_STYLESHEET_LOCATIONS);
+    }
+
+    private static List<Stylesheet> load(List<Identifier> locations) {
+        return locations.stream()
                 .map(StylesheetManager.INSTANCE::getStylesheet)
                 .filter(Objects::nonNull)
                 .toList();

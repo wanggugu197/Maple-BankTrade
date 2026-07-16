@@ -73,6 +73,65 @@ public class MBTLangHandler {
         addLang("trade.maple_banktrade.fail.machine_insufficient", "资源不足，无法执行交易。", "Insufficient resources to run this trade.");
         addLang("trade.maple_banktrade.fail.machine_transfer", "交易资源转移失败。", "Failed to transfer trade resources.");
 
+        // 银行权限卡 UI
+        addLang("ui.maple_banktrade.perm_card.title", "权限卡编辑", "Permission Card Editor");
+        addLang("ui.maple_banktrade.perm_card.manageable_list", "可管理的卡", "Manageable Cards");
+        addLang("ui.maple_banktrade.perm_card.selected_list", "已选卡", "Selected Cards");
+        addLang("ui.maple_banktrade.perm_card.empty_manageable", "没有可管理的银行卡", "No manageable bank cards");
+        addLang("ui.maple_banktrade.perm_card.empty_selected", "尚未选择", "None selected");
+        addLang("ui.maple_banktrade.perm_card.add", "添加", "Add");
+        addLang("ui.maple_banktrade.perm_card.remove", "移除", "Remove");
+        addLang("ui.maple_banktrade.perm_card.clear", "全部清除", "Clear All");
+        addLang("ui.maple_banktrade.perm_card.export", "输出物品", "Export Item");
+        addLang("ui.maple_banktrade.perm_card.unknown_card", "未知卡", "Unknown Card");
+        addLang("ui.maple_banktrade.perm_card.unknown_bank", "未知银行", "Unknown Bank");
+        addLang("ui.maple_banktrade.perm_card.tip.bank", "银行: %s", "Bank: %s");
+        addLang("ui.maple_banktrade.perm_card.tip.card", "卡: %s", "Card: %s");
+        addLang("ui.maple_banktrade.perm_card.tip.perm", "权限: %s", "Permission: %s");
+
+        // 银行权限卡物品 Tooltip（ItemAttachment.collectTooltipNodes）
+        addLang("tooltip.maple_banktrade.perm_card.count", "授权卡: %s 张", "Authorized cards: %s");
+        addLang("tooltip.maple_banktrade.perm_card.empty", "（未写入任何卡）", "(No cards stored)");
+        addLang("tooltip.maple_banktrade.perm_card.entry", " - %s · %s (%s)", " - %s · %s (%s)");
+        addLang("tooltip.maple_banktrade.perm_card.entry_unknown", " - %s", " - %s");
+
+        // 权限卡右键贸易站（BaseTradingStationBlockEntity）
+        addLang("message.maple_banktrade.perm_card.apply.empty",
+                "权限卡为空，未写入任何银行卡。",
+                "Permission card is empty; no bank cards to apply.");
+        addLang("message.maple_banktrade.perm_card.apply.success",
+                "已绑定 %s 张新卡（跳过已有 %s 张），方块现共 %s 张。",
+                "Bound %s new card(s) (skipped %s already present); block now has %s.");
+        addLang("message.maple_banktrade.perm_card.apply.none_new",
+                "卡上 UUID 均已绑定（当前 %s 张）。",
+                "All card UUIDs already bound (currently %s).");
+
+        // 交易站 UI（交易类型名称/描述见 TradableTypeRegistration）
+        addLang("ui.maple_banktrade.trading_station.tab.inventory", "库存", "Inventory");
+        addLang("ui.maple_banktrade.trading_station.input", "输入", "Input");
+        addLang("ui.maple_banktrade.trading_station.output", "输出", "Output");
+        addLang("ui.maple_banktrade.trading_station.energy", "FE: %s/%s  (%s)", "FE: %s/%s  (%s)");
+        addLang("ui.maple_banktrade.trading_station.no_recipes", "暂无配方", "No recipes");
+        addLang("ui.maple_banktrade.trading_station.bound_cards.title", "绑定银行卡 (%s)", "Bound bank cards (%s)");
+        addLang("ui.maple_banktrade.trading_station.bound_cards.empty",
+                "（尚未绑定。用手持权限卡右键本站写入）",
+                "(None bound. Right-click this station with a permission card.)");
+        addLang("ui.maple_banktrade.trading_station.bound_cards.entry",
+                "· %s · %s (%s)",
+                "· %s · %s (%s)");
+        addLang("ui.maple_banktrade.trading_station.bound_cards.entry_unknown",
+                "· %s",
+                "· %s");
+
+        // 机器交易配方 Tooltip
+        addLang("trade.maple_banktrade.machine.tooltip.inputs", "输入:", "Inputs:");
+        addLang("trade.maple_banktrade.machine.tooltip.outputs", "输出:", "Outputs:");
+        addLang("trade.maple_banktrade.machine.tooltip.item_entry", " - %sx ", " - %sx ");
+        addLang("trade.maple_banktrade.machine.tooltip.fluid_entry", " - %s mB ", " - %s mB ");
+        addLang("trade.maple_banktrade.machine.tooltip.energy_extract", " - 消耗 %s FE", " - Extract %s FE");
+        addLang("trade.maple_banktrade.machine.tooltip.energy_insert", " - 产出 %s FE", " - Insert %s FE");
+        addLang("trade.maple_banktrade.machine.tooltip.currency_entry", " - %s ", " - %s ");
+
         addLang("command.mbt_bank.factories.empty", "当前没有已注册的银行卡创建定义。", "No registered bank card factories.");
         addLang("command.mbt_bank.factories.header", "可创建的银行卡：", "Creatable bank cards:");
         addLang("command.mbt_bank.factories.entry", "- %s | id=%s | bank=%s", "- %s | id=%s | bank=%s");

@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.bank.registration;
+package com.maple.maple_banktrade.common.bank;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
@@ -9,10 +9,10 @@ import com.maple.maple_banktrade.api.bank.base.BankCardType;
 import com.maple.maple_banktrade.api.bank.data.CardInfo;
 import com.maple.maple_banktrade.bank.cards.*;
 import com.maple.maple_banktrade.bank.ui.cardInfos.*;
-import com.maple.maple_banktrade.trade.registration.CurrencyItemTradeRegistration;
+import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
 
-import static com.maple.maple_banktrade.bank.registration.BankRegistration.*;
-import static com.maple.maple_banktrade.bank.registration.CurrencyRegistration.*;
+import static com.maple.maple_banktrade.common.bank.BankRegistration.*;
+import static com.maple.maple_banktrade.common.bank.CurrencyRegistration.*;
 
 /**
  * 内置银行卡类型、创建工厂与 UI 信息注册。

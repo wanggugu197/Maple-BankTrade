@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.bank.registration;
+package com.maple.maple_banktrade.common.bank;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankType;

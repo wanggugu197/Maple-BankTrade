@@ -1,8 +1,17 @@
 package com.maple.maple_banktrade.trade.machine;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 
+import com.lowdragmc.lowdraglib2.gui.texture.FluidStackTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.registry.TradeInfo;
 import com.maple.maple_banktrade.trade.machine.MachineTradeHooks.MachineTradeCheckHook;
 import com.maple.maple_banktrade.trade.machine.MachineTradeHooks.MachineTradeSuccessHook;
@@ -10,6 +19,8 @@ import com.maple.maple_banktrade.trade.machine.MachineTradeHooks.MachineTradeVis
 import com.maple.maple_banktrade.trade.machine.MachineTradeIO.CurrencyIO;
 import com.maple.maple_banktrade.trade.machine.MachineTradeIO.FluidIO;
 import com.maple.maple_banktrade.trade.machine.MachineTradeIO.ItemIO;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -197,5 +208,152 @@ public final class MachineTrade implements TradeInfo {
             }
             return trade;
         }
+    }
+
+    // ==============================================
+    // UI构造
+    // ==============================================
+
+    public UIElement getMachineTradeIcon() {
+        var base = new UIElement()
+                .layout(l -> l
+                        .width(26).height(26)
+                        .alignItems(AlignItems.CENTER)
+                        .justifyContent(AlignContent.CENTER))
+                .style(s -> s
+                        .background(Sprites.PROGRESS_CONTAINER));
+
+        var icon = new UIElement()
+                .layout(l -> l.width(18).height(18));
+
+        // ==============================================
+        // 动态构建 Tooltip 链：Description -> 输入 -> 输出
+        // ==============================================
+        List<Component> tooltipLines = new ArrayList<>();
+
+        // 1. 优先放入自定义描述
+        if (description != null) {
+            tooltipLines.addAll(description);
+        }
+
+        boolean hasInputs = !itemInputs.isEmpty() || !fluidInputs.isEmpty() || energyExtract > 0 || !currencyExtract.isEmpty();
+        boolean hasOutputs = !itemOutputs.isEmpty() || !fluidOutputs.isEmpty() || energyInsert > 0 || !currencyInsert.isEmpty();
+
+        // 如果存在描述，且后续有输入或输出，追加一个空行做视觉隔离
+        if (!tooltipLines.isEmpty() && (hasInputs || hasOutputs)) {
+            tooltipLines.add(Component.empty());
+        }
+
+        // 2. 整理并添加【输入】信息
+        if (hasInputs) {
+            tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.inputs")
+                    .withStyle(ChatFormatting.YELLOW));
+
+            for (ItemIO io : itemInputs) {
+                ItemStack temp = io.resource().toStack(io.amount());
+                if (!temp.isEmpty()) {
+                    tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.item_entry", io.amount())
+                            .append(temp.getHoverName())
+                            .withStyle(ChatFormatting.GRAY));
+                }
+            }
+            for (FluidIO io : fluidInputs) {
+                FluidStack temp = io.resource().toStack(io.amount());
+                if (!temp.isEmpty()) {
+                    tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.fluid_entry", io.amount())
+                            .append(temp.getHoverName())
+                            .withStyle(ChatFormatting.GRAY));
+                }
+            }
+            if (energyExtract > 0) {
+                tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.energy_extract", energyExtract)
+                        .withStyle(ChatFormatting.GOLD));
+            }
+            for (CurrencyIO io : currencyExtract) {
+                if (io.isValid()) {
+                    tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.currency_entry", io.amount().toString())
+                            .append(io.resource().type().getHoverName())
+                            .withStyle(ChatFormatting.GOLD));
+                }
+            }
+        }
+
+        // 3. 整理并添加【输出】信息
+        if (hasOutputs) {
+            if (hasInputs) {
+                tooltipLines.add(Component.empty());
+            }
+            tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.outputs")
+                    .withStyle(ChatFormatting.GREEN));
+
+            for (ItemIO io : itemOutputs) {
+                ItemStack temp = io.resource().toStack(io.amount());
+                if (!temp.isEmpty()) {
+                    tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.item_entry", io.amount())
+                            .append(temp.getHoverName())
+                            .withStyle(ChatFormatting.GRAY));
+                }
+            }
+            for (FluidIO io : fluidOutputs) {
+                FluidStack temp = io.resource().toStack(io.amount());
+                if (!temp.isEmpty()) {
+                    tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.fluid_entry", io.amount())
+                            .append(temp.getHoverName())
+                            .withStyle(ChatFormatting.GRAY));
+                }
+            }
+            if (energyInsert > 0) {
+                tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.energy_insert", energyInsert)
+                        .withStyle(ChatFormatting.GOLD));
+            }
+            for (CurrencyIO io : currencyInsert) {
+                if (io.isValid()) {
+                    tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.currency_entry", io.amount().toString())
+                            .append(io.resource().type().getHoverName())
+                            .withStyle(ChatFormatting.GOLD));
+                }
+            }
+        }
+
+        // 应用最终生成的 Tooltip 数组
+        icon.style(s -> s.tooltips(tooltipLines.toArray(new Component[0])));
+
+        // ==============================================
+        // 渲染背景图（保持你原有的动态材质匹配逻辑）
+        // ==============================================
+        if (machineTradeIcon != IGuiTexture.EMPTY) {
+            icon.style(s -> s.background(machineTradeIcon));
+        } else {
+            if (!itemOutputs.isEmpty()) {
+                ItemStack[] itemOuts = itemOutputs.stream()
+                        .map(io -> io.resource().toStack(io.amount()))
+                        .filter(stack -> !stack.isEmpty())
+                        .toArray(ItemStack[]::new);
+                icon.style(s -> s.background(new ItemStackTexture(itemOuts)));
+            } else if (!itemInputs.isEmpty()) {
+                ItemStack[] itemIns = itemInputs.stream()
+                        .map(io -> io.resource().toStack(io.amount()))
+                        .filter(stack -> !stack.isEmpty())
+                        .toArray(ItemStack[]::new);
+                icon.style(s -> s.background(new ItemStackTexture(itemIns)));
+            } else if (!fluidOutputs.isEmpty()) {
+                FluidStack[] fluidOuts = fluidOutputs.stream()
+                        .map(io -> io.resource().toStack(io.amount()))
+                        .filter(stack -> !stack.isEmpty())
+                        .toArray(FluidStack[]::new);
+                icon.style(s -> s.background(new FluidStackTexture(fluidOuts)));
+            } else if (!fluidInputs.isEmpty()) {
+                FluidStack[] fluidIns = fluidInputs.stream()
+                        .map(io -> io.resource().toStack(io.amount()))
+                        .filter(stack -> !stack.isEmpty())
+                        .toArray(FluidStack[]::new);
+                icon.style(s -> s.background(new FluidStackTexture(fluidIns)));
+            } else {
+                icon.style(s -> s.background(SpriteTexture.of(MapleBankTrade.id("textures/item/leaf.png"))));
+            }
+        }
+
+        base.addChild(icon);
+        return base;
     }
 }

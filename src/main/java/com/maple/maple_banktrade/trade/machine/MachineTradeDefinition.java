@@ -19,6 +19,8 @@ import com.maple.maple_banktrade.bank.resource.BankCurrencyResourceHandler;
 import com.maple.maple_banktrade.trade.machine.MachineTradeIO.FluidIO;
 import com.maple.maple_banktrade.trade.machine.MachineTradeIO.ItemIO;
 import com.maple.maple_banktrade.trade.machine.MachineTradeIO.ScaledIO;
+import com.mapleutillib.api.resource.ObservableFluidResourceHandler;
+import com.mapleutillib.api.resource.ObservableItemResourceHandler;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -181,28 +183,32 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
 
     private static boolean extractItems(ItemStacksResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
         for (ItemIO io : list) {
-            if (handler.extract(io.resource(), io.amount(), tx) != io.amount()) return false;
+            int got = handler instanceof ObservableItemResourceHandler obs ? obs.extractBypassFilter(io.resource(), io.amount(), tx) : handler.extract(io.resource(), io.amount(), tx);
+            if (got != io.amount()) return false;
         }
         return true;
     }
 
     private static boolean insertItems(ItemStacksResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
         for (ItemIO io : list) {
-            if (handler.insert(io.resource(), io.amount(), tx) != io.amount()) return false;
+            int put = handler instanceof ObservableItemResourceHandler obs ? obs.insertBypassFilter(io.resource(), io.amount(), tx) : handler.insert(io.resource(), io.amount(), tx);
+            if (put != io.amount()) return false;
         }
         return true;
     }
 
     private static boolean extractFluids(FluidStacksResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
         for (FluidIO io : list) {
-            if (handler.extract(io.resource(), io.amount(), tx) != io.amount()) return false;
+            int got = handler instanceof ObservableFluidResourceHandler obs ? obs.extractBypassFilter(io.resource(), io.amount(), tx) : handler.extract(io.resource(), io.amount(), tx);
+            if (got != io.amount()) return false;
         }
         return true;
     }
 
     private static boolean insertFluids(FluidStacksResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
         for (FluidIO io : list) {
-            if (handler.insert(io.resource(), io.amount(), tx) != io.amount()) return false;
+            int put = handler instanceof ObservableFluidResourceHandler obs ? obs.insertBypassFilter(io.resource(), io.amount(), tx) : handler.insert(io.resource(), io.amount(), tx);
+            if (put != io.amount()) return false;
         }
         return true;
     }

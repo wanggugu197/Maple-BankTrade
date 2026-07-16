@@ -6,8 +6,8 @@ import com.maple.maple_banktrade.api.trade.definition.TradeRunner;
 import com.maple.maple_banktrade.api.trade.input.TradeCheckInput;
 import com.maple.maple_banktrade.api.trade.result.TradeCheckResult;
 import com.maple.maple_banktrade.api.trade.result.TradeExecuteResult;
-import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.Map;

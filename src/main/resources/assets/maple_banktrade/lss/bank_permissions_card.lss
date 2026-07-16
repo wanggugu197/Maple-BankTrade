@@ -1,0 +1,144 @@
+/* ========== 银行权限卡编辑 UI ========== */
+
+.mbt-perm-card-page {
+  width: 270;
+  height: 160;
+  padding-all: 2;
+  flex-direction: column;
+  gap-all: 1;
+  align-items: center;
+  background: sprite(maple_banktrade:textures/gui/wallet_lining.png, 0, 0, 0, 0, 4, 4, 4, 4);
+}
+
+.mbt-perm-card-title {
+  width: 266;
+  height: auto;
+  font-size: 12;
+  adaptive-height: true;
+  adaptive-width: true;
+  horizontal-align: center;
+}
+
+.mbt-perm-card-columns {
+  width: 266;
+  height: 120;
+  flex-direction: row;
+  gap-all: 0;
+  align-items: stretch;
+  background: empty;
+}
+
+.mbt-perm-card-col {
+  width: 133;
+  height: 120;
+  flex-direction: column;
+  gap-all: 0;
+  padding-all: 2;
+  flex-grow: 1;
+  background: sprite(maple_banktrade:textures/gui/wallet_lining.png, 0, 0, 0, 0, 2, 2, 2, 2);
+}
+
+.mbt-perm-card-section {
+  width: 100%;
+  height: auto;
+  font-size: 9;
+  adaptive-height: true;
+  adaptive-width: true;
+  horizontal-align: center;
+}
+
+.mbt-perm-card-left,
+.mbt-perm-card-right {
+  width: 129;
+  height: 104;
+  padding-all: 0;
+  background: empty;
+  scroller-view-mode: vertical;
+  scroller-vertical-display: never;
+  scroller-horizontal-display: never;
+  scroller-view-margin: 0;
+  flex-grow: 1;
+}
+
+.mbt-perm-card-left .__scroller_view_view-port__,
+.mbt-perm-card-right .__scroller_view_view-port__ {
+  background: empty;
+  padding-all: 0;
+}
+
+.mbt-perm-card-list-container {
+  flex-direction: column;
+  gap-all: 0;
+  padding-all: 0;
+}
+
+/* 行：卡名 + 操作按钮 */
+.mbt-perm-card-row {
+  width: 129;
+  height: auto;
+  padding-all: 0;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap-all: 0;
+  background: empty;
+}
+
+.mbt-perm-card-name {
+  width: auto;
+  height: auto;
+  font-size: 6;
+  adaptive-width: true;
+  adaptive-height: true;
+  flex-grow: 1;
+}
+
+.mbt-perm-card-row-button {
+  width: auto;
+  height: 10;
+  padding-horizontal: 2;
+  padding-vertical: 0;
+  flex-shrink: 0;
+  base-background: built-in(ui-gdp:RECT_RD);
+  hover-background: built-in(ui-gdp:RECT_RD_LIGHT);
+  pressed-background: built-in(ui-gdp:RECT_RD_DARK);
+}
+
+.mbt-perm-card-row-button > text:internal,
+.mbt-perm-card-row-button .__button_text__ {
+  font-size: 6;
+  text-shadow: false;
+}
+
+.mbt-perm-card-empty {
+  width: auto;
+  height: auto;
+  font-size: 6;
+  adaptive-width: true;
+  adaptive-height: true;
+}
+
+.mbt-perm-card-footer {
+  width: 266;
+  height: auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap-all: 2;
+}
+
+.mbt-perm-card-button {
+  width: auto;
+  height: 11;
+  padding-horizontal: 3;
+  padding-vertical: 0;
+  base-background: built-in(ui-gdp:RECT_RD);
+  hover-background: built-in(ui-gdp:RECT_RD_LIGHT);
+  pressed-background: built-in(ui-gdp:RECT_RD_DARK);
+}
+
+.mbt-perm-card-button > text:internal,
+.mbt-perm-card-button .__button_text__ {
+  font-size: 6;
+  text-shadow: false;
+}

@@ -5,8 +5,8 @@ import net.minecraft.resources.Identifier;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.registry.TradeRegistry;
 import com.maple.maple_banktrade.api.trade.registry.TradeType;
-import lombok.NonNull;
 import lombok.experimental.Accessors;
+import org.jspecify.annotations.NonNull;
 
 /**
  * 机器多资源交易类型：身份 + 空存储器工厂。

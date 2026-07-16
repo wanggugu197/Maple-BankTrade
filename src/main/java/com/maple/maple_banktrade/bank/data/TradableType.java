@@ -51,6 +51,26 @@ public record TradableType(Identifier id,
         return "tradable." + id.getNamespace() + "." + id.getPath().replace('/', '.');
     }
 
+    /** 本类型显示名（翻译组件）。 */
+    public Component getDisplayName() {
+        return Component.translatable(getTranslationKey(id));
+    }
+
+    /** 按 ID 取显示名；未注册时回退为 path 末段的字面量。 */
+    public static Component getDisplayName(Identifier id) {
+        TradableType type = requireById(id);
+        if (type != null) {
+            return type.getDisplayName();
+        }
+        if (id == null) {
+            return Component.empty();
+        }
+        String path = id.getPath();
+        int slash = path.lastIndexOf('/');
+        String shortId = slash >= 0 && slash + 1 < path.length() ? path.substring(slash + 1) : path;
+        return Component.literal(shortId);
+    }
+
     // ==============================================
     // 注册方法
     // ==============================================

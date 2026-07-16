@@ -18,7 +18,6 @@ import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.trade.registry.TradeRegistry;
 import com.maple.maple_banktrade.bank.capability.TradableWalletBankCard;
-import com.maple.maple_banktrade.bank.data.CurrencyType;
 import com.maple.maple_banktrade.bank.data.TradableType;
 import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTrade;
 import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTradeHandler;
@@ -79,7 +78,7 @@ public class TradableUI {
                         .style(s -> s.background(tradableType.tradableIcon()))
                         .layout(l -> l.height(8).width(8)))
                 .addChild(new TextElement()
-                        .setText(TradableType.getTranslationKey(tradableType.id()))
+                        .setText(tradableType.getDisplayName())
                         .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).fontSize(9))
                         .style(s -> s.tooltips(tradableType.description().toArray(new Component[0]))));
 
@@ -124,7 +123,7 @@ public class TradableUI {
                         .appendTooltips(Component.translatable(
                                 "currency.maple_banktrade.trade_price",
                                 trade.pricePerTrade().toString(),
-                                Component.translatable(CurrencyType.getTranslationKey(trade.currency().currencyTypeId()))));
+                                trade.currency().type().getHoverName()));
                 if (!trade.allowsSell()) {
                     style.appendTooltips(Component.translatable("currency.maple_banktrade.trade_buy_only"));
                 }

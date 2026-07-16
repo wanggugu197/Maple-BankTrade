@@ -1,11 +1,11 @@
-package com.maple.maple_banktrade.trade.registration;
+package com.maple.maple_banktrade.common.trade;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
 import com.maple.maple_banktrade.MapleBankTrade;
-import com.maple.maple_banktrade.bank.registration.CurrencyRegistration;
+import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTrade;
 import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTrade.Mode;
 import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTradeStorage;

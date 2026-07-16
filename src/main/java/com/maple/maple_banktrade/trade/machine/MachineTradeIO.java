@@ -8,8 +8,8 @@ import net.neoforged.neoforge.transfer.fluid.FluidResource;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 
 import com.maple.maple_banktrade.bank.resource.CurrencyResource;
-import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.NonNull;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

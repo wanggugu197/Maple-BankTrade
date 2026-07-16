@@ -62,30 +62,36 @@ public class MBTModConfig {
 
         @Configurable
         @Configurable.Comment({
-                "Register built-in currency-item trade entries? Default: true",
-                "是否注册内置货币-物品交易价目？默认 true"
+                "Register built-in mod content (banks, cards, currencies, trading station, etc.)?",
+                "When false, only API registration remains (wallet items, UI, bank data, commands).",
+                "Default: true",
+                "是否注册模组内置内容（银行/卡/货币/交易站等）？",
+                "关闭后仅保留 API 注册（钱包物品、UI、银行数据、命令）。",
+                "默认 true"
         })
-        public boolean enableBuiltInTrades = true;
+        public boolean enableModContent = true;
 
         @Configurable
         @Configurable.Comment({
-                "Register player bank self-service commands (/mbt_bank)? Default: true",
-                "是否注册玩家银行命令 /mbt_bank？默认 true"
+                "Register built-in trade entries (currency-item prices & machine recipes)?",
+                "Only effective when enableModContent is true. Default: true",
+                "是否注册内置交易价目（货币-物品与机器配方）？",
+                "仅在 enableModContent 为 true 时生效。默认 true"
         })
-        public boolean enableBankCommands = true;
+        public boolean enableBuiltInTrades = true;
     }
 
     // ==============================================
     // 访问
     // ==============================================
 
-    /** 是否注册内置货币-物品交易价目。 */
-    public static boolean enableBuiltInTrades() {
-        return config().general.enableBuiltInTrades;
+    /** 是否注册模组内置内容（银行/卡/货币/交易站等）。关闭时仅 API。 */
+    public static boolean enableModContent() {
+        return config().general.enableModContent;
     }
 
-    /** 是否注册玩家银行命令。 */
-    public static boolean enableBankCommands() {
-        return config().general.enableBankCommands;
+    /** 是否注册内置交易价目；需同时开启 {@link #enableModContent()}。 */
+    public static boolean enableBuiltInTrades() {
+        return enableModContent() && config().general.enableBuiltInTrades;
     }
 }

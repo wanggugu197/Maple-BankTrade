@@ -55,6 +55,11 @@ public record CurrencyType(Identifier id,
         return "currency." + id.getNamespace() + "." + id.getPath();
     }
 
+    /** 生成货币翻译键。 */
+    public Component getHoverName() {
+        return Component.translatable("currency." + id.getNamespace() + "." + id.getPath());
+    }
+
     // ==============================================
     // 注册方法
     // ==============================================
