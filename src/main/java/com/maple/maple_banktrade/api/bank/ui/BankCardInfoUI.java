@@ -8,6 +8,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
+import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
@@ -112,7 +113,7 @@ public final class BankCardInfoUI {
     /** 获取银行显示名称。 */
     private static Component getBankName(Identifier bankTypeId) {
         BankInfo info = BankInfo.of(BankType.requireById(bankTypeId));
-        return info == null ? Component.literal(bankTypeId.toString()) : info.name();
+        return info == null ? Component.literal(bankTypeId.toString()) : Component.translatable(BankInfo.getTranslationKey(info.type()));
     }
 
     /** 获取权限显示名称。 */
@@ -124,7 +125,7 @@ public final class BankCardInfoUI {
     private static BankCardPermission resolvePermission(Player player, BankCard card) {
         if (card == null) return BankCardPermission.UNUSABLE;
         if (player != null && !player.level().isClientSide() && player.level().getServer() != null) {
-            return MBTBankStates.getBankCards(player.level().getServer()).getPermission(player.getUUID(), card.getCardUuid());
+            return MBTBankStates.getBankCards(player.level().getServer()).getPermission(BankHelper.getUuid(player), card.getCardUuid());
         }
         return card.getClientPermission() == null ? BankCardPermission.UNUSABLE : card.getClientPermission();
     }

@@ -4,6 +4,7 @@ import net.neoforged.bus.api.IEventBus;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.WalletApiRegistration;
+import com.maple.maple_banktrade.api.bank.item.BankDataComponent;
 import com.maple.maple_banktrade.common.bank.BankRegistration;
 import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
@@ -24,7 +25,7 @@ public class CommonInit {
 
     public static void init(IEventBus modBus) {
         MBTModConfig.init();
-        MBTDataComponent.init();
+        BankDataComponent.init();
         MBTLangHandler.init();
         MBTTab.init();
 

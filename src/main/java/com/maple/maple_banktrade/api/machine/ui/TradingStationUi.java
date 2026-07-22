@@ -17,16 +17,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ProgressBar;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Tab;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
@@ -47,12 +38,7 @@ import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.FlexWrap;
 import org.jspecify.annotations.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
@@ -307,7 +293,7 @@ public final class TradingStationUi {
                     "ui.maple_banktrade.trading_station.bound_cards.entry_unknown", shortUuid(uuid));
         }
         BankInfo bank = BankInfo.of(BankType.requireById(card.getBankTypeId()));
-        Component bankName = bank == null ? Component.literal(card.getBankTypeId().toString()) : bank.name();
+        Component bankName = bank == null ? Component.literal(card.getBankTypeId().toString()) : Component.translatable(BankInfo.getTranslationKey(bank.type()));
         Component cardName = Component.translatable(BankCardFactory.getTranslationKey(card.getNameIndex()));
         return Component.translatable(
                 "ui.maple_banktrade.trading_station.bound_cards.entry", bankName, cardName, shortUuid(uuid));

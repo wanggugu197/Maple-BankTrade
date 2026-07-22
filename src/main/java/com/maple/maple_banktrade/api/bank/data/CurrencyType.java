@@ -65,20 +65,19 @@ public record CurrencyType(Identifier id,
     // ==============================================
 
     /** 注册货币类型；重复注册时返回已有实例。 */
-    public static CurrencyType CurrencyTypeRegister(Identifier id, String cnName, String enName, List<Component> description, IGuiTexture currencyTexture, IGuiTexture backgroundTexture) {
+    public static CurrencyType register(Identifier id, String cnName, String enName, List<Component> description, IGuiTexture currencyTexture, IGuiTexture backgroundTexture) {
         if (REGISTRY.containsKey(id)) {
             MapleBankTrade.LOGGER.error("Currency type with id {} already exists", id);
             return REGISTRY.get(id);
         }
         MBTLangHandler.addLang(getTranslationKey(id), cnName, enName);
-        return register(id, description, currencyTexture, backgroundTexture);
+        return register(new CurrencyType(id, description, currencyTexture, backgroundTexture));
     }
 
     /** 写入注册表。 */
-    private static CurrencyType register(Identifier id, List<Component> description, IGuiTexture currencyTexture, IGuiTexture backgroundTexture) {
-        CurrencyType type = new CurrencyType(id, description, currencyTexture, backgroundTexture);
-        REGISTRY.put(id, type);
-        return type;
+    private static CurrencyType register(CurrencyType currencyType) {
+        REGISTRY.put(currencyType.id, currencyType);
+        return currencyType;
     }
 
     // ==============================================

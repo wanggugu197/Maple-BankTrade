@@ -9,6 +9,7 @@ import com.maple.maple_banktrade.api.bank.base.BankCardType;
 import com.maple.maple_banktrade.api.bank.data.CardInfo;
 import com.maple.maple_banktrade.bank.cards.*;
 import com.maple.maple_banktrade.bank.ui.cardInfos.*;
+import com.maple.maple_banktrade.common.MBTTab;
 import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
 
 import static com.maple.maple_banktrade.common.bank.BankRegistration.*;
@@ -37,58 +38,67 @@ public class CardRegistration {
             MapleBankTrade.id("central_stone_ores_card"), "中央银行石料矿石卡", "Central Stone & Ores Card",
             CENTRAL,
             (cardUuid, bankType, nameIndex) -> new TradableSingleCurrencyBankCard(
-                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.STONE_AND_ORES.id()));
+                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.STONE_AND_ORES.id()),
+            MBTTab.TAB_BANK.getKey());
 
     /** 植物与食物交易卡（农业银行）。 */
     public static final BankCardFactory FARMERS_PLANTS_FOOD_CARD = BankCardFactory.register(
             MapleBankTrade.id("farmers_plants_food_card"), "农业银行植物食物卡", "Farmers Plants & Food Card",
-            FARMERS,
+            AGRICULTURAL,
             (cardUuid, bankType, nameIndex) -> new TradableSingleCurrencyBankCard(
-                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.PLANTS_AND_FOOD.id()));
+                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.PLANTS_AND_FOOD.id()),
+            MBTTab.TAB_BANK.getKey());
 
     /** 生物掉落交易卡（星空银行）。 */
     public static final BankCardFactory MERCHANT_MOB_DROPS_CARD = BankCardFactory.register(
             MapleBankTrade.id("merchant_mob_drops_card"), "星空银行生物掉落卡", "Merchant Mob Drops Card",
-            MERCHANT,
+            STARRY_SKY,
             (cardUuid, bankType, nameIndex) -> new TradableSingleCurrencyBankCard(
-                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.MOB_DROPS.id()));
+                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.MOB_DROPS.id()),
+            MBTTab.TAB_BANK.getKey());
 
     /** 兼容旧 ID：中央单货币卡 → 石料矿石交易。 */
     public static final BankCardFactory CENTRAL_SINGLE_CURRENCY_CARD = BankCardFactory.register(
             MapleBankTrade.id("central_single_currency_card"), "中央银行单货币卡", "Central Single Currency Card",
             CENTRAL,
             (cardUuid, bankType, nameIndex) -> new TradableSingleCurrencyBankCard(
-                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.STONE_AND_ORES.id()));
+                    cardUuid, bankType, nameIndex, COINS, CurrencyItemTradeRegistration.STONE_AND_ORES.id()),
+            MBTTab.TAB_BANK.getKey());
 
     /** 中央大额单货币卡。 */
     public static final BankCardFactory CENTRAL_LARGE_SINGLE_CURRENCY_CARD = BankCardFactory.register(
             MapleBankTrade.id("central_large_single_currency_card"), "中央银行大额单货币卡", "Central Large Single Currency Card",
-            FARMERS,
-            (cardUuid, bankType, nameIndex) -> new LargeSingleCurrencyBankCard(cardUuid, bankType, nameIndex, COINS));
+            AGRICULTURAL,
+            (cardUuid, bankType, nameIndex) -> new LargeSingleCurrencyBankCard(cardUuid, bankType, nameIndex, COINS),
+            MBTTab.TAB_BANK.getKey());
 
     /** 中央多货币卡。 */
     public static final BankCardFactory CENTRAL_MULTI_CURRENCY_CARD = BankCardFactory.register(
             MapleBankTrade.id("central_multi_currency_card"), "中央银行多货币卡", "Central Multi Currency Card",
-            MERCHANT,
-            (cardUuid, bankType, nameIndex) -> new MultiCurrencyBankCard(cardUuid, bankType, nameIndex, COINS, GOLD, DIAMONDS));
+            STARRY_SKY,
+            (cardUuid, bankType, nameIndex) -> new MultiCurrencyBankCard(cardUuid, bankType, nameIndex, COINS, GOLD, DIAMONDS),
+            MBTTab.TAB_BANK.getKey());
 
     /** 中央标记卡。 */
     public static final BankCardFactory CENTRAL_TAGGED_CARD = BankCardFactory.register(
             MapleBankTrade.id("central_tagged_card"), "中央银行标记卡", "Central Tagged Card",
-            MERCHANT,
-            TaggedBankCard::new);
+            STARRY_SKY,
+            TaggedBankCard::new,
+            MBTTab.TAB_BANK.getKey());
 
     /** 自然银行单货币卡。 */
     public static final BankCardFactory NATURE_SINGLE_CURRENCY_CARD = BankCardFactory.register(
             MapleBankTrade.id("nature_single_currency_card"), "自然银行单货币卡", "Nature Single Currency Card",
             NATURE,
-            (cardUuid, bankType, nameIndex) -> new SingleCurrencyBankCard(cardUuid, bankType, nameIndex, COINS));
+            (cardUuid, bankType, nameIndex) -> new SingleCurrencyBankCard(cardUuid, bankType, nameIndex, COINS),
+            MBTTab.TAB_BANK.getKey());
 
     /** 魔法银行标记卡。 */
     public static final BankCardFactory MAGIC_TAGGED_CARD = BankCardFactory.register(
             MapleBankTrade.id("magic_tagged_card"), "魔法银行标记卡", "Magic Tagged Card",
             MAGIC,
-            TaggedBankCard::new);
+            TaggedBankCard::new,
+            MBTTab.TAB_BANK.getKey());
 
     // ==============================================
     // 注册

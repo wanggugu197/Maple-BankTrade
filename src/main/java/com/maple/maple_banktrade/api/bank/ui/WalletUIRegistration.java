@@ -23,6 +23,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.style.PropertyRegistry;
 import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
 import com.maple.maple_banktrade.MapleBankTrade;
+import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
@@ -288,12 +289,12 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         BankType bankType = BankType.requireById(bankTypeId);
         if (bankType == null) return root;
         // getCardsForPlayerInBank 已按 canUse 过滤
-        data.getCardsForPlayerInBank(player.getUUID(), bankType).stream()
+        data.getCardsForPlayerInBank(BankHelper.getUuid(player), bankType).stream()
                 .sorted()
                 .forEach(cardUuid -> {
                     BankCard card = data.getCard(cardUuid);
                     if (cardInfoOf(card) != null) {
-                        cards.add(card.toClientTag(data.getPermission(player.getUUID(), cardUuid)));
+                        cards.add(card.toClientTag(data.getPermission(BankHelper.getUuid(player), cardUuid)));
                     }
                 });
         root.putInt(BANK_CARD_LIST_COUNT_KEY, cards.size());
@@ -380,7 +381,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
     /** 计算右页银行列表总页数，至少保留一页。 */
     private static int getPageCount(Player player) {
         BankCardsWorldData data = getServerBankCards(player);
-        int bankCount = data == null ? 0 : data.getBankTypesForPlayer(player.getUUID()).size();
+        int bankCount = data == null ? 0 : data.getBankTypesForPlayer(BankHelper.getUuid(player)).size();
         return Math.max(1, (bankCount + BANK_UI_SLOT_COUNT - 1) / BANK_UI_SLOT_COUNT);
     }
 
@@ -391,7 +392,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         if (bankType == null || data == null) {
             return new SlotInfo(bankType, 0);
         }
-        Set<UUID> cardUUIDs = data.getCardsForPlayerInBank(player.getUUID(), bankType);
+        Set<UUID> cardUUIDs = data.getCardsForPlayerInBank(BankHelper.getUuid(player), bankType);
         return new SlotInfo(bankType, cardUUIDs.size());
     }
 
@@ -399,7 +400,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
     private static BankType getBankTypeForIndex(Player player, int bankIndex) {
         BankCardsWorldData data = getServerBankCards(player);
         if (bankIndex < 0 || data == null) return null;
-        List<Identifier> bankTypeIds = data.getBankTypesForPlayer(player.getUUID());
+        List<Identifier> bankTypeIds = data.getBankTypesForPlayer(BankHelper.getUuid(player));
         return bankIndex < bankTypeIds.size() ? BankType.requireById(bankTypeIds.get(bankIndex)) : null;
     }
 

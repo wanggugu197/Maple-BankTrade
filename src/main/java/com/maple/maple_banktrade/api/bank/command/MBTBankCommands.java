@@ -13,6 +13,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
+import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
@@ -116,7 +117,7 @@ public final class MBTBankCommands {
         }
 
         BankCard[] created = { null };
-        MBTBankStates.modifyBankCards(source.getServer(), data -> created[0] = data.createCard(factory, player.getUUID()));
+        MBTBankStates.modifyBankCards(source.getServer(), data -> created[0] = data.createCard(factory, BankHelper.getUuid(player)));
         if (created[0] == null) {
             source.sendFailure(Component.translatable("command.mbt_bank.create.failed", nameIndex.toString()));
             return 0;
@@ -132,7 +133,7 @@ public final class MBTBankCommands {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayerOrException();
         BankCardsWorldData data = MBTBankStates.getBankCards(source.getServer());
-        List<BankCard> cards = data.getUsableCardsForPlayer(player.getUUID());
+        List<BankCard> cards = data.getUsableCardsForPlayer(BankHelper.getUuid(player));
         if (cards.isEmpty()) {
             source.sendSystemMessage(Component.translatable("command.mbt_bank.list.empty"));
             return 0;
@@ -142,7 +143,7 @@ public final class MBTBankCommands {
         cards.stream()
                 .sorted(Comparator.comparing(c -> c.getCardUuid().toString()))
                 .forEach(card -> {
-                    BankCardPermission perm = data.getPermission(player.getUUID(), card.getCardUuid());
+                    BankCardPermission perm = data.getPermission(BankHelper.getUuid(player), card.getCardUuid());
                     source.sendSystemMessage(Component.translatable(
                             "command.mbt_bank.list.entry", cardSummary(card, perm)));
                 });
@@ -174,7 +175,7 @@ public final class MBTBankCommands {
             source.sendFailure(Component.translatable("command.mbt_bank.info.not_found", cardUuid.toString()));
             return 0;
         }
-        BankCardPermission permission = data.getPermission(player.getUUID(), cardUuid);
+        BankCardPermission permission = data.getPermission(BankHelper.getUuid(player), cardUuid);
         if (permission == null || !permission.canUse()) {
             source.sendFailure(Component.translatable("command.mbt_bank.info.no_permission", cardUuid.toString()));
             return 0;
@@ -243,7 +244,7 @@ public final class MBTBankCommands {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
         BankCardsWorldData data = MBTBankStates.getBankCards(ctx.getSource().getServer());
         return SharedSuggestionProvider.suggest(
-                data.getUsableCardsForPlayer(player.getUUID()).stream()
+                data.getUsableCardsForPlayer(BankHelper.getUuid(player)).stream()
                         .map(c -> c.getCardUuid().toString()),
                 builder);
     }

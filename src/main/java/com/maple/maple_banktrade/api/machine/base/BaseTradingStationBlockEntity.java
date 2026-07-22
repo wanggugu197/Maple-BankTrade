@@ -24,6 +24,7 @@ import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.DropSaved;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.syncdata.holder.blockentity.ISyncPersistRPCBlockEntity;
 import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
@@ -35,12 +36,7 @@ import com.maple.maple_banktrade.api.machine.ui.TradingStationUiHost;
 import com.maple.maple_banktrade.api.trade.base.registry.TradeRegistry;
 import com.maple.maple_banktrade.api.trade.base.result.TradeCheckResult;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
-import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeContext;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeDetail;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeHandler;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradePlan;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeStorage;
+import com.maple.maple_banktrade.api.trade.machine.*;
 import com.mapleutillib.api.baseBlock.DirectionBlockEntity;
 import com.mapleutillib.api.resource.ObservableFluidResourceHandler;
 import com.mapleutillib.api.resource.ObservableItemResourceHandler;
@@ -48,14 +44,7 @@ import com.mapleutillib.api.resource.filter.NoInsertFilter;
 import lombok.Getter;
 import org.jspecify.annotations.NonNull;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -89,32 +78,38 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
 
     @Persisted
     @DescSynced
+    @DropSaved
     @Getter
     private final ObservableItemResourceHandler itemInput;
 
     @Persisted
     @DescSynced
+    @DropSaved
     @Getter
     private final ObservableItemResourceHandler itemOutput;
 
     @Persisted
     @DescSynced
+    @DropSaved
     @Getter
     private final ObservableFluidResourceHandler fluidInput;
 
     @Persisted
     @DescSynced
+    @DropSaved
     @Getter
     private final ObservableFluidResourceHandler fluidOutput;
 
     @Persisted
     @DescSynced
+    @DropSaved
     @Getter
     private final SimpleEnergyHandler energy;
 
     /** 绑定银行卡 UUID（插入顺序 = 货币扣款顺序）。原地增删后 markDirty。 */
     @Persisted
     @DescSynced
+    @DropSaved
     private final Set<UUID> cardUuids = new LinkedHashSet<>();
 
     /**
@@ -443,7 +438,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         if (!(getLevel() instanceof ServerLevel serverLevel) || uuids == null) {
             return Set.of();
         }
-        BankCardsWorldData data = MBTBankStates.getBankCards(serverLevel);
+        BankCardsWorldData data = MBTBankStates.getBankCards(serverLevel.getServer());
         LinkedHashSet<BankCard> cards = new LinkedHashSet<>();
         for (UUID uuid : uuids) {
             if (uuid == null) {
@@ -663,7 +658,9 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
     }
 
     public ModularUI createUI(BlockUIMenuType.BlockUIHolder holder) {
-        return TradingStationUi.create(holder, this, createInventoryTab());
+        ModularUI ui = TradingStationUi.create(holder, this, createInventoryTab());
+        refreshOutputsForUiOpen();
+        return ui;
     }
 
     // ── 能力侧 InsertOnly ──
@@ -684,5 +681,13 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         public int extract(@NonNull T resource, int amount, @NonNull TransactionContext transaction) {
             return 0;
         }
+    }
+
+    private void refreshOutputsForUiOpen() {
+        if (!isServerSide()) return;
+        markDirty("itemInput");
+        markDirty("itemOutput");
+        markDirty("fluidInput");
+        markDirty("fluidOutput");
     }
 }

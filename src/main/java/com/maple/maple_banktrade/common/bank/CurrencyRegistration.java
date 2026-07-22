@@ -24,21 +24,21 @@ public class CurrencyRegistration {
     // 货币
     // ==============================================
 
-    public static final CurrencyType COINS = CurrencyType.CurrencyTypeRegister(
+    public static final CurrencyType COINS = CurrencyType.register(
             MapleBankTrade.id("coins"),
             "金币", "Coins",
             new ArrayList<>(),
             SpriteTexture.of("maple_banktrade:textures/item/coins.png"),
             Sprites.RECT_RD_LIGHT);
 
-    public static final CurrencyType GOLD = CurrencyType.CurrencyTypeRegister(
+    public static final CurrencyType GOLD = CurrencyType.register(
             MapleBankTrade.id("gold"),
             "黄金", "Gold",
             new ArrayList<>(),
             IGuiTexture.dynamic(() -> new ItemStackTexture(Items.GOLD_INGOT)),
             Sprites.RECT_RD_LIGHT);
 
-    public static final CurrencyType DIAMONDS = CurrencyType.CurrencyTypeRegister(
+    public static final CurrencyType DIAMONDS = CurrencyType.register(
             MapleBankTrade.id("diamonds"),
             "钻石", "Diamonds",
             new ArrayList<>(),

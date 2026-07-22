@@ -19,15 +19,12 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
 import com.maple.maple_banktrade.MapleBankTrade;
+import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.WalletApiRegistration;
-import com.maple.maple_banktrade.api.bank.base.BankCard;
-import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
-import com.maple.maple_banktrade.api.bank.base.BankCardPermission;
-import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
-import com.maple.maple_banktrade.api.bank.base.BankType;
+import com.maple.maple_banktrade.api.bank.base.*;
 import com.maple.maple_banktrade.api.bank.data.BankInfo;
-import com.maple.maple_banktrade.common.MBTDataComponent;
+import com.maple.maple_banktrade.api.bank.item.BankDataComponent;
 
 import java.util.*;
 
@@ -162,7 +159,7 @@ public final class BankPermissionsCardUIRegistration {
         if (player.level().isClientSide() || player.level().getServer() == null) return root;
 
         BankCardsWorldData data = MBTBankStates.getBankCards(player.level().getServer());
-        UUID pid = player.getUUID();
+        UUID pid = BankHelper.getUuid(player);
         Map<UUID, BankCardPermission> perms = data.getPermissionsForPlayer(pid);
 
         ListTag left = new ListTag();
@@ -262,7 +259,7 @@ public final class BankPermissionsCardUIRegistration {
         Identifier id = Identifier.tryParse(raw);
         if (id == null) return Component.literal(raw);
         BankInfo info = BankInfo.of(BankType.requireById(id));
-        return info == null ? Component.literal(id.toString()) : info.name();
+        return info == null ? Component.literal(id.toString()) : Component.translatable(BankInfo.getTranslationKey(info.type()));
     }
 
     // ---- server ----
@@ -272,12 +269,12 @@ public final class BankPermissionsCardUIRegistration {
         BankCardsWorldData data = MBTBankStates.getBankCards(player.level().getServer());
         LinkedHashSet<UUID> valid = new LinkedHashSet<>();
         for (UUID id : selected) {
-            if (data.canManage(player.getUUID(), id) && data.getCard(id) != null) {
+            if (data.canManage(BankHelper.getUuid(player), id) && data.getCard(id) != null) {
                 valid.add(id);
             }
         }
         ItemStack stack = new ItemStack(WalletApiRegistration.BANK_PERMISSIONS_CARD.get());
-        MBTDataComponent.CARD_PERMISSIONS.set(stack, valid);
+        BankDataComponent.CARD_PERMISSIONS.set(stack, valid);
         sp.getInventory().placeItemBackInInventory(stack);
     }
 
@@ -285,7 +282,7 @@ public final class BankPermissionsCardUIRegistration {
     private static boolean isOwnerOrAdmin(Player player, UUID cardId) {
         if (player.level().getServer() == null) return false;
         BankCardsWorldData data = MBTBankStates.getBankCards(player.level().getServer());
-        return data.getCard(cardId) != null && data.canManage(player.getUUID(), cardId);
+        return data.getCard(cardId) != null && data.canManage(BankHelper.getUuid(player), cardId);
     }
 
     /** 手持成品权限卡时预填（仅仍为 OWNER / ADMIN 的 UUID）。 */
@@ -294,10 +291,10 @@ public final class BankPermissionsCardUIRegistration {
         BankCardsWorldData data = MBTBankStates.getBankCards(player.level().getServer());
         for (ItemStack stack : new ItemStack[] { player.getMainHandItem(), player.getOffhandItem() }) {
             if (!WalletApiRegistration.BANK_PERMISSIONS_CARD.is(stack)) continue;
-            Set<UUID> from = MBTDataComponent.CARD_PERMISSIONS.getOrDefault(stack, Set.of());
+            Set<UUID> from = BankDataComponent.CARD_PERMISSIONS.getOrDefault(stack, Set.of());
             if (from == null || from.isEmpty()) continue;
             for (UUID id : from) {
-                if (data.canManage(player.getUUID(), id) && data.getCard(id) != null) {
+                if (data.canManage(BankHelper.getUuid(player), id) && data.getCard(id) != null) {
                     selected.add(id);
                 }
             }

@@ -42,7 +42,7 @@ public record BankType(Identifier id) implements StringRepresentable {
     public static void init() {}
 
     /** 注册银行类型，重复注册时返回已有类型。 */
-    public static BankType BankTypeRegister(Identifier id) {
+    public static BankType register(Identifier id) {
         if (BANK_TYPE_MAP.containsKey(id)) {
             MapleBankTrade.LOGGER.error("Bank type with id {} already exists", id);
             return BANK_TYPE_MAP.get(id);

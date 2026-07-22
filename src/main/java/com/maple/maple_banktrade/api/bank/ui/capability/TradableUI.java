@@ -171,6 +171,6 @@ public class TradableUI {
             return false;
         }
         BankCardsWorldData data = MBTBankStates.getBankCards(player.level().getServer());
-        return data.canUse(player.getUUID(), cardUuid) && data.getCard(cardUuid) instanceof TradableWalletBankCard;
+        return data.getCard(cardUuid) instanceof TradableWalletBankCard;
     }
 }

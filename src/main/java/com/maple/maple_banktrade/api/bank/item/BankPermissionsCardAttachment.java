@@ -23,7 +23,6 @@ import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.data.BankInfo;
 import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
-import com.maple.maple_banktrade.common.MBTDataComponent;
 
 import java.util.Set;
 import java.util.UUID;
@@ -31,7 +30,7 @@ import java.util.UUID;
 /**
  * 银行权限卡附件。
  * <p>
- * Tooltip：展示 {@link MBTDataComponent#CARD_PERMISSIONS}。<br>
+ * Tooltip：展示 {@link BankDataComponent#CARD_PERMISSIONS}。<br>
  * 右键贸易站：若 BE 为 {@link BaseTradingStationBlockEntity}，将卡上 UUID 全部并入该站。
  * </p>
  */
@@ -55,7 +54,7 @@ public class BankPermissionsCardAttachment extends ItemAttachment<ComponentItem>
 
         Player player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
-        Set<UUID> fromCard = MBTDataComponent.CARD_PERMISSIONS.getOrDefault(stack, Set.of());
+        Set<UUID> fromCard = BankDataComponent.CARD_PERMISSIONS.getOrDefault(stack, Set.of());
         if (fromCard == null || fromCard.isEmpty()) {
             if (player instanceof ServerPlayer serverPlayer) {
                 serverPlayer.sendOverlayMessage(
@@ -87,7 +86,7 @@ public class BankPermissionsCardAttachment extends ItemAttachment<ComponentItem>
 
     @Override
     public void collectTooltipNodes(ComponentItem item, ItemStack stack, TooltipNodeCollector collector) {
-        Set<UUID> cards = MBTDataComponent.CARD_PERMISSIONS.getOrDefault(stack, Set.of());
+        Set<UUID> cards = BankDataComponent.CARD_PERMISSIONS.getOrDefault(stack, Set.of());
         if (cards == null) cards = Set.of();
 
         int priority = 0;
@@ -118,7 +117,7 @@ public class BankPermissionsCardAttachment extends ItemAttachment<ComponentItem>
 
     private static Component bankName(BankCard card) {
         BankInfo info = BankInfo.of(BankType.requireById(card.getBankTypeId()));
-        return info == null ? Component.literal(card.getBankTypeId().toString()) : info.name();
+        return info == null ? Component.literal(card.getBankTypeId().toString()) : Component.translatable(BankInfo.getTranslationKey(info.type()));
     }
 
     private static String shortUuid(UUID uuid) {

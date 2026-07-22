@@ -1,5 +1,6 @@
 package com.maple.maple_banktrade.common;
 
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 import com.gto.registrylib.util.entry.BlockEntityTypeEntry;
@@ -7,22 +8,16 @@ import com.gto.registrylib.util.entry.BlockEntry;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
 import com.maple.maple_banktrade.api.machine.base.TradingStationStorageSpec;
-import com.maple.maple_banktrade.common.block.AutoTradingStationBlock;
-import com.maple.maple_banktrade.common.block.AutoTradingStationBlockEntity;
-import com.maple.maple_banktrade.common.block.ItemCardTradingStationBlock;
-import com.maple.maple_banktrade.common.block.ItemCardTradingStationBlockEntity;
-import com.maple.maple_banktrade.common.block.TradingStationBlock;
-import com.maple.maple_banktrade.common.block.TradingStationBlockEntity;
+import com.maple.maple_banktrade.common.block.*;
 import com.mapleutillib.utils.RLUtils;
 import com.mapleutillib.utils.generator.ModBlockModelGeneratorHelper;
 import com.mapleutillib.utils.generator.ModItemModelGeneratorHelper;
 
 import static com.maple.maple_banktrade.MapleBankTrade.REGISTRY;
 import static com.maple.maple_banktrade.common.MBTTab.TAB_BANK;
-import static com.maple.maple_banktrade.common.MBTTags.*;
-import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.AUTO_TRADING_STATION_TYPES;
-import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.ITEM_CARD_TRADING_STATION_TYPES;
-import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.TRADING_STATION_TYPES;
+import static com.maple.maple_banktrade.common.MBTTags.TRADING_STATION_BLOCK;
+import static com.maple.maple_banktrade.common.MBTTags.TRADING_STATION_ITEM;
+import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.*;
 
 /**
  * 模组内置方块/物品等内容注册入口（非 API）。
@@ -46,6 +41,7 @@ public class MBTRegistration {
     public static final BlockEntry<TradingStationBlock> TRADING_STATION = REGISTRY
             .block("trading_station", p -> new TradingStationBlock(p, TRADING_STATION_TYPES))
             .langCn("交易站")
+            .initialProperties(Blocks.OAK_PLANKS)
             .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
                     MapleBankTrade.id("block/trading_station"),
                     RLUtils.mc("block/oak_planks")))
@@ -71,6 +67,7 @@ public class MBTRegistration {
             .block("item_card_trading_station", p -> new ItemCardTradingStationBlock(p, ITEM_CARD_TRADING_STATION_TYPES))
             .langCn("物品卡贸易站")
             .lang("Item-Card Trading Station")
+            .initialProperties(Blocks.WHITE_WOOL)
             .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
                     MapleBankTrade.id("block/trading_station"),
                     RLUtils.mc("block/white_wool")))
@@ -95,6 +92,7 @@ public class MBTRegistration {
             .block("auto_trading_station", p -> new AutoTradingStationBlock(p, AUTO_TRADING_STATION_TYPES))
             .langCn("自动贸易站")
             .lang("Auto Trading Station")
+            .initialProperties(Blocks.GOLD_BLOCK)
             .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
                     MapleBankTrade.id("block/trading_station"),
                     RLUtils.mc("block/gold_block")))

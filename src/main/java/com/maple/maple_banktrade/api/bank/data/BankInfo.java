@@ -4,7 +4,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.style.BasicStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
@@ -20,7 +19,7 @@ import java.util.function.Consumer;
 /**
  * 银行类型的客户端显示信息。
  */
-public record BankInfo(BankType type, Component name, List<Component> description, IGuiTexture background) {
+public record BankInfo(BankType type, List<Component> description, IGuiTexture background) {
 
     // ==============================================
     // 常量
@@ -43,7 +42,6 @@ public record BankInfo(BankType type, Component name, List<Component> descriptio
     /** 创建银行显示信息并归一化可选显示字段。 */
     public BankInfo {
         Objects.requireNonNull(type, "type");
-        name = name == null ? Component.translatable(getTranslationKey(type)) : name;
         description = description == null ? List.of() : List.copyOf(description);
         background = background == null ? Sprites.RECT_RD_T : background;
     }
@@ -62,15 +60,9 @@ public record BankInfo(BankType type, Component name, List<Component> descriptio
     }
 
     /** 按路径与贴图注册银行显示信息与双语文本。 */
-    public static void registerBankInfo(BankType type, String path, String texturePath,
-                                        String cnName, String enName,
-                                        String cnDescription, String enDescription) {
-        String key = "bank.maple_banktrade." + path;
-        register(new BankInfo(
-                type,
-                MBTLangHandler.addLang(key, cnName, enName),
-                List.of(MBTLangHandler.addLang(key + ".desc", cnDescription, enDescription)),
-                SpriteTexture.of("maple_banktrade:textures/gui/bank/" + texturePath + ".png")));
+    public static void register(BankType type, String cnName, String enName, List<Component> description, IGuiTexture background) {
+        MBTLangHandler.addLang(getTranslationKey(type), cnName, enName);
+        register(new BankInfo(type, description, background));
     }
 
     // ==============================================
@@ -81,11 +73,11 @@ public record BankInfo(BankType type, Component name, List<Component> descriptio
     public static BankInfo of(BankType type) {
         if (type == null) return null;
         BankInfo info = REGISTRY.get(type);
-        return info == null ? new BankInfo(type, Component.translatable(getTranslationKey(type)), List.of(), Sprites.RECT_RD_T) : info;
+        return info == null ? new BankInfo(type, List.of(), Sprites.RECT_RD_T) : info;
     }
 
     /** 获取银行显示名称的翻译键。 */
-    private static String getTranslationKey(BankType type) {
+    public static String getTranslationKey(BankType type) {
         Identifier id = type.id();
         return "bank." + id.getNamespace() + "." + id.getPath();
     }
@@ -97,7 +89,7 @@ public record BankInfo(BankType type, Component name, List<Component> descriptio
     /** 组装银行 tooltip：名称、描述与持卡数量。 */
     private Component[] createBankTooltips(int cardCount) {
         Component[] components = new Component[description.size() + 2];
-        components[0] = name;
+        components[0] = Component.translatable(getTranslationKey(type));
         for (int i = 0; i < description.size(); i++) {
             components[i + 1] = description.get(i);
         }
@@ -107,7 +99,7 @@ public record BankInfo(BankType type, Component name, List<Component> descriptio
 
     /** 应用银行背景与持卡数量 tooltip。 */
     public void applyBankStyle(BasicStyle style, int cardCount) {
-        style.backgroundTexture(background);
+        style.backgroundTexture(Sprites.RECT_RD_T).overlay(background);
         style.tooltips(createBankTooltips(cardCount));
     }
 

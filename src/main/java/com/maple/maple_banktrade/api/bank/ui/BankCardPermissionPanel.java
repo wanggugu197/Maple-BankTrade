@@ -15,12 +15,16 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
+import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardPermission;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -66,10 +70,10 @@ public final class BankCardPermissionPanel {
 
         // 消息挂 panel，避免列表重建丢 handler
         panel.onMessage(M_GRANT, p -> mutate(player, p, rev, (data, target) -> data.grantPermission(
-                player.getUUID(), target, cardId,
+                BankHelper.getUuid(player), target, cardId,
                 BankCardPermission.bySerializedName(p.getStringOr(K_PERM, "usable")))));
         panel.onMessage(M_REVOKE, p -> mutate(player, p, rev,
-                (data, target) -> data.revokeManagedPermission(player.getUUID(), target, cardId)));
+                (data, target) -> data.revokeManagedPermission(BankHelper.getUuid(player), target, cardId)));
         // 删除：服务端计数并执行；文案在客户端 setOnClick 中逐步更新
         panel.onMessage(M_DELETE, _ -> handleDelete(player, cardId, delClicks));
         panel.onMessage(M_REFRESH, _ -> {
@@ -149,12 +153,12 @@ public final class BankCardPermissionPanel {
 
         MinecraftServer server = player.level().getServer();
         BankCardsWorldData data = MBTBankStates.getBankCards(server);
-        root.putString(K_ACTOR, data.getPermission(player.getUUID(), cardId).getSerializedName());
+        root.putString(K_ACTOR, data.getPermission(BankHelper.getUuid(player), cardId).getSerializedName());
         root.put(K_HOLDERS, entryList(server, data.getUsablePermissionsForCard(cardId).entrySet().stream()));
 
         Set<UUID> targets = new LinkedHashSet<>(data.getAllPlayersInPermissionTable());
         targets.addAll(data.getPermissionsForCard(cardId).keySet());
-        if (server != null) server.getPlayerList().getPlayers().forEach(p -> targets.add(p.getUUID()));
+        if (server != null) server.getPlayerList().getPlayers().forEach(p -> targets.add(BankHelper.getUuid(p)));
         root.put(K_GRANTS, entryList(server, targets.stream()
                 .map(id -> Map.entry(id, orUnusable(data.getPermission(id, cardId))))));
         return root;
@@ -273,7 +277,7 @@ public final class BankCardPermissionPanel {
      */
     private static void handleDelete(Player player, UUID cardId, int[] clicks) {
         if (!(player instanceof ServerPlayer sp)) return;
-        if (!MBTBankStates.getBankCards(player.level().getServer()).isOwner(player.getUUID(), cardId)) return;
+        if (!MBTBankStates.getBankCards(player.level().getServer()).isOwner(BankHelper.getUuid(player), cardId)) return;
 
         // 服务端独立计数（与客户端 UI 计数同步：每点一次发一条 M_DELETE）
         if (++clicks[0] < DELETE_CLICKS) {
@@ -281,7 +285,7 @@ public final class BankCardPermissionPanel {
         }
         boolean[] ok = { false };
         MBTBankStates.modifyBankCards(sp.level().getServer(),
-                data -> ok[0] = data.deleteCardAsOwner(sp.getUUID(), cardId));
+                data -> ok[0] = data.deleteCardAsOwner(BankHelper.getUuid(sp), cardId));
         if (ok[0]) {
             sp.closeContainer();
         } else {
@@ -409,6 +413,6 @@ public final class BankCardPermissionPanel {
             return p != null && client.test(p);
         }
         return server.test(MBTBankStates.getBankCards(player.level().getServer()),
-                player.getUUID(), card.getCardUuid());
+                BankHelper.getUuid(player), card.getCardUuid());
     }
 }

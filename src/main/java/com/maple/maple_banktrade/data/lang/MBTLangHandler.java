@@ -96,6 +96,32 @@ public class MBTLangHandler {
         addLang("tooltip.maple_banktrade.perm_card.entry", " - %s · %s (%s)", " - %s · %s (%s)");
         addLang("tooltip.maple_banktrade.perm_card.entry_unknown", " - %s", " - %s");
 
+        // 银行卡认证密钥 Tooltip / 使用反馈
+        addLang("item.maple_banktrade.bank_card_authentication_key.named",
+                "%s认证密钥",
+                "%s Authentication Key");
+        addLang("tooltip.maple_banktrade.auth_key.creates",
+                "创建银行卡: %s",
+                "Creates bank card: %s");
+        addLang("tooltip.maple_banktrade.auth_key.no_card",
+                "未指定银行卡",
+                "No bank card selected");
+        addLang("message.maple_banktrade.auth_key.missing_card",
+                "此认证密钥未绑定银行卡。",
+                "This authentication key is not bound to a bank card.");
+        addLang("message.maple_banktrade.auth_key.unknown_card",
+                "未知银行卡: %s",
+                "Unknown bank card: %s");
+        addLang("message.maple_banktrade.auth_key.already_owned",
+                "你已经拥有 %s。",
+                "You already own %s.");
+        addLang("message.maple_banktrade.auth_key.create_failed",
+                "无法创建 %s。",
+                "Failed to create %s.");
+        addLang("message.maple_banktrade.auth_key.created",
+                "已创建 %s。",
+                "Created %s.");
+
         // 权限卡右键贸易站（BaseTradingStationBlockEntity）
         addLang("message.maple_banktrade.perm_card.apply.empty",
                 "权限卡为空，未写入任何银行卡。",

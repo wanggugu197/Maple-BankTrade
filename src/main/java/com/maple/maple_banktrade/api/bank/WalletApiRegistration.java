@@ -6,15 +6,13 @@ import net.neoforged.bus.api.IEventBus;
 
 import com.gto.registrylib.composite.ComponentItem;
 import com.gto.registrylib.util.entry.ItemEntry;
+import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
 import com.maple.maple_banktrade.api.bank.command.MBTBankCommands;
-import com.maple.maple_banktrade.api.bank.item.BankPermissionsCardAttachment;
-import com.maple.maple_banktrade.api.bank.item.BankPermissionsCardBuilderAttachment;
-import com.maple.maple_banktrade.api.bank.item.WalletAttachment;
+import com.maple.maple_banktrade.api.bank.item.*;
 import com.maple.maple_banktrade.api.bank.ui.BankCardDetailUIRegistration;
 import com.maple.maple_banktrade.api.bank.ui.BankPermissionsCardUIRegistration;
 import com.maple.maple_banktrade.api.bank.ui.ParameterizedPlayerUIMenuType;
 import com.maple.maple_banktrade.api.bank.ui.WalletUIRegistration;
-import com.maple.maple_banktrade.common.MBTDataComponent;
 
 import java.util.HashSet;
 
@@ -41,7 +39,7 @@ public class WalletApiRegistration {
 
     /**
      * 银行权限卡构造器：使用打开编辑 UI，可输出权限卡。
-     * 不携带 {@link MBTDataComponent#CARD_PERMISSIONS}。
+     * 不携带 {@link BankDataComponent#CARD_PERMISSIONS}。
      */
     public static final ItemEntry<ComponentItem> BANK_PERMISSIONS_CARD_BUILDER = REGISTRY
             .componentItem("bank_permissions_card_builder")
@@ -53,16 +51,32 @@ public class WalletApiRegistration {
             .register();
 
     /**
-     * 银行权限卡：保存 {@link MBTDataComponent#CARD_PERMISSIONS}（卡 UUID 集合）。
+     * 银行权限卡：保存 {@link BankDataComponent#CARD_PERMISSIONS}（卡 UUID 集合）。
      * 由构造器 UI「输出物品」生成；Tooltip 由 {@link BankPermissionsCardAttachment} 提供。
      */
     public static final ItemEntry<ComponentItem> BANK_PERMISSIONS_CARD = REGISTRY
             .componentItem("bank_permissions_card")
             .langCn("银行权限卡")
             .lang("Bank Permissions Card")
-            .properties(p -> p.component(MBTDataComponent.CARD_PERMISSIONS, new HashSet<>()))
+            .properties(p -> p.component(BankDataComponent.CARD_PERMISSIONS, new HashSet<>()))
             .attach(new BankPermissionsCardAttachment())
             .addTab(TAB_BANK.getKey())
+            .register();
+
+    /**
+     * 银行卡认证密钥基础物品。
+     * <p>
+     * 基础形态不加入创造栏；创造栏通过事件按 {@link BankCardFactory#values()} 放入带
+     * {@link BankDataComponent#CARD_NAME_INDEX} 的预置堆叠。
+     * </p>
+     */
+    public static final ItemEntry<ComponentItem> BANK_CARD_AUTHENTICATION_KEY = REGISTRY
+            .componentItem("bank_card_authentication_key")
+            .langCn("银行卡认证密钥")
+            .lang("Bank Card Authentication Key")
+            .properties(p -> p.stacksTo(16))
+            .modelTexture("item/bank_permissions_card_builder")
+            .attach(new BankCardAuthenticationKeyAttachment())
             .register();
 
     private static void addRecipe() {

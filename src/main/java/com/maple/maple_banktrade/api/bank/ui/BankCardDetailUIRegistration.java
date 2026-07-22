@@ -15,6 +15,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
 import com.maple.maple_banktrade.MapleBankTrade;
+import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
@@ -60,7 +61,7 @@ public final class BankCardDetailUIRegistration {
         BankCard card = resolveUsableCard(player, cardUuid);
         if (card == null) return false;
         BankCardsWorldData data = MBTBankStates.getBankCards(player.level().getServer());
-        CompoundTag cardTag = card.toClientTag(data.getPermission(player.getUUID(), cardUuid));
+        CompoundTag cardTag = card.toClientTag(data.getPermission(BankHelper.getUuid(player), cardUuid));
         return ParameterizedPlayerUIMenuType.openUI(player, BANK_CARD_DETAIL_UI, new DetailPayload(cardUuid, cardTag));
     }
 
@@ -103,7 +104,7 @@ public final class BankCardDetailUIRegistration {
             return null;
         }
         BankCardsWorldData data = MBTBankStates.getBankCards(player.level().getServer());
-        if (!data.canUse(player.getUUID(), cardUuid)) return null;
+        if (!data.canUse(BankHelper.getUuid(player), cardUuid)) return null;
         BankCard card = data.getCard(cardUuid);
         return card != null && CardInfo.of(card.getNameIndex()) != null ? card : null;
     }
