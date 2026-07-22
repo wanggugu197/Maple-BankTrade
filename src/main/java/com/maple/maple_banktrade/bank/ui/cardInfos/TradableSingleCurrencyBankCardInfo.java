@@ -3,8 +3,8 @@ package com.maple.maple_banktrade.bank.ui.cardInfos;
 import net.minecraft.world.entity.player.Player;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.maple.maple_banktrade.api.bank.ui.capability.TradableUI;
 import com.maple.maple_banktrade.bank.cards.TradableSingleCurrencyBankCard;
-import com.maple.maple_banktrade.bank.ui.capability.TradableUI;
 
 /**
  * 可交易单货币卡的简略 / 详情 UI。

@@ -37,7 +37,7 @@
     },
     {
       "apply": {
-        "model": "minecraft:block/crafting_table_top"
+        "model": "minecraft:block/white_wool"
       },
       "when": {
         "facing": "north"
@@ -45,7 +45,7 @@
     },
     {
       "apply": {
-        "model": "minecraft:block/crafting_table_top",
+        "model": "minecraft:block/white_wool",
         "y": 90
       },
       "when": {
@@ -54,7 +54,7 @@
     },
     {
       "apply": {
-        "model": "minecraft:block/crafting_table_top",
+        "model": "minecraft:block/white_wool",
         "y": 180
       },
       "when": {
@@ -63,7 +63,7 @@
     },
     {
       "apply": {
-        "model": "minecraft:block/crafting_table_top",
+        "model": "minecraft:block/white_wool",
         "y": 270
       },
       "when": {

@@ -4,8 +4,8 @@ import net.minecraft.world.entity.player.Player;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.maple.maple_banktrade.api.bank.ui.BankCardInfoUI;
+import com.maple.maple_banktrade.api.bank.ui.capability.CurrencyTypeUI;
 import com.maple.maple_banktrade.bank.cards.MultiCurrencyBankCard;
-import com.maple.maple_banktrade.bank.ui.capability.CurrencyTypeUI;
 
 /**
  * 多货币银行卡的简略 / 详情 UI。

@@ -22,8 +22,8 @@ import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.data.BankInfo;
+import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
 import com.maple.maple_banktrade.common.MBTDataComponent;
-import com.maple.maple_banktrade.common.block.BaseTradingStationBlockEntity;
 
 import java.util.Set;
 import java.util.UUID;

@@ -5,11 +5,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
 import com.maple.maple_banktrade.MapleBankTrade;
+import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTrade;
+import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTrade.Mode;
+import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeStorage;
+import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeType;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
-import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTrade;
-import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTrade.Mode;
-import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTradeStorage;
-import com.maple.maple_banktrade.trade.currency_item.CurrencyItemTradeType;
 
 /**
  * 注册内置货币-物品交易类型与价目条目。

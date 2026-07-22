@@ -5,8 +5,8 @@ import net.minecraft.resources.Identifier;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankType;
-import com.maple.maple_banktrade.bank.capability.TradableWalletBankCard;
-import com.maple.maple_banktrade.bank.data.CurrencyType;
+import com.maple.maple_banktrade.api.bank.capability.TradableWalletBankCard;
+import com.maple.maple_banktrade.api.bank.data.CurrencyType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;

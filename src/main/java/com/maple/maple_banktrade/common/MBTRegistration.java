@@ -1,8 +1,14 @@
 package com.maple.maple_banktrade.common;
 
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+
 import com.gto.registrylib.util.entry.BlockEntityTypeEntry;
 import com.gto.registrylib.util.entry.BlockEntry;
 import com.maple.maple_banktrade.MapleBankTrade;
+import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
+import com.maple.maple_banktrade.api.machine.base.TradingStationStorageSpec;
+import com.maple.maple_banktrade.common.block.AutoTradingStationBlock;
+import com.maple.maple_banktrade.common.block.AutoTradingStationBlockEntity;
 import com.maple.maple_banktrade.common.block.ItemCardTradingStationBlock;
 import com.maple.maple_banktrade.common.block.ItemCardTradingStationBlockEntity;
 import com.maple.maple_banktrade.common.block.TradingStationBlock;
@@ -13,6 +19,8 @@ import com.mapleutillib.utils.generator.ModItemModelGeneratorHelper;
 
 import static com.maple.maple_banktrade.MapleBankTrade.REGISTRY;
 import static com.maple.maple_banktrade.common.MBTTab.TAB_BANK;
+import static com.maple.maple_banktrade.common.MBTTags.*;
+import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.AUTO_TRADING_STATION_TYPES;
 import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.ITEM_CARD_TRADING_STATION_TYPES;
 import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.TRADING_STATION_TYPES;
 
@@ -41,8 +49,10 @@ public class MBTRegistration {
             .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
                     MapleBankTrade.id("block/trading_station"),
                     RLUtils.mc("block/oak_planks")))
+            .addTag(TRADING_STATION_BLOCK)
             .item(builder -> builder
                     .addTab(TAB_BANK.getKey())
+                    .addTag(TRADING_STATION_ITEM)
                     .model(() -> (item, prov) -> ModItemModelGeneratorHelper.mapItemToComposite(prov, item,
                             RLUtils.mc("block/oak_planks"),
                             MapleBankTrade.id("block/trading_station"))))
@@ -54,7 +64,7 @@ public class MBTRegistration {
             .register();
 
     /**
-     * 物品卡贸易站：较小 {@link com.maple.maple_banktrade.common.block.TradingStationStorageSpec}，
+     * 物品卡贸易站：较小 {@link TradingStationStorageSpec}，
      * 默认 item_desk 配方；仍具备物品/流体/能量/卡存储。
      */
     public static final BlockEntry<ItemCardTradingStationBlock> ITEM_CARD_TRADING_STATION = REGISTRY
@@ -63,11 +73,13 @@ public class MBTRegistration {
             .lang("Item-Card Trading Station")
             .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
                     MapleBankTrade.id("block/trading_station"),
-                    RLUtils.mc("block/crafting_table_top")))
+                    RLUtils.mc("block/white_wool")))
+            .addTag(TRADING_STATION_BLOCK)
             .item(builder -> builder
                     .addTab(TAB_BANK.getKey())
+                    .addTag(TRADING_STATION_ITEM)
                     .model(() -> (item, prov) -> ModItemModelGeneratorHelper.mapItemToComposite(prov, item,
-                            RLUtils.mc("block/crafting_table_top"),
+                            RLUtils.mc("block/white_wool"),
                             MapleBankTrade.id("block/trading_station"))))
             .register();
 
@@ -75,4 +87,34 @@ public class MBTRegistration {
             .blockEntity(REGISTRY, "item_card_trading_station_entity", (_, p, s) -> new ItemCardTradingStationBlockEntity(p, s))
             .validBlock(ITEM_CARD_TRADING_STATION)
             .register();
+
+    /**
+     * 自动贸易站：开启自动交易，绑定矿石+岩浆与怪物掉落物自动出售类型。
+     */
+    public static final BlockEntry<AutoTradingStationBlock> AUTO_TRADING_STATION = REGISTRY
+            .block("auto_trading_station", p -> new AutoTradingStationBlock(p, AUTO_TRADING_STATION_TYPES))
+            .langCn("自动贸易站")
+            .lang("Auto Trading Station")
+            .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
+                    MapleBankTrade.id("block/trading_station"),
+                    RLUtils.mc("block/gold_block")))
+            .addTag(TRADING_STATION_BLOCK)
+            .item(builder -> builder
+                    .addTab(TAB_BANK.getKey())
+                    .addTag(TRADING_STATION_ITEM)
+                    .model(() -> (item, prov) -> ModItemModelGeneratorHelper.mapItemToComposite(prov, item,
+                            RLUtils.mc("block/gold_block"),
+                            MapleBankTrade.id("block/trading_station"))))
+            .register();
+
+    public static final BlockEntityTypeEntry<AutoTradingStationBlockEntity> AUTO_TRADING_STATION_ENTITY = REGISTRY
+            .blockEntity(REGISTRY, "auto_trading_station_entity", (_, p, s) -> new AutoTradingStationBlockEntity(p, s))
+            .validBlock(AUTO_TRADING_STATION)
+            .register();
+
+    public static void registerTradingStationCapabilities(RegisterCapabilitiesEvent event) {
+        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.TRADING_STATION_ENTITY.get());
+        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.ITEM_CARD_TRADING_STATION_ENTITY.get());
+        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.AUTO_TRADING_STATION_ENTITY.get());
+    }
 }

@@ -1,7 +1,6 @@
 package com.maple.maple_banktrade.api.machine.ui;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
@@ -18,15 +17,18 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.FluidSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ProgressBar;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Tab;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.OreSprites;
@@ -37,8 +39,8 @@ import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.data.BankInfo;
-import com.maple.maple_banktrade.bank.data.TradableType;
-import com.maple.maple_banktrade.trade.machine.MachineTrade;
+import com.maple.maple_banktrade.api.bank.data.TradableType;
+import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
@@ -57,36 +59,30 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * 贸易站 UI 构建 API：主壳、库存页、配方页、槽网格与修饰键批量。
+ * 贸易站 UI 构建。
  * <p>
- * 宿主实现 {@link TradingStationUiHost}；库存页可用 {@link #fullIoInventoryTab}。
+ * 数据通道（对齐 LDLib2 Sync）：
+ * <ul>
+ * <li><b>S2C</b>：{@link DataBindingBuilder}（{@code *S2C}）— 标题、能量、卡名等只读展示。</li>
+ * <li><b>C2S 动作</b>：{@link UIElement#addServerEventListener} /
+ * {@link Button#setOnServerClick} — 解绑 / 执行配方（RPC 事件，无需 message）。</li>
+ * <li><b>本地 UI</b>：{@link Button#setOnClick} — 仅客户端表现（如隐藏已解绑行）。</li>
+ * </ul>
+ * 批量次数：客户端写入 {@link UIEvent#modifiers}（直接存次数 1/4/8/64），服务端读取。
  * </p>
  */
 public final class TradingStationUi {
 
-    /** 槽位网格单行像素宽度（6 × 18）。 */
     public static final int SLOT_ROW_WIDTH = 18 * 6;
 
     public static final int SHIFT_TRADE_COUNT = 4;
     public static final int CTRL_TRADE_COUNT = 8;
     public static final int ALT_TRADE_COUNT = 64;
 
-    /** 写入 UIEvent.modifiers 的自定义标志（非 GLFW）。 */
-    public static final int SHIFT_TRADE_MODIFIER = 1;
-    public static final int CTRL_TRADE_MODIFIER = 2;
-    public static final int ALT_TRADE_MODIFIER = 4;
-
     private TradingStationUi() {}
 
-    // ╔══════════════════════════════════════════════╗
-    // ║ 主界面壳 ║
-    // ╚══════════════════════════════════════════════╝
+    // ── 主壳 ──────────────────────────────────────────
 
-    /**
-     * 构建标准贸易站 UI：库存页 + 每个 trade type 一页配方 + 玩家背包。
-     *
-     * @param inventoryTab 库存标签页内容（由站类型决定是否含流体/能量）
-     */
     public static ModularUI create(
                                    BlockUIMenuType.BlockUIHolder holder,
                                    TradingStationUiHost host,
@@ -102,7 +98,6 @@ public final class TradingStationUi {
         var tabView = new TabView();
         tabView.tabHeaderContainer.layout(l -> l.width(270).height(14));
         tabView.tabContentContainer.layout(l -> l.width(270).height(140));
-
         tabView.addTab(
                 new Tab().setText(Component.translatable("ui.maple_banktrade.trading_station.tab.inventory")),
                 inventoryTab);
@@ -111,129 +106,211 @@ public final class TradingStationUi {
         }
         root.addChild(tabView);
 
-        var lowerPart = new UIElement().layout(l -> l.flexDirection(FlexDirection.ROW));
-        var additional = new UIElement()
-                .layout(l -> l.width(98).height(87).paddingAll(5))
-                .style(s -> s.background(Sprites.BORDER_THICK_RT1));
-        var inventory = new InventorySlots()
-                .layout(l -> l.paddingAll(5))
-                .style(s -> s.background(Sprites.BORDER_THICK_RT1));
-        lowerPart.addChildren(additional, inventory);
-        root.addChild(lowerPart);
+        var lower = new UIElement().layout(l -> l.flexDirection(FlexDirection.ROW));
+        lower.addChildren(
+                buildAdditionalPanel(host),
+                new InventorySlots()
+                        .layout(l -> l.paddingAll(5))
+                        .style(s -> s.background(Sprites.BORDER_THICK_RT1)));
+        root.addChild(lower);
 
         return new ModularUI(
                 UI.of(root, List.of(StylesheetManager.INSTANCE.getStylesheetSafe(StylesheetManager.GDP_MERGED))),
                 holder.player);
     }
 
-    // ╔══════════════════════════════════════════════╗
-    // ║ 库存页工厂 ║
-    // ╚══════════════════════════════════════════════╝
+    /**
+     * 左下额外小面板：可滚动；仅当 {@link TradingStationUiHost#supportsAutoTrade()} 时显示自动交易 Switch。
+     */
+    public static UIElement buildAdditionalPanel(TradingStationUiHost host) {
+        Objects.requireNonNull(host, "host");
+        var panel = new UIElement()
+                .layout(l -> l.width(98).height(87).paddingAll(3))
+                .style(s -> s.background(Sprites.BORDER_THICK_RT1));
+
+        ScrollerView scroller = new ScrollerView()
+                .scrollerStyle(s -> s
+                        .horizontalScrollDisplay(ScrollDisplay.NEVER)
+                        .verticalScrollDisplay(ScrollDisplay.AUTO)
+                        .scrollerViewStyle(0)
+                        .mode(ScrollerMode.VERTICAL));
+        scroller.layout(l -> l.width(92).height(81));
+        scroller.viewContainer.layout(l -> l.paddingAll(1)).style(s -> s.background(IGuiTexture.EMPTY));
+        scroller.viewPort.layout(l -> l.paddingAll(0)).style(s -> s.background(IGuiTexture.EMPTY));
+
+        if (host.supportsAutoTrade()) {
+            scroller.addScrollViewChild(buildAutoTradeSwitchRow(host));
+        }
+
+        panel.addChild(scroller);
+        return panel;
+    }
 
     /**
-     * 物品+流体 I/O；能量条与绑定卡列表可选。
-     *
-     * @param boundCardUuids 绑定卡 UUID 供应（通常 {@code station::getCardUuids}）；null 不显示列表
+     * 自动交易开关行：标签 + {@link Switch}。
+     * <p>
+     * S2C 绑定显示 BE 状态；服务端 {@link UIEvents#MOUSE_DOWN} 翻转配置
+     * （Switch 客户端本地切换，服务端改 {@link TradingStationUiHost#setAutoTradeEnabled}）。
+     * </p>
      */
+    public static UIElement buildAutoTradeSwitchRow(TradingStationUiHost host) {
+        var row = new UIElement()
+                .layout(l -> l
+                        .width(88)
+                        .gapAll(2)
+                        .flexDirection(FlexDirection.COLUMN)
+                        .alignItems(AlignItems.FLEX_START)
+                        .wrap(FlexWrap.WRAP)
+                        .paddingAll(2));
+
+        Label title = new Label();
+        title.setValue(Component.translatable("ui.maple_banktrade.trading_station.auto_trade"));
+        title.textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).fontSize(8).textWrap(TextWrap.WRAP));
+        title.style(s -> s.tooltips(
+                Component.translatable("ui.maple_banktrade.trading_station.auto_trade.tooltip")));
+
+        Switch sw = new Switch();
+        sw.setOn(host.isAutoTradeEnabled(), false);
+        // 服务端 → 客户端同步开关外观（LDLib2 IBinding / Sync）
+        sw.bind(DataBindingBuilder.boolS2C(host::isAutoTradeEnabled).build());
+        // 服务端：点击时翻转配置（与客户端 Switch 本地切换同向）
+        sw.addServerEventListener(UIEvents.MOUSE_DOWN, event -> {
+            if (event.button != 0) {
+                return;
+            }
+            host.setAutoTradeEnabled(!host.isAutoTradeEnabled());
+        });
+
+        var switchRow = new UIElement()
+                .layout(l -> l
+                        .width(84)
+                        .flexDirection(FlexDirection.ROW)
+                        .alignItems(AlignItems.CENTER)
+                        .justifyContent(AlignContent.SPACE_BETWEEN)
+                        .gapAll(2));
+        switchRow.addChildren(title, sw);
+        row.addChild(switchRow);
+        return row;
+    }
+
+    // ── 库存页 ────────────────────────────────────────
+
     public static UIElement fullIoInventoryTab(
                                                ItemStacksResourceHandler itemInput,
                                                ItemStacksResourceHandler itemOutput,
                                                FluidStacksResourceHandler fluidInput,
                                                FluidStacksResourceHandler fluidOutput,
                                                @Nullable EnergyHandler energy,
-                                               @Nullable Supplier<Set<UUID>> boundCardUuids) {
+                                               @Nullable TradingStationUiHost host) {
         Objects.requireNonNull(itemInput, "itemInput");
         Objects.requireNonNull(itemOutput, "itemOutput");
         Objects.requireNonNull(fluidInput, "fluidInput");
         Objects.requireNonNull(fluidOutput, "fluidOutput");
-        var scroller = createScrollerView();
+
         var panel = new UIElement().layout(l -> l.width(260).gapAll(2).alignItems(AlignItems.CENTER));
         var columns = new UIElement().layout(l -> l.width(260).flexDirection(FlexDirection.ROW));
         columns.addChild(ioColumn(
-                Component.translatable("ui.maple_banktrade.trading_station.input"),
-                itemInput, fluidInput));
+                Component.translatable("ui.maple_banktrade.trading_station.input"), itemInput, fluidInput));
         columns.addChild(ioColumn(
-                Component.translatable("ui.maple_banktrade.trading_station.output"),
-                itemOutput, fluidOutput));
+                Component.translatable("ui.maple_banktrade.trading_station.output"), itemOutput, fluidOutput));
         panel.addChild(columns);
         if (energy != null) {
             panel.addChild(buildEnergyBar(energy));
         }
-        if (boundCardUuids != null) {
-            panel.addChild(buildBoundCardsPanel(boundCardUuids));
+        if (host != null) {
+            panel.addChild(buildBoundCardsPanel(host));
         }
+
+        var scroller = createScrollerView();
         scroller.addScrollViewChild(panel);
         return scroller;
     }
 
     /**
-     * 绑定银行卡列表：标题（数量）+ 多行卡信息（S2C 绑定）。
+     * 绑定卡列表。数量/卡名走 S2C；解绑走 {@link Button#setOnServerClick}。
      */
-    public static UIElement buildBoundCardsPanel(Supplier<Set<UUID>> boundCardUuids) {
-        Objects.requireNonNull(boundCardUuids, "boundCardUuids");
+    public static UIElement buildBoundCardsPanel(TradingStationUiHost host) {
+        Objects.requireNonNull(host, "host");
         var panel = new UIElement()
                 .layout(l -> l.width(250).gapAll(1).paddingAll(4).alignItems(AlignItems.FLEX_START))
                 .style(s -> s.background(Sprites.RECT_RD_T));
 
-        Label title = new Label();
-        title.setValue(Component.translatable("ui.maple_banktrade.trading_station.bound_cards.title", 0));
-        title.textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).fontSize(9));
+        Label title = label(9);
         title.bind(DataBindingBuilder.componentS2C(() -> {
-            Set<UUID> set = boundCardUuids.get();
+            Set<UUID> set = host.getBoundCardUuids();
             int n = set == null ? 0 : set.size();
             return Component.translatable("ui.maple_banktrade.trading_station.bound_cards.title", n);
         }).build());
         panel.addChild(title);
 
-        Label list = new Label();
-        list.setValue(Component.empty());
-        list.textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(8));
-        list.layout(l -> l.width(246));
-        list.bind(DataBindingBuilder.componentS2C(() -> boundCardsBody(boundCardUuids.get())).build());
-        panel.addChild(list);
+        var rows = new UIElement()
+                .layout(l -> l.width(246).gapAll(1).flexDirection(FlexDirection.COLUMN).alignItems(AlignItems.STRETCH));
+        Set<UUID> uuids = host.getBoundCardUuids();
+        if (uuids == null || uuids.isEmpty()) {
+            Label empty = label(8);
+            empty.setValue(Component.translatable("ui.maple_banktrade.trading_station.bound_cards.empty"));
+            empty.layout(l -> l.width(246));
+            rows.addChild(empty);
+        } else {
+            for (UUID uuid : new ArrayList<>(uuids)) {
+                if (uuid != null) {
+                    rows.addChild(buildBoundCardRow(host, uuid));
+                }
+            }
+        }
+        panel.addChild(rows);
         return panel;
     }
 
-    /** 列表正文：空提示或「银行 · 卡名 (短UUID)」多行。 */
-    public static Component boundCardsBody(@Nullable Set<UUID> uuids) {
-        if (uuids == null || uuids.isEmpty()) {
-            return Component.translatable("ui.maple_banktrade.trading_station.bound_cards.empty");
-        }
-        BankCardsWorldData data = tryWorldData();
-        MutableComponent root = Component.empty();
-        boolean first = true;
-        for (UUID uuid : new ArrayList<>(uuids)) {
-            if (uuid == null) continue;
-            if (!first) {
-                root.append(Component.literal("\n"));
+    private static UIElement buildBoundCardRow(TradingStationUiHost host, UUID uuid) {
+        var row = new UIElement()
+                .layout(l -> l
+                        .width(246)
+                        .flexDirection(FlexDirection.ROW)
+                        .alignItems(AlignItems.CENTER)
+                        .justifyContent(AlignContent.SPACE_BETWEEN)
+                        .wrap(FlexWrap.WRAP)
+                        .gapAll(2));
+
+        // S2C：服务端解析卡名，客户端只收 Component
+        Label info = new Label();
+        info.textStyle(s -> s.adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(8));
+        info.layout(l -> l.width(190).flexGrow(1f));
+        info.bind(DataBindingBuilder.componentS2C(() -> boundCardLine(uuid)).build());
+
+        Button unbind = new Button()
+                .setText(Component.translatable("ui.maple_banktrade.trading_station.bound_cards.unbind"));
+        unbind.textStyle(s -> s.adaptiveWidth(true));
+        unbind.layout(l -> l.height(12));
+        // C2S：服务端解绑
+        unbind.setOnServerClick(e -> {
+            if (e.button == 0) {
+                host.unbindCardFromUi(uuid);
             }
-            first = false;
-            root.append(boundCardLine(uuid, data));
-        }
-        return first ? Component.translatable("ui.maple_banktrade.trading_station.bound_cards.empty") : root;
+        });
+        // 本地：隐藏行（标题数量仍由 S2C 更新）
+        unbind.setOnClick(e -> {
+            if (e.button == 0) {
+                row.setDisplay(false);
+            }
+        });
+
+        row.addChildren(info, unbind);
+        return row;
     }
 
-    private static Component boundCardLine(UUID uuid, @Nullable BankCardsWorldData data) {
+    private static Component boundCardLine(UUID uuid) {
+        BankCardsWorldData data = tryWorldData();
         BankCard card = data == null ? null : data.getCard(uuid);
         if (card == null) {
             return Component.translatable(
-                    "ui.maple_banktrade.trading_station.bound_cards.entry_unknown",
-                    shortUuid(uuid));
+                    "ui.maple_banktrade.trading_station.bound_cards.entry_unknown", shortUuid(uuid));
         }
+        BankInfo bank = BankInfo.of(BankType.requireById(card.getBankTypeId()));
+        Component bankName = bank == null ? Component.literal(card.getBankTypeId().toString()) : bank.name();
+        Component cardName = Component.translatable(BankCardFactory.getTranslationKey(card.getNameIndex()));
         return Component.translatable(
-                "ui.maple_banktrade.trading_station.bound_cards.entry",
-                bankDisplayName(card),
-                cardDisplayName(card),
-                shortUuid(uuid));
-    }
-
-    private static Component cardDisplayName(BankCard card) {
-        return Component.translatable(BankCardFactory.getTranslationKey(card.getNameIndex()));
-    }
-
-    private static Component bankDisplayName(BankCard card) {
-        BankInfo info = BankInfo.of(BankType.requireById(card.getBankTypeId()));
-        return info == null ? Component.literal(card.getBankTypeId().toString()) : info.name();
+                "ui.maple_banktrade.trading_station.bound_cards.entry", bankName, cardName, shortUuid(uuid));
     }
 
     private static String shortUuid(UUID uuid) {
@@ -244,24 +321,17 @@ public final class TradingStationUi {
     @Nullable
     private static BankCardsWorldData tryWorldData() {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        if (server == null) return null;
-        return MBTBankStates.getBankCards(server);
+        return server == null ? null : MBTBankStates.getBankCards(server);
     }
 
-    // ╔══════════════════════════════════════════════╗
-    // ║ 槽位 / 能量 / 滚动容器 ║
-    // ╚══════════════════════════════════════════════╝
+    // ── 槽位 / 能量 ───────────────────────────────────
 
-    /** 单侧：标题 + 物品槽。 */
     public static UIElement itemColumn(Component title, ItemStacksResourceHandler items) {
         return new UIElement()
                 .layout(l -> l.width(130).alignItems(AlignItems.CENTER))
-                .addChildren(
-                        new TextElement().setText(title).textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true)),
-                        slotGrid(items.size(), i -> new ItemSlot().bind(items, i)));
+                .addChildren(titleText(title), slotGrid(items.size(), i -> new ItemSlot().bind(items, i)));
     }
 
-    /** 单侧：标题 + 物品槽 + 流体槽。 */
     public static UIElement ioColumn(
                                      Component title,
                                      ItemStacksResourceHandler items,
@@ -269,12 +339,11 @@ public final class TradingStationUi {
         return new UIElement()
                 .layout(l -> l.width(130).alignItems(AlignItems.CENTER))
                 .addChildren(
-                        new TextElement().setText(title).textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true)),
+                        titleText(title),
                         slotGrid(items.size(), i -> new ItemSlot().bind(items, i)),
                         slotGrid(fluids.size(), i -> new FluidSlot().bind(fluids, i)));
     }
 
-    /** 按槽位数生成换行网格。 */
     public static UIElement slotGrid(int size, IntFunction<UIElement> factory) {
         var grid = new UIElement()
                 .layout(l -> l.width(SLOT_ROW_WIDTH).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
@@ -284,9 +353,7 @@ public final class TradingStationUi {
         return grid;
     }
 
-    /**
-     * 能量进度条（0–1 比例绑定，避免 MAX_VALUE range 溢出）。
-     */
+    /** 能量条：比例 + 文案均 S2C。 */
     public static ProgressBar buildEnergyBar(EnergyHandler energy) {
         Objects.requireNonNull(energy, "energy");
         ProgressBar bar = new ProgressBar()
@@ -305,11 +372,11 @@ public final class TradingStationUi {
         long amount = energy.getAmountAsLong();
         long capacity = energy.getCapacityAsLong();
         double ratio = capacity <= 0 ? 0 : ((double) amount / (double) capacity) * 100;
-        String pct = String.format("%.4f%%", ratio);
-        return Component.translatable("ui.maple_banktrade.trading_station.energy", amount, capacity, pct);
+        return Component.translatable(
+                "ui.maple_banktrade.trading_station.energy",
+                amount, capacity, String.format("%.4f%%", ratio));
     }
 
-    /** 无滚动条、固定尺寸的垂直 ScrollerView。 */
     public static ScrollerView createScrollerView() {
         ScrollerView list = new ScrollerView()
                 .scrollerStyle(s -> s
@@ -323,11 +390,8 @@ public final class TradingStationUi {
         return list;
     }
 
-    // ╔══════════════════════════════════════════════╗
-    // ║ 配方页 / 按钮 / 修饰键 ║
-    // ╚══════════════════════════════════════════════╝
+    // ── 配方页 ────────────────────────────────────────
 
-    /** 交易类型 Tab 头：名称 + 描述 tooltip。 */
     public static Tab buildTradeTypeTab(Identifier tradeTypeId) {
         TradableType type = TradableType.requireById(tradeTypeId);
         Component title = type != null ? type.getDisplayName() : TradableType.getDisplayName(tradeTypeId);
@@ -338,7 +402,6 @@ public final class TradingStationUi {
         return tab;
     }
 
-    /** 某一交易类型的配方标签页（类型头 + 配方网格）。 */
     public static UIElement buildTradesTab(TradingStationUiHost host, Identifier tradeTypeId) {
         var scroller = createScrollerView();
         TradableType type = TradableType.requireById(tradeTypeId);
@@ -350,7 +413,8 @@ public final class TradingStationUi {
         var grid = new UIElement()
                 .layout(l -> l.width(260).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
         if (trades.isEmpty()) {
-            grid.addChild(new Label().setText(Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
+            grid.addChild(new Label().setText(
+                    Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
         } else {
             for (Map.Entry<Identifier, MachineTrade> entry : trades) {
                 grid.addChild(buildTradeButton(host, tradeTypeId, entry));
@@ -360,7 +424,6 @@ public final class TradingStationUi {
         return scroller;
     }
 
-    /** 交易类型页眉：图标 + 名称 + 描述。 */
     public static UIElement buildTradeTypeHeader(TradableType type) {
         var header = new UIElement()
                 .layout(l -> l.width(260).paddingAll(4))
@@ -372,23 +435,21 @@ public final class TradingStationUi {
                 .layout(l -> l.width(12).height(12)));
         titleRow.addChild(new TextElement()
                 .setText(type.getDisplayName())
-                .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(10)));
+                .textStyle(s -> s.adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(10))
+                .layout(l -> l.width(252)));
         header.addChild(titleRow);
 
         for (Component line : type.description()) {
             header.addChild(new TextElement()
                     .setText(line)
-                    .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(8)));
+                    .textStyle(s -> s.adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(8))
+                    .layout(l -> l.width(252)));
         }
         return header;
     }
 
     /**
-     * 可点击配方图标。
-     * <p>
-     * 客户端编码 Alt/Ctrl/Shift → modifiers；服务端解码后 {@link TradingStationUiHost#runTradeFromUi}。
-     * 勿 stopPropagation，以免干扰 LDLib2 服务端事件。
-     * </p>
+     * 配方点击：客户端把批量次数写入 {@code modifiers}，服务端 RPC 执行。
      */
     public static @NonNull UIElement buildTradeButton(
                                                       TradingStationUiHost host,
@@ -397,32 +458,33 @@ public final class TradingStationUi {
         Identifier tradeId = entry.getKey();
         UIElement tradeUI = entry.getValue().getMachineTradeIcon();
 
-        tradeUI.addEventListener(UIEvents.MOUSE_DOWN, event -> {
-            if (event.button != 0) return;
-            event.modifiers = 0;
-            if (event.isAltDown()) event.modifiers |= ALT_TRADE_MODIFIER;
-            else if (event.isCtrlDown()) event.modifiers |= CTRL_TRADE_MODIFIER;
-            else if (event.isShiftDown()) event.modifiers |= SHIFT_TRADE_MODIFIER;
+        tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
+            if (e.button == 0) {
+                e.modifiers = tradeCountFromKeyboard(e);
+            }
         });
-
-        tradeUI.addServerEventListener(UIEvents.MOUSE_DOWN, event -> {
-            if (event.button != 0) return;
-            host.runTradeFromUi(tradeTypeId, tradeId, desiredCountFromModifiers(event.modifiers));
+        tradeUI.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
+            if (e.button == 0) {
+                host.runTradeFromUi(tradeTypeId, tradeId, Math.max(1, e.modifiers));
+            }
         });
         return tradeUI;
     }
 
-    /** 将自定义 modifiers 解码为执行次数（默认 1）。 */
-    public static int desiredCountFromModifiers(int modifiers) {
-        if ((modifiers & ALT_TRADE_MODIFIER) != 0) return ALT_TRADE_COUNT;
-        if ((modifiers & CTRL_TRADE_MODIFIER) != 0) return CTRL_TRADE_COUNT;
-        if ((modifiers & SHIFT_TRADE_MODIFIER) != 0) return SHIFT_TRADE_COUNT;
+    /** 客户端：Alt=64 / Ctrl=8 / Shift=4 / 默认 1。直接写入 {@link UIEvent#modifiers} 传给服务端。 */
+    public static int tradeCountFromKeyboard(UIEvent event) {
+        if (event.isAltDown()) {
+            return ALT_TRADE_COUNT;
+        }
+        if (event.isCtrlDown()) {
+            return CTRL_TRADE_COUNT;
+        }
+        if (event.isShiftDown()) {
+            return SHIFT_TRADE_COUNT;
+        }
         return 1;
     }
 
-    /**
-     * 可见列表优先，空则回退已注册列表（供 host 默认实现复用）。
-     */
     public static List<Map.Entry<Identifier, MachineTrade>> preferVisibleOrRegistered(
                                                                                       Supplier<List<Map.Entry<Identifier, MachineTrade>>> visible,
                                                                                       Supplier<List<Map.Entry<Identifier, MachineTrade>>> registered) {
@@ -431,5 +493,19 @@ public final class TradingStationUi {
             trades = registered.get();
         }
         return trades == null ? List.of() : trades;
+    }
+
+    // ── 小工具 ────────────────────────────────────────
+
+    private static Label label(int fontSize) {
+        Label label = new Label();
+        label.textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(fontSize));
+        return label;
+    }
+
+    private static TextElement titleText(Component title) {
+        return new TextElement()
+                .setText(title)
+                .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true));
     }
 }

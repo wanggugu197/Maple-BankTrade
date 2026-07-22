@@ -8,7 +8,7 @@ import net.minecraft.world.item.Items;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
-import com.maple.maple_banktrade.bank.data.TradableType;
+import com.maple.maple_banktrade.api.bank.data.TradableType;
 import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
 import com.maple.maple_banktrade.common.trade.MachineTradeRegistration;
 import com.maple.maple_banktrade.data.lang.MBTLangHandler;
@@ -96,6 +96,22 @@ public final class TradableTypeRegistration {
             "物品柜", "Item Desk",
             "仅物品与银行卡货币的买卖，无需能量与流体。",
             "Trade items with bank-card currency; no energy or fluid required.");
+
+    public static final TradableType AUTO_SELL_ORES_LAVA = register(
+            MachineTradeRegistration.AUTO_SELL_ORES_LAVA.id(),
+            Items.RAW_IRON,
+            Sprites.RECT_RD_LIGHT,
+            "自动出售·矿物岩浆", "Auto-Sell Ores & Lava",
+            "自动将矿石、矿物、锭与岩浆出售为硬币。",
+            "Automatically sell ores, minerals, ingots, and lava for coins.");
+
+    public static final TradableType AUTO_SELL_MOB_DROPS = register(
+            MachineTradeRegistration.AUTO_SELL_MOB_DROPS.id(),
+            Items.ROTTEN_FLESH,
+            Sprites.RECT_RD,
+            "自动出售·怪物掉落", "Auto-Sell Mob Drops",
+            "自动将怪物掉落物出售为硬币。",
+            "Automatically sell mob drops for coins.");
 
     /** 预留初始化入口（静态字段加载时已完成注册）。 */
     public static void init() {}

@@ -72,6 +72,7 @@ public class MBTLangHandler {
         addLang("trade.maple_banktrade.fail.item_extract", "无法取出物品。", "Failed to extract items.");
         addLang("trade.maple_banktrade.fail.machine_insufficient", "资源不足，无法执行交易。", "Insufficient resources to run this trade.");
         addLang("trade.maple_banktrade.fail.machine_transfer", "交易资源转移失败。", "Failed to transfer trade resources.");
+        addLang("ui.bank.card.detail.tag_count", "已存储标签 - %s", "Stored tags - %s");
 
         // 银行权限卡 UI
         addLang("ui.maple_banktrade.perm_card.title", "权限卡编辑", "Permission Card Editor");
@@ -122,6 +123,11 @@ public class MBTLangHandler {
         addLang("ui.maple_banktrade.trading_station.bound_cards.entry_unknown",
                 "· %s",
                 "· %s");
+        addLang("ui.maple_banktrade.trading_station.bound_cards.unbind", "解绑", "Unbind");
+        addLang("ui.maple_banktrade.trading_station.auto_trade", "自动交易", "Auto-Trade");
+        addLang("ui.maple_banktrade.trading_station.auto_trade.tooltip",
+                "开启后按输入与周期自动出售匹配配方。",
+                "When on, matching recipes sell automatically from inputs.");
 
         // 机器交易配方 Tooltip
         addLang("trade.maple_banktrade.machine.tooltip.inputs", "输入:", "Inputs:");

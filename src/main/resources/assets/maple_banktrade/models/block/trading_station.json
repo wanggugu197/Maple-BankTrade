@@ -1,6 +1,7 @@
 {
 	"parent": "minecraft:block/cube_all",
 	"textures": {
+		"particle": "maple_banktrade:block/trading_station/bring",
 		"bring": "maple_banktrade:block/trading_station/bring",
 		"icon": "maple_banktrade:block/trading_station/icon",
 		"roof": "maple_banktrade:block/trading_station/roof"

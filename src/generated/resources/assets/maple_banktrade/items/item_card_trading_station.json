@@ -4,7 +4,7 @@
     "models": [
       {
         "type": "minecraft:model",
-        "model": "minecraft:block/crafting_table_top"
+        "model": "minecraft:block/white_wool"
       },
       {
         "type": "minecraft:model",

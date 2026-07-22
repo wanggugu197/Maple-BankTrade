@@ -1,7 +1,6 @@
 package com.maple.maple_banktrade.common;
 
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.WalletApiRegistration;
@@ -9,7 +8,6 @@ import com.maple.maple_banktrade.common.bank.BankRegistration;
 import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 import com.maple.maple_banktrade.common.bank.TradableTypeRegistration;
-import com.maple.maple_banktrade.common.block.BaseTradingStationBlockEntity;
 import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
 import com.maple.maple_banktrade.common.trade.MachineTradeRegistration;
 import com.maple.maple_banktrade.config.MBTModConfig;
@@ -61,12 +59,7 @@ public class CommonInit {
 
         // 触发交易站等 DeferredRegister 静态登记
         MBTRegistration.init();
-        // 两台贸易站：物品 / 流体 / 能量能力（基类统一注册）
-        modBus.addListener(CommonInit::registerTradingStationCapabilities);
-    }
-
-    private static void registerTradingStationCapabilities(RegisterCapabilitiesEvent event) {
-        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.TRADING_STATION_ENTITY.get());
-        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.ITEM_CARD_TRADING_STATION_ENTITY.get());
+        // 各贸易站：物品 / 流体 / 能量能力（基类统一注册）
+        modBus.addListener(MBTRegistration::registerTradingStationCapabilities);
     }
 }

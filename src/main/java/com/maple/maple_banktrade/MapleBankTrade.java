@@ -2,7 +2,6 @@ package com.maple.maple_banktrade;
 
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 
 import com.maple.maple_banktrade.common.CommonInit;
@@ -29,7 +28,7 @@ public class MapleBankTrade {
     // ==============================================
 
     /** 模组加载入口，触发通用初始化。 */
-    public MapleBankTrade(IEventBus modEventBus, ModContainer modContainer) {
+    public MapleBankTrade(IEventBus modEventBus) {
         LOGGER.info("{} start loading", MODID);
         CommonInit.init(modEventBus);
     }

@@ -1,18 +1,19 @@
 package com.maple.maple_banktrade.common.trade;
 
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluids;
 
 import com.maple.maple_banktrade.MapleBankTrade;
-import com.maple.maple_banktrade.bank.resource.CurrencyResource;
+import com.maple.maple_banktrade.api.bank.resource.CurrencyResource;
+import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.CurrencyIO;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.FluidIO;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.ItemIO;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeStorage;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeType;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
-import com.maple.maple_banktrade.trade.machine.MachineTrade;
-import com.maple.maple_banktrade.trade.machine.MachineTradeIO.CurrencyIO;
-import com.maple.maple_banktrade.trade.machine.MachineTradeIO.FluidIO;
-import com.maple.maple_banktrade.trade.machine.MachineTradeIO.ItemIO;
-import com.maple.maple_banktrade.trade.machine.MachineTradeStorage;
-import com.maple.maple_banktrade.trade.machine.MachineTradeType;
 
 import java.util.List;
 
@@ -41,10 +42,22 @@ public final class MachineTradeRegistration {
     public static final MachineTradeType MACHINE_POWER = new MachineTradeType(MapleBankTrade.id("trade_type/machine_power"));
 
     /**
-     * 物品柜：仅物品 + 银行卡货币，无流体/能量需求。
-     * 供 {@code ItemCardTradingStation} 使用。
+     * 物品柜：仅物品 + 银行卡货币；手动交易。
+     * 供 {@code ItemCardTradingStation} 使用（不开启自动交易）。
      */
     public static final MachineTradeType MACHINE_ITEM_DESK = new MachineTradeType(MapleBankTrade.id("trade_type/machine_item_desk"));
+
+    /**
+     * 自动出售：矿物 / 原矿 / 矿锭 + 岩浆 → 硬币。
+     * 允许 {@code autoTrade} 单输入条目。
+     */
+    public static final MachineTradeType AUTO_SELL_ORES_LAVA = new MachineTradeType(MapleBankTrade.id("trade_type/auto_sell_ores_lava"), true);
+
+    /**
+     * 自动出售：怪物掉落物 → 硬币。
+     * 允许 {@code autoTrade} 单输入条目。
+     */
+    public static final MachineTradeType AUTO_SELL_MOB_DROPS = new MachineTradeType(MapleBankTrade.id("trade_type/auto_sell_mob_drops"), true);
 
     /** 全功能交易站默认绑定的类型（顺序 = UI 标签页顺序）。 */
     public static final List<Identifier> TRADING_STATION_TYPES = List.of(
@@ -57,6 +70,11 @@ public final class MachineTradeRegistration {
     /** 物品+卡贸易站绑定的类型。 */
     public static final List<Identifier> ITEM_CARD_TRADING_STATION_TYPES = List.of(
             MACHINE_ITEM_DESK.id());
+
+    /** 自动贸易站绑定的类型（顺序 = UI 标签页顺序）。 */
+    public static final List<Identifier> AUTO_TRADING_STATION_TYPES = List.of(
+            AUTO_SELL_ORES_LAVA.id(),
+            AUTO_SELL_MOB_DROPS.id());
 
     private static boolean registered;
 
@@ -76,6 +94,8 @@ public final class MachineTradeRegistration {
         registerBank(coins);
         registerPower();
         registerItemDesk(coins);
+        registerAutoSellOresLava(coins);
+        registerAutoSellMobDrops(coins);
     }
 
     private static void registerBench() {
@@ -213,7 +233,7 @@ public final class MachineTradeRegistration {
                 .build());
     }
 
-    /** 物品柜：只依赖物品与货币，无能量/流体。 */
+    /** 物品柜：只依赖物品与货币，无能量/流体；手动买卖。 */
     private static void registerItemDesk(CurrencyResource coins) {
         MachineTradeStorage storage = MACHINE_ITEM_DESK.register();
 
@@ -245,6 +265,88 @@ public final class MachineTradeRegistration {
         storage.register("buy_bread", MachineTrade.builder()
                 .addCurrencyExtract(CurrencyIO.of(coins, 6))
                 .addItemOutput(ItemIO.of(Items.BREAD, 1))
+                .build());
+    }
+
+    /**
+     * 自动出售矿物 + 岩浆（价目与货币-物品交易大致对齐，岩浆按桶/份出售）。
+     */
+    private static void registerAutoSellOresLava(CurrencyResource coins) {
+        MachineTradeStorage storage = AUTO_SELL_ORES_LAVA.register();
+
+        // 原矿 / 矿物
+        autoSellItem(storage, coins, "sell_coal", Items.COAL, 4);
+        autoSellItem(storage, coins, "sell_raw_copper", Items.RAW_COPPER, 6);
+        autoSellItem(storage, coins, "sell_raw_iron", Items.RAW_IRON, 12);
+        autoSellItem(storage, coins, "sell_raw_gold", Items.RAW_GOLD, 20);
+        autoSellItem(storage, coins, "sell_copper_ingot", Items.COPPER_INGOT, 8);
+        autoSellItem(storage, coins, "sell_iron_ingot", Items.IRON_INGOT, 30);
+        autoSellItem(storage, coins, "sell_gold_ingot", Items.GOLD_INGOT, 40);
+        autoSellItem(storage, coins, "sell_redstone", Items.REDSTONE, 5);
+        autoSellItem(storage, coins, "sell_lapis", Items.LAPIS_LAZULI, 6);
+        autoSellItem(storage, coins, "sell_quartz", Items.QUARTZ, 8);
+        autoSellItem(storage, coins, "sell_amethyst", Items.AMETHYST_SHARD, 10);
+        autoSellItem(storage, coins, "sell_diamond", Items.DIAMOND, 150);
+        autoSellItem(storage, coins, "sell_emerald", Items.EMERALD, 120);
+        autoSellItem(storage, coins, "sell_netherite_scrap", Items.NETHERITE_SCRAP, 200);
+        autoSellItem(storage, coins, "sell_ancient_debris", Items.ANCIENT_DEBRIS, 250);
+        autoSellItem(storage, coins, "sell_coal_ore", Items.COAL_ORE, 8);
+        autoSellItem(storage, coins, "sell_iron_ore", Items.IRON_ORE, 15);
+        autoSellItem(storage, coins, "sell_gold_ore", Items.GOLD_ORE, 25);
+        autoSellItem(storage, coins, "sell_copper_ore", Items.COPPER_ORE, 8);
+        autoSellItem(storage, coins, "sell_diamond_ore", Items.DIAMOND_ORE, 180);
+        autoSellItem(storage, coins, "sell_emerald_ore", Items.EMERALD_ORE, 140);
+        autoSellItem(storage, coins, "sell_redstone_ore", Items.REDSTONE_ORE, 12);
+        autoSellItem(storage, coins, "sell_lapis_ore", Items.LAPIS_ORE, 14);
+        autoSellItem(storage, coins, "sell_nether_quartz_ore", Items.NETHER_QUARTZ_ORE, 10);
+
+        // 岩浆：单流体输入 autoTrade
+        storage.register("sell_lava", MachineTrade.builder()
+                .addFluidInput(FluidIO.of(Fluids.LAVA, 1000))
+                .addCurrencyInsert(CurrencyIO.of(coins, 25))
+                .autoTrade(true)
+                .build());
+    }
+
+    /**
+     * 自动出售怪物掉落物（价目与 {@code mob_drops} 货币交易对齐）。
+     */
+    private static void registerAutoSellMobDrops(CurrencyResource coins) {
+        MachineTradeStorage storage = AUTO_SELL_MOB_DROPS.register();
+
+        autoSellItem(storage, coins, "sell_rotten_flesh", Items.ROTTEN_FLESH, 1);
+        autoSellItem(storage, coins, "sell_bone", Items.BONE, 3);
+        autoSellItem(storage, coins, "sell_bone_meal", Items.BONE_MEAL, 1);
+        autoSellItem(storage, coins, "sell_string", Items.STRING, 2);
+        autoSellItem(storage, coins, "sell_spider_eye", Items.SPIDER_EYE, 5);
+        autoSellItem(storage, coins, "sell_feather", Items.FEATHER, 2);
+        autoSellItem(storage, coins, "sell_leather", Items.LEATHER, 6);
+        autoSellItem(storage, coins, "sell_ink_sac", Items.INK_SAC, 3);
+        autoSellItem(storage, coins, "sell_glow_ink_sac", Items.GLOW_INK_SAC, 8);
+        autoSellItem(storage, coins, "sell_gunpowder", Items.GUNPOWDER, 8);
+        autoSellItem(storage, coins, "sell_slime_ball", Items.SLIME_BALL, 10);
+        autoSellItem(storage, coins, "sell_ender_pearl", Items.ENDER_PEARL, 40);
+        autoSellItem(storage, coins, "sell_blaze_rod", Items.BLAZE_ROD, 30);
+        autoSellItem(storage, coins, "sell_ghast_tear", Items.GHAST_TEAR, 50);
+        autoSellItem(storage, coins, "sell_phantom_membrane", Items.PHANTOM_MEMBRANE, 25);
+        autoSellItem(storage, coins, "sell_shulker_shell", Items.SHULKER_SHELL, 80);
+        autoSellItem(storage, coins, "sell_prismarine_shard", Items.PRISMARINE_SHARD, 4);
+        autoSellItem(storage, coins, "sell_prismarine_crystals", Items.PRISMARINE_CRYSTALS, 6);
+        autoSellItem(storage, coins, "sell_magma_cream", Items.MAGMA_CREAM, 12);
+        autoSellItem(storage, coins, "sell_wither_skeleton_skull", Items.WITHER_SKELETON_SKULL, 200);
+    }
+
+    /** 注册单物品输入、货币产出的 autoTrade 出售条目。 */
+    private static void autoSellItem(
+                                     MachineTradeStorage storage,
+                                     CurrencyResource coins,
+                                     String path,
+                                     Item item,
+                                     long price) {
+        storage.register(path, MachineTrade.builder()
+                .addItemInput(ItemIO.of(item, 1))
+                .addCurrencyInsert(CurrencyIO.of(coins, price))
+                .autoTrade(true)
                 .build());
     }
 

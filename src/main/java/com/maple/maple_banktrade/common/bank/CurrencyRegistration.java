@@ -7,7 +7,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.maple.maple_banktrade.MapleBankTrade;
-import com.maple.maple_banktrade.bank.data.CurrencyType;
+import com.maple.maple_banktrade.api.bank.data.CurrencyType;
 
 import java.util.ArrayList;
 
