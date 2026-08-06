@@ -6,8 +6,7 @@ import com.maple.maple_banktrade.api.bank.data.CurrencyType;
 import com.mapleutillib.utils.FormattingUtil;
 
 import java.math.BigInteger;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 支持货币余额读写的银行卡统一接口。
@@ -72,5 +71,22 @@ public interface CurrencyStorageBankCard {
     static String formatCurrencyAmount(BigInteger amount) {
         Objects.requireNonNull(amount, "amount");
         return canRepresentAsLong(amount) ? FormattingUtil.DECIMAL_FORMAT_0F.format(amount) : FormattingUtil.DECIMAL_FORMAT_SIC_2F.format(amount);
+    }
+
+    /** 创建固定货币键的初始余额表，跳过空货币。 */
+    static <V> Map<Identifier, V> createInitialBalances(Collection<CurrencyType> currencyTypes, V initialValue) {
+        Map<Identifier, V> result = new HashMap<>();
+        if (currencyTypes != null) {
+            for (CurrencyType type : currencyTypes) {
+                if (type != null) result.put(type.id(), initialValue);
+            }
+        }
+        return result;
+    }
+
+    /** 创建固定货币键的初始余额表，跳过空货币。 */
+    @SafeVarargs
+    static <V> Map<Identifier, V> createInitialBalances(V initialValue, CurrencyType... currencyTypes) {
+        return createInitialBalances(currencyTypes == null ? List.of() : Arrays.asList(currencyTypes), initialValue);
     }
 }

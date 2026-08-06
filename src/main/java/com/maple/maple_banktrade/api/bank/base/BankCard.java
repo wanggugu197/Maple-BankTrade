@@ -1,5 +1,6 @@
 package com.maple.maple_banktrade.api.bank.base;
 
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
@@ -7,7 +8,8 @@ import net.minecraft.resources.Identifier;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -31,8 +33,40 @@ public abstract class BankCard {
     // Codec
     // ==============================================
 
-    /** 编码按实例 card_type；解码按存档 card_type 分发。 */
-    public static final Codec<BankCard> CODEC = Codec.of(BankCard::encode, BankCardType::decodeCard);
+    /** 银行卡基础身份：card_type 之外的三个存档字段。 */
+    public record BankCardIdentity(UUID cardUuid, Identifier bankTypeId, Identifier nameIndex) {
+
+        /** 从银行卡实例提取身份字段。 */
+        public static BankCardIdentity of(BankCard card) {
+            return new BankCardIdentity(card.getCardUuid(), card.getBankTypeId(), card.getNameIndex());
+        }
+
+        /** 使用银行类型与名称索引创建身份字段。 */
+        public static BankCardIdentity of(UUID cardUuid, BankType bankType, Identifier nameIndex) {
+            return new BankCardIdentity(cardUuid, bankType.id(), nameIndex);
+        }
+    }
+
+    /** bank_type 字段 Codec：解码时要求银行类型已注册，未注册则拒绝加载该卡。 */
+    private static final Codec<Identifier> BANK_TYPE_CODEC = Identifier.CODEC.flatXmap(
+            bankTypeId -> {
+                BankType bankType = BankType.requireById(bankTypeId);
+                return bankType == null ? DataResult.error(() -> "Unknown bank type: " + bankTypeId) : DataResult.success(bankType.id());
+            },
+            DataResult::success);
+
+    /** 基础身份字段组 Codec；card_type 由 CODEC 的 dispatch 单独读写。 */
+    public static final MapCodec<BankCardIdentity> IDENTITY_FIELDS_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            UUIDUtil.CODEC.fieldOf("card_uuid").forGetter(BankCardIdentity::cardUuid),
+            BANK_TYPE_CODEC.fieldOf("bank_type").forGetter(BankCardIdentity::bankTypeId),
+            Identifier.CODEC.fieldOf("name_index").forGetter(BankCardIdentity::nameIndex))
+            .apply(instance, BankCardIdentity::new));
+
+    /** 编码按实例 card_type；解码按存档 card_type 分发（DFU 标准 dispatch）。 */
+    public static final Codec<BankCard> CODEC = Identifier.CODEC.partialDispatch(
+            "card_type",
+            card -> DataResult.success(card.getCardTypeId()),
+            BankCardType::getCodecResult);
 
     // ==============================================
     // 字段
@@ -57,6 +91,11 @@ public abstract class BankCard {
     // ==============================================
     // 构造
     // ==============================================
+
+    /** 使用身份字段组与卡类型 ID 创建基础卡信息。 */
+    protected BankCard(BankCardIdentity identity, Identifier cardTypeId) {
+        this(identity.cardUuid(), identity.bankTypeId(), cardTypeId, identity.nameIndex());
+    }
 
     /** 使用银行类型、卡类型与名称索引创建基础卡信息。 */
     protected BankCard(UUID cardUuid, Identifier bankTypeId, Identifier cardTypeId, Identifier nameIndex) {
@@ -98,19 +137,5 @@ public abstract class BankCard {
             card.clientPermission = BankCardPermission.bySerializedName(compoundTag.getStringOr(CLIENT_PERMISSION_KEY, BankCardPermission.UNUSABLE.getSerializedName()));
         }
         return card;
-    }
-
-    // ==============================================
-    // 工具
-    // ==============================================
-
-    /** 按银行卡实际 card_type 选择对应 Codec 写入存档。 */
-    @SuppressWarnings("unchecked")
-    private static <T> DataResult<T> encode(BankCard input, DynamicOps<T> ops, T prefix) {
-        Codec<? extends BankCard> codec = BankCardType.getCodec(input);
-        if (codec == null) {
-            return DataResult.error(() -> "Bank card class " + input.getClass().getName() + " is not bound to card type: " + input.getCardTypeId());
-        }
-        return ((Codec<BankCard>) codec).encode(input, ops, prefix);
     }
 }

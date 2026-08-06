@@ -86,7 +86,7 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     public BankCard create(UUID cardUuid) {
         if (cardUuid == null) return null;
         if (bankType == null) return null;
-        BankCard card = factory.create(cardUuid, bankType, nameIndex);
+        BankCard card = factory.create(BankCard.BankCardIdentity.of(cardUuid, bankType, nameIndex));
         if (card == null) return null;
         if (!nameIndex.equals(card.getNameIndex())) return null;
         if (!bankType.id().equals(card.getBankTypeId())) return null;
@@ -104,6 +104,6 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     public interface Factory {
 
         /** 创建一张指定银行类型和名称索引的新卡。 */
-        BankCard create(UUID cardUuid, BankType bankType, Identifier nameIndex);
+        BankCard create(BankCard.BankCardIdentity identity);
     }
 }

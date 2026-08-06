@@ -1,15 +1,17 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.Identifier;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
-import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Getter;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 标记银行卡，保存一组 Identifier 标记。
@@ -32,18 +34,16 @@ public class TaggedBankCard extends BankCard {
             .xmap(HashSet::new, List::copyOf);
 
     /** 标记银行卡序列化编解码器。 */
-    public static final Codec<TaggedBankCard> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            UUIDUtil.CODEC.fieldOf("card_uuid").forGetter(TaggedBankCard::getCardUuid),
-            Identifier.CODEC.fieldOf("bank_type").forGetter(TaggedBankCard::getBankTypeId),
-            Identifier.CODEC.fieldOf("card_type").forGetter(TaggedBankCard::getCardTypeId),
-            Identifier.CODEC.fieldOf("name_index").forGetter(TaggedBankCard::getNameIndex),
+    public static final MapCodec<TaggedBankCard> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            BankCard.IDENTITY_FIELDS_CODEC.forGetter(BankCardIdentity::of),
             TAGS_CODEC.fieldOf("tags").forGetter(TaggedBankCard::getTags))
-            .apply(instance, (cardUuid, bankTypeId, ignoredCardTypeId, nameIndex, tags) -> new TaggedBankCard(cardUuid, bankTypeId, nameIndex, tags)));
+            .apply(instance, TaggedBankCard::new));
 
     // ==============================================
     // 字段
     // ==============================================
 
+    @Getter
     private final Set<Identifier> tags;
 
     // ==============================================
@@ -51,23 +51,14 @@ public class TaggedBankCard extends BankCard {
     // ==============================================
 
     /** 创建指定银行和名称索引的标记卡。 */
-    public TaggedBankCard(UUID cardUuid, BankType bankType, Identifier nameIndex) {
-        this(cardUuid, bankType.id(), nameIndex, Set.of());
+    public TaggedBankCard(BankCardIdentity identity) {
+        this(identity, Set.of());
     }
 
     /** 从存档字段恢复标记卡。 */
-    protected TaggedBankCard(UUID cardUuid, Identifier bankTypeId, Identifier nameIndex, Set<Identifier> tags) {
-        super(cardUuid, bankTypeId, CARD_TYPE_ID, nameIndex);
+    protected TaggedBankCard(BankCardIdentity identity, Set<Identifier> tags) {
+        super(identity, CARD_TYPE_ID);
         this.tags = new HashSet<>(tags);
-    }
-
-    // ==============================================
-    // 查询方法
-    // ==============================================
-
-    /** 获取标签的只读视图。 */
-    public Set<Identifier> getTags() {
-        return Collections.unmodifiableSet(tags);
     }
 
     // ==============================================

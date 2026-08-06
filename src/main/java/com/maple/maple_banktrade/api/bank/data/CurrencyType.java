@@ -37,6 +37,11 @@ public record CurrencyType(Identifier id,
     /** 仅允许已注册货币 ID 通过。 */
     public static final Codec<Identifier> ID_CODEC = Identifier.CODEC.flatXmap(CurrencyType::decodeId, CurrencyType::decodeId);
 
+    /** 存档与网络用 Codec：按已注册货币 ID 编解码为 CurrencyType 对象。 */
+    public static final Codec<CurrencyType> CODEC = Identifier.CODEC.flatXmap(
+            CurrencyType::decode,
+            type -> DataResult.success(type.id()));
+
     // ==============================================
     // 构造方法
     // ==============================================
@@ -114,5 +119,11 @@ public record CurrencyType(Identifier id,
         return findById(id)
                 .map(type -> DataResult.success(type.id()))
                 .orElseGet(() -> DataResult.error(() -> "Unknown currency type: " + id));
+    }
+
+    /** 按 ID 查找已注册货币类型；未知货币返回错误。 */
+    private static DataResult<CurrencyType> decode(Identifier id) {
+        CurrencyType type = requireById(id);
+        return type == null ? DataResult.error(() -> "Unknown currency type: " + id) : DataResult.success(type);
     }
 }

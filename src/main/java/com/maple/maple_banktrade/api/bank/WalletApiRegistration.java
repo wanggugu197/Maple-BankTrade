@@ -80,20 +80,22 @@ public class WalletApiRegistration {
             .register();
 
     private static void addRecipe() {
-        REGISTRY.addRecipeData(prov -> prov.shaped(RecipeCategory.COMBAT, WALLET.get())
-                .pattern("AAA").pattern("ABA").pattern("AAA")
-                .define('A', Items.BLUE_DYE)
-                .define('B', Items.PAPER)
-                .unlockedBy("unlocked", UNCONDITIONAL_CRITERION)
-                .save(prov, "make_wallet"));
+        REGISTRY.addRecipeData(prov -> {
+            prov.shaped(RecipeCategory.COMBAT, WALLET.get())
+                    .pattern("AAA").pattern("ABA").pattern("AAA")
+                    .define('A', Items.BLUE_DYE)
+                    .define('B', Items.PAPER)
+                    .unlockedBy("unlocked", UNCONDITIONAL_CRITERION)
+                    .save(prov, "make_wallet");
 
-        REGISTRY.addRecipeData(prov -> prov.shaped(RecipeCategory.COMBAT, BANK_PERMISSIONS_CARD_BUILDER.get())
-                .pattern("BBB").pattern("BOB").pattern("BAB")
-                .define('A', Items.ORANGE_DYE)
-                .define('B', Items.BLUE_DYE)
-                .define('O', Items.BLUE_STAINED_GLASS_PANE)
-                .unlockedBy("unlocked", UNCONDITIONAL_CRITERION)
-                .save(prov, "make_bank_permissions_card_builder"));
+            prov.shaped(RecipeCategory.COMBAT, BANK_PERMISSIONS_CARD_BUILDER.get())
+                    .pattern("BBB").pattern("BOB").pattern("BAB")
+                    .define('A', Items.ORANGE_DYE)
+                    .define('B', Items.BLUE_DYE)
+                    .define('O', Items.BLUE_STAINED_GLASS_PANE)
+                    .unlockedBy("unlocked", UNCONDITIONAL_CRITERION)
+                    .save(prov, "make_bank_permissions_card_builder");
+        });
     }
 
     /** 注册参数化菜单、卡详情 UI、权限卡 UI 与钱包 UI 世界数据注册入口。 */

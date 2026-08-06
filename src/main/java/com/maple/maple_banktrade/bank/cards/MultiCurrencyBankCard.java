@@ -1,18 +1,18 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.Identifier;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
-import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.capability.CurrencyStorageBankCard;
 import com.maple.maple_banktrade.api.bank.data.CurrencyType;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Getter;
 
 import java.util.*;
 
@@ -49,18 +49,16 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     };
 
     /** 多货币银行卡序列化编解码器。 */
-    public static final Codec<MultiCurrencyBankCard> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            UUIDUtil.CODEC.fieldOf("card_uuid").forGetter(MultiCurrencyBankCard::getCardUuid),
-            Identifier.CODEC.fieldOf("bank_type").forGetter(MultiCurrencyBankCard::getBankTypeId),
-            Identifier.CODEC.fieldOf("card_type").forGetter(MultiCurrencyBankCard::getCardTypeId),
-            Identifier.CODEC.fieldOf("name_index").forGetter(MultiCurrencyBankCard::getNameIndex),
+    public static final MapCodec<MultiCurrencyBankCard> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            BankCard.IDENTITY_FIELDS_CODEC.forGetter(BankCardIdentity::of),
             BALANCES_CODEC.fieldOf("balances").forGetter(MultiCurrencyBankCard::getBalances))
-            .apply(instance, (cardUuid, bankTypeId, ignoredCardTypeId, nameIndex, balances) -> new MultiCurrencyBankCard(cardUuid, bankTypeId, nameIndex, balances)));
+            .apply(instance, MultiCurrencyBankCard::new));
 
     // ==============================================
     // 字段
     // ==============================================
 
+    @Getter
     private final Map<Identifier, Long> balances;
 
     // ==============================================
@@ -68,18 +66,18 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     // ==============================================
 
     /** 创建指定银行、名称索引和固定货币表的多货币卡。 */
-    public MultiCurrencyBankCard(UUID cardUuid, BankType bankType, Identifier nameIndex, CurrencyType... currencyTypes) {
-        this(cardUuid, bankType.id(), nameIndex, createInitialBalances(currencyTypes));
+    public MultiCurrencyBankCard(BankCardIdentity identity, CurrencyType... currencyTypes) {
+        this(identity, CurrencyStorageBankCard.createInitialBalances(0L, currencyTypes));
     }
 
     /** 创建指定银行、名称索引和固定货币表的多货币卡。 */
-    public MultiCurrencyBankCard(UUID cardUuid, BankType bankType, Identifier nameIndex, Collection<CurrencyType> currencyTypes) {
-        this(cardUuid, bankType.id(), nameIndex, createInitialBalances(currencyTypes));
+    public MultiCurrencyBankCard(BankCardIdentity identity, Collection<CurrencyType> currencyTypes) {
+        this(identity, CurrencyStorageBankCard.createInitialBalances(currencyTypes, 0L));
     }
 
     /** 从存档字段恢复多货币卡。 */
-    protected MultiCurrencyBankCard(UUID cardUuid, Identifier bankTypeId, Identifier nameIndex, Map<Identifier, Long> balances) {
-        super(cardUuid, bankTypeId, CARD_TYPE_ID, nameIndex);
+    protected MultiCurrencyBankCard(BankCardIdentity identity, Map<Identifier, Long> balances) {
+        super(identity, CARD_TYPE_ID);
         this.balances = new HashMap<>();
         balances.forEach((type, amount) -> {
             Identifier currencyId = normalizeCurrencyId(type);
@@ -92,11 +90,6 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     // ==============================================
     // 查询方法
     // ==============================================
-
-    /** 获取全部货币余额的只读视图。 */
-    public Map<Identifier, Long> getBalances() {
-        return Collections.unmodifiableMap(balances);
-    }
 
     /** 查询指定货币 ID 的余额。 */
     private long getBalance(Identifier typeId) {
@@ -152,35 +145,6 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     protected static Identifier normalizeCurrencyId(Identifier typeId) {
         CurrencyType type = CurrencyType.requireById(typeId);
         return type == null ? null : type.id();
-    }
-
-    /** 创建新卡时固定写入指定货币键。 */
-    private static Map<Identifier, Long> createInitialBalances(CurrencyType... currencyTypes) {
-        Map<Identifier, Long> result = new HashMap<>();
-        if (currencyTypes != null) {
-            for (CurrencyType type : currencyTypes) {
-                putInitialCurrency(result, type);
-            }
-        }
-        return result;
-    }
-
-    /** 创建新卡时固定写入指定货币键。 */
-    private static Map<Identifier, Long> createInitialBalances(Collection<CurrencyType> currencyTypes) {
-        Map<Identifier, Long> result = new HashMap<>();
-        if (currencyTypes != null) {
-            for (CurrencyType type : currencyTypes) {
-                putInitialCurrency(result, type);
-            }
-        }
-        return result;
-    }
-
-    /** 将货币键以 0 余额写入初始表。 */
-    private static void putInitialCurrency(Map<Identifier, Long> balances, CurrencyType type) {
-        if (type != null) {
-            balances.put(type.id(), 0L);
-        }
     }
 
     /** 宽松读取余额表，跳过无法解析或未注册的货币项。 */

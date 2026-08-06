@@ -1,21 +1,19 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.Identifier;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
-import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.capability.CurrencyStorageBankCard;
 import com.maple.maple_banktrade.api.bank.data.CurrencyType;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
 
 import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * 单货币大额银行卡，保存一种货币和 BigInteger 余额。
@@ -43,14 +41,11 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
     }, BigInteger::toString);
 
     /** 单货币大额银行卡序列化编解码器。 */
-    public static final Codec<LargeSingleCurrencyBankCard> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            UUIDUtil.CODEC.fieldOf("card_uuid").forGetter(LargeSingleCurrencyBankCard::getCardUuid),
-            Identifier.CODEC.fieldOf("bank_type").forGetter(LargeSingleCurrencyBankCard::getBankTypeId),
-            Identifier.CODEC.fieldOf("card_type").forGetter(LargeSingleCurrencyBankCard::getCardTypeId),
-            Identifier.CODEC.fieldOf("name_index").forGetter(LargeSingleCurrencyBankCard::getNameIndex),
-            CurrencyType.ID_CODEC.fieldOf("currency").forGetter(LargeSingleCurrencyBankCard::getCurrencyTypeId),
+    public static final MapCodec<LargeSingleCurrencyBankCard> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            BankCard.IDENTITY_FIELDS_CODEC.forGetter(BankCardIdentity::of),
+            CurrencyType.CODEC.fieldOf("currency").forGetter(LargeSingleCurrencyBankCard::getCurrencyType),
             BIG_INTEGER_CODEC.fieldOf("balance").forGetter(LargeSingleCurrencyBankCard::getBalance))
-            .apply(instance, (cardUuid, bankTypeId, ignoredCardTypeId, nameIndex, currencyTypeId, balance) -> new LargeSingleCurrencyBankCard(cardUuid, bankTypeId, nameIndex, currencyTypeId, balance)));
+            .apply(instance, LargeSingleCurrencyBankCard::new));
 
     // ==============================================
     // 字段
@@ -61,19 +56,24 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
     @Getter
     private BigInteger balance;
 
+    /** 获取本卡唯一支持的货币类型。 */
+    public CurrencyType getCurrencyType() {
+        return CurrencyType.requireById(currencyTypeId);
+    }
+
     // ==============================================
     // 构造方法
     // ==============================================
 
     /** 创建指定银行、名称索引和货币的大额单货币卡。 */
-    public LargeSingleCurrencyBankCard(UUID cardUuid, BankType bankType, Identifier nameIndex, CurrencyType currencyType) {
-        this(cardUuid, bankType.id(), nameIndex, currencyType.id(), BigInteger.ZERO);
+    public LargeSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType) {
+        this(identity, currencyType, BigInteger.ZERO);
     }
 
     /** 从存档字段恢复大额单货币卡。 */
-    protected LargeSingleCurrencyBankCard(UUID cardUuid, Identifier bankTypeId, Identifier nameIndex, Identifier currencyTypeId, BigInteger balance) {
-        super(cardUuid, bankTypeId, CARD_TYPE_ID, nameIndex);
-        this.currencyTypeId = normalizeCurrencyId(currencyTypeId);
+    protected LargeSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, BigInteger balance) {
+        super(identity, CARD_TYPE_ID);
+        this.currencyTypeId = Objects.requireNonNull(currencyType, "currencyType").id();
         this.balance = normalizeBigAmount(balance);
     }
 
@@ -135,15 +135,6 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
     // ==============================================
     // 工具方法
     // ==============================================
-
-    /** 规范化货币 ID，未知货币视为非法。 */
-    protected static Identifier normalizeCurrencyId(Identifier typeId) {
-        CurrencyType type = CurrencyType.requireById(typeId);
-        if (type == null) {
-            throw new IllegalArgumentException("Unknown currency type: " + typeId);
-        }
-        return type.id();
-    }
 
     /** 将 BigInteger 金额规范化为非负值。 */
     protected static BigInteger normalizeBigAmount(BigInteger amount) {
