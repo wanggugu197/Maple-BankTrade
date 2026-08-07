@@ -1,13 +1,22 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.transfer.fluid.FluidResource;
-import net.neoforged.neoforge.transfer.item.ItemResource;
 
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.api.bank.resource.CurrencyResource;
+import com.mojang.serialization.Codec;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.NonNull;
 
@@ -15,183 +24,239 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-/**
- * 机器交易单次 I/O 规格与按次数放大后的快照。
- * <p>
- * 物品/流体资源使用 {@link Supplier} 惰性解析，避免模组构造期
- * {@code ItemResource.of} / {@code FluidResource.of} 触发
- * “Components not bound yet”。
- * </p>
- */
 @UtilityClass
 public class MachineTradeIO {
 
     // ==============================================
-    // 物品
+    // 物品 I/O
     // ==============================================
 
-    /**
-     * 物品规格：惰性资源 + 数量。
-     */
-    public record ItemIO(@NonNull Supplier<ItemResource> resourceSupplier, int amount) {
+    @Getter
+    @Setter(AccessLevel.PACKAGE)
+    @Accessors(fluent = true)
+    public static final class ItemIO implements IPersistedSerializable {
 
-        public ItemIO {
+        @Persisted
+        private ItemStack itemStack; // 仅作为类型标识，数量为1
+
+        @Persisted
+        private int amount; // 单次交易数量
+
+        public ItemIO() {
+            this(ItemStack.EMPTY, 0);
+        }
+
+        public ItemIO(@NonNull ItemStack itemStack, int amount) {
             if (amount < 0) {
                 throw new IllegalArgumentException("amount must be non-negative");
             }
+            this.itemStack = itemStack.isEmpty() ? ItemStack.EMPTY : itemStack.copy();
+            if (!this.itemStack.isEmpty()) {
+                this.itemStack.setCount(1); // 只保留类型
+            }
+            this.amount = amount;
         }
 
-        /** 解析物品资源（须在 components 绑定后调用）。 */
-        public ItemResource resource() {
-            ItemResource resource = resourceSupplier.get();
-            return resource == null ? ItemResource.EMPTY : resource;
-        }
-
-        /**
-         * 由物品栈创建。仅保存栈副本与 Supplier，不在此处强制解析 components。
-         */
         public static ItemIO of(ItemStack stack) {
             if (stack == null || stack.isEmpty()) {
-                return new ItemIO(() -> ItemResource.EMPTY, 0);
+                return new ItemIO(ItemStack.EMPTY, 0);
             }
-            ItemStack held = stack.copy();
-            int count = held.getCount();
-            return new ItemIO(() -> ItemResource.of(held), count);
+            return new ItemIO(stack, stack.getCount());
         }
 
-        /**
-         * 由物品与数量创建。注册期只持有 {@link ItemLike} 引用，运行时再 {@link ItemResource#of}。
-         */
         public static ItemIO of(@NonNull ItemLike item, int amount) {
-            return new ItemIO(() -> ItemResource.of(item), amount);
+            return new ItemIO(new ItemStack(item, 1), amount);
         }
 
-        /**
-         * 结构校验（不解析 ItemResource，可在模组构造期安全调用）。
-         */
         public boolean isValid() {
             return amount > 0;
         }
 
-        /**
-         * 运行时校验：结构合法且资源非空。
-         */
         public boolean isResolvable() {
-            return isValid() && !resource().isEmpty();
+            return isValid() && !itemStack.isEmpty();
         }
 
-        /** 按次数放大；溢出时返回 null。 */
         @Nullable
         public ItemIO scale(int count) {
             if (count <= 0 || !isValid()) return null;
             try {
-                return new ItemIO(resourceSupplier, Math.multiplyExact(amount, count));
+                return new ItemIO(itemStack, Math.multiplyExact(amount, count));
             } catch (ArithmeticException ignored) {
                 return null;
             }
         }
+
+        public ItemStack toStack() {
+            return itemStack.copyWithCount(amount);
+        }
+
+        public static final Codec<ItemIO> CODEC = PersistedParser.createCodec(ItemIO::new);
+
+        @Override
+        public void serialize(@NonNull ValueOutput output) {
+            PersistedParser.serialize(this, output);
+        }
+
+        @Override
+        public void deserialize(@NonNull ValueInput input) {
+            PersistedParser.deserialize(this, input);
+        }
+
+        @Override
+        public String toString() {
+            return "ItemIO{itemStack=" + itemStack + ", amount=" + amount + "}";
+        }
     }
 
     // ==============================================
-    // 流体
+    // 流体 I/O
     // ==============================================
 
-    /**
-     * 流体规格：惰性资源 + 数量。
-     */
-    public record FluidIO(@NonNull Supplier<FluidResource> resourceSupplier, int amount) {
+    @Getter
+    @Setter(AccessLevel.PACKAGE)
+    @Accessors(fluent = true)
+    public static final class FluidIO implements IPersistedSerializable {
 
-        public FluidIO {
+        @Persisted
+        private FluidStack fluidStack; // 仅作为类型标识，数量为1
+
+        @Persisted
+        private int amount; // 单次交易数量
+
+        public FluidIO() {
+            this(FluidStack.EMPTY, 0);
+        }
+
+        public FluidIO(@NonNull FluidStack fluidStack, int amount) {
             if (amount < 0) {
                 throw new IllegalArgumentException("amount must be non-negative");
             }
+            this.fluidStack = fluidStack.isEmpty() ? FluidStack.EMPTY : fluidStack.copy();
+            if (!this.fluidStack.isEmpty()) {
+                this.fluidStack.setAmount(1); // 只保留类型
+            }
+            this.amount = amount;
         }
 
-        /** 解析流体资源。 */
-        public FluidResource resource() {
-            FluidResource resource = resourceSupplier.get();
-            return resource == null ? FluidResource.EMPTY : resource;
-        }
-
-        /** 由流体栈创建（栈副本 + 惰性 of）。 */
         public static FluidIO of(FluidStack stack) {
             if (stack == null || stack.isEmpty()) {
-                return new FluidIO(() -> FluidResource.EMPTY, 0);
+                return new FluidIO(FluidStack.EMPTY, 0);
             }
-            FluidStack held = stack.copy();
-            int count = held.getAmount();
-            return new FluidIO(() -> FluidResource.of(held), count);
+            return new FluidIO(stack, stack.getAmount());
         }
 
-        /** 由流体与数量创建（惰性 of）。 */
         public static FluidIO of(@NonNull Fluid fluid, int amount) {
-            return new FluidIO(() -> FluidResource.of(fluid), amount);
+            return new FluidIO(new FluidStack(fluid, 1), amount);
         }
 
-        /** 结构校验（不解析 FluidResource）。 */
         public boolean isValid() {
             return amount > 0;
         }
 
-        /** 运行时校验。 */
         public boolean isResolvable() {
-            return isValid() && !resource().isEmpty();
+            return isValid() && !fluidStack.isEmpty();
         }
 
-        /** 按次数放大；溢出时返回 null。 */
         @Nullable
         public FluidIO scale(int count) {
             if (count <= 0 || !isValid()) return null;
             try {
-                return new FluidIO(resourceSupplier, Math.multiplyExact(amount, count));
+                return new FluidIO(fluidStack, Math.multiplyExact(amount, count));
             } catch (ArithmeticException ignored) {
                 return null;
             }
         }
+
+        public FluidStack toStack() {
+            return fluidStack.copyWithAmount(amount);
+        }
+
+        public static final Codec<FluidIO> CODEC = PersistedParser.createCodec(FluidIO::new);
+
+        @Override
+        public void serialize(@NonNull ValueOutput output) {
+            PersistedParser.serialize(this, output);
+        }
+
+        @Override
+        public void deserialize(@NonNull ValueInput input) {
+            PersistedParser.deserialize(this, input);
+        }
+
+        @Override
+        public String toString() {
+            return "FluidIO{fluidStack=" + fluidStack + ", amount=" + amount + "}";
+        }
     }
 
     // ==============================================
-    // 货币
+    // 货币 I/O（不变）
     // ==============================================
 
-    /**
-     * 货币规格：资源 + BigInteger 数量。
-     */
-    public record CurrencyIO(CurrencyResource resource, BigInteger amount) {
+    @Getter
+    @Setter(AccessLevel.PACKAGE)
+    @Accessors(fluent = true)
+    public static final class CurrencyIO implements IPersistedSerializable {
 
-        public CurrencyIO {
-            resource = resource == null ? CurrencyResource.EMPTY : resource;
-            amount = amount == null ? BigInteger.ZERO : amount;
-            if (amount.signum() < 0) {
+        @Persisted
+        private CurrencyResource resource;
+
+        @Persisted
+        private BigInteger amount;
+
+        public CurrencyIO() {
+            this(CurrencyResource.EMPTY, BigInteger.ZERO);
+        }
+
+        public CurrencyIO(@NonNull CurrencyResource resource, @NonNull BigInteger amount) {
+            this.resource = resource;
+            this.amount = amount;
+            if (this.amount.signum() < 0) {
                 throw new IllegalArgumentException("amount must be non-negative");
             }
         }
 
-        /** 由货币资源与 long 数量创建。 */
+        public static CurrencyIO of(CurrencyResource resource, BigInteger amount) {
+            return new CurrencyIO(resource, amount);
+        }
+
         public static CurrencyIO of(CurrencyResource resource, long amount) {
             return new CurrencyIO(resource, BigInteger.valueOf(amount));
         }
 
-        /** 由货币 ID 与 long 数量创建。 */
-        public static CurrencyIO of(net.minecraft.resources.Identifier currencyTypeId, long amount) {
+        public static CurrencyIO of(Identifier currencyTypeId, long amount) {
             return of(CurrencyResource.of(currencyTypeId), amount);
         }
 
-        /** 规格是否有效。 */
         public boolean isValid() {
             return !resource.isEmpty() && amount.signum() > 0;
         }
 
-        /** 按次数放大。 */
         public CurrencyIO scale(int count) {
             if (count <= 0 || !isValid()) {
                 return new CurrencyIO(resource, BigInteger.ZERO);
             }
             return new CurrencyIO(resource, amount.multiply(BigInteger.valueOf(count)));
+        }
+
+        public static final Codec<CurrencyIO> CODEC = PersistedParser.createCodec(CurrencyIO::new);
+
+        @Override
+        public void serialize(@NonNull ValueOutput output) {
+            PersistedParser.serialize(this, output);
+        }
+
+        @Override
+        public void deserialize(@NonNull ValueInput input) {
+            PersistedParser.deserialize(this, input);
+        }
+
+        @Override
+        public String toString() {
+            return "CurrencyIO{resource=" + resource + ", amount=" + amount + "}";
         }
     }
 
@@ -199,40 +264,57 @@ public class MachineTradeIO {
     // 放大后的完整 I/O 快照
     // ==============================================
 
-    /**
-     * 按实际交易次数放大后的全部 I/O，供 plan / execute 共用。
-     */
-    public record ScaledIO(
-                           List<ItemIO> itemInputs,
-                           List<ItemIO> itemOutputs,
-                           List<FluidIO> fluidInputs,
-                           List<FluidIO> fluidOutputs,
-                           int energyExtract,
-                           int energyInsert,
-                           List<CurrencyIO> currencyExtract,
-                           List<CurrencyIO> currencyInsert) {
+    @Getter
+    @Setter(AccessLevel.PACKAGE)
+    @Accessors(fluent = true)
+    public static final class ScaledIO implements IPersistedSerializable {
 
-        public ScaledIO {
-            itemInputs = List.copyOf(Objects.requireNonNullElse(itemInputs, List.of()));
-            itemOutputs = List.copyOf(Objects.requireNonNullElse(itemOutputs, List.of()));
-            fluidInputs = List.copyOf(Objects.requireNonNullElse(fluidInputs, List.of()));
-            fluidOutputs = List.copyOf(Objects.requireNonNullElse(fluidOutputs, List.of()));
-            currencyExtract = List.copyOf(Objects.requireNonNullElse(currencyExtract, List.of()));
-            currencyInsert = List.copyOf(Objects.requireNonNullElse(currencyInsert, List.of()));
-            if (energyExtract < 0 || energyInsert < 0) {
-                throw new IllegalArgumentException("energy amounts must be non-negative");
-            }
+        @Persisted
+        private List<ItemIO> itemInputs;
+
+        @Persisted
+        private List<ItemIO> itemOutputs;
+
+        @Persisted
+        private List<FluidIO> fluidInputs;
+
+        @Persisted
+        private List<FluidIO> fluidOutputs;
+
+        @Persisted
+        private int energyExtract;
+
+        @Persisted
+        private int energyInsert;
+
+        @Persisted
+        private List<CurrencyIO> currencyExtract;
+
+        @Persisted
+        private List<CurrencyIO> currencyInsert;
+
+        public ScaledIO() {
+            this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), 0, 0, new ArrayList<>(), new ArrayList<>());
         }
 
-        /** 空快照。 */
+        public ScaledIO(List<ItemIO> itemInputs, List<ItemIO> itemOutputs,
+                        List<FluidIO> fluidInputs, List<FluidIO> fluidOutputs,
+                        int energyExtract, int energyInsert,
+                        List<CurrencyIO> currencyExtract, List<CurrencyIO> currencyInsert) {
+            this.itemInputs = new ArrayList<>(Objects.requireNonNullElse(itemInputs, new ArrayList<>()));
+            this.itemOutputs = new ArrayList<>(Objects.requireNonNullElse(itemOutputs, new ArrayList<>()));
+            this.fluidInputs = new ArrayList<>(Objects.requireNonNullElse(fluidInputs, new ArrayList<>()));
+            this.fluidOutputs = new ArrayList<>(Objects.requireNonNullElse(fluidOutputs, new ArrayList<>()));
+            this.energyExtract = Math.max(0, energyExtract);
+            this.energyInsert = Math.max(0, energyInsert);
+            this.currencyExtract = new ArrayList<>(Objects.requireNonNullElse(currencyExtract, new ArrayList<>()));
+            this.currencyInsert = new ArrayList<>(Objects.requireNonNullElse(currencyInsert, new ArrayList<>()));
+        }
+
         public static ScaledIO empty() {
-            return new ScaledIO(List.of(), List.of(), List.of(), List.of(), 0, 0, List.of(), List.of());
+            return new ScaledIO();
         }
 
-        /**
-         * 将条目单次配方按 {@code count} 放大；溢出或非法返回 null。
-         * 会解析物品/流体资源，须在 components 绑定后调用。
-         */
         @Nullable
         public static ScaledIO scale(@NonNull MachineTrade trade, int count) {
             if (count <= 0) return null;
@@ -269,14 +351,10 @@ public class MachineTradeIO {
             }
 
             return new ScaledIO(
-                    itemIn,
-                    itemOut,
-                    fluidIn,
-                    fluidOut,
-                    (int) energyExtractLong,
-                    (int) energyInsertLong,
-                    currencyIn,
-                    currencyOut);
+                    itemIn, itemOut,
+                    fluidIn, fluidOut,
+                    (int) energyExtractLong, (int) energyInsertLong,
+                    currencyIn, currencyOut);
         }
 
         @Nullable
@@ -301,6 +379,26 @@ public class MachineTradeIO {
                 result.add(scaled);
             }
             return result;
+        }
+
+        public static final Codec<ScaledIO> CODEC = PersistedParser.createCodec(ScaledIO::new);
+
+        @Override
+        public void serialize(@NonNull ValueOutput output) {
+            PersistedParser.serialize(this, output);
+        }
+
+        @Override
+        public void deserialize(@NonNull ValueInput input) {
+            PersistedParser.deserialize(this, input);
+        }
+
+        @Override
+        public String toString() {
+            return "ScaledIO{itemInputs=" + itemInputs.size() + ", itemOutputs=" + itemOutputs.size() +
+                    ", fluidInputs=" + fluidInputs.size() + ", fluidOutputs=" + fluidOutputs.size() +
+                    ", energyExtract=" + energyExtract + ", energyInsert=" + energyInsert +
+                    ", currencyExtract=" + currencyExtract.size() + ", currencyInsert=" + currencyInsert.size() + "}";
         }
     }
 }

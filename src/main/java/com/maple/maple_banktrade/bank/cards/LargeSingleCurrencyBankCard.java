@@ -70,9 +70,13 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
         this(identity, currencyType, BigInteger.ZERO);
     }
 
+    public LargeSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, BigInteger balance) {
+        this(identity, CARD_TYPE_ID, currencyType, balance);
+    }
+
     /** 从存档字段恢复大额单货币卡。 */
-    protected LargeSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, BigInteger balance) {
-        super(identity, CARD_TYPE_ID);
+    protected LargeSingleCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId, CurrencyType currencyType, BigInteger balance) {
+        super(identity, cardTypeId);
         this.currencyTypeId = Objects.requireNonNull(currencyType, "currencyType").id();
         this.balance = normalizeBigAmount(balance);
     }

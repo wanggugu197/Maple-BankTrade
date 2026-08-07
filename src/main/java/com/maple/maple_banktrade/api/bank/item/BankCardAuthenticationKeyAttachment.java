@@ -84,6 +84,6 @@ public class BankCardAuthenticationKeyAttachment extends ItemAttachment<Componen
     }
 
     private static Component cardName(Identifier nameIndex) {
-        return Component.translatable(BankCardFactory.getTranslationKey(nameIndex));
+        return Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(nameIndex));
     }
 }

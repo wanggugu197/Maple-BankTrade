@@ -2,6 +2,7 @@ package com.maple.maple_banktrade.api.trade.currency_item;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.base.registry.AbstractTradeEntryStorage;
@@ -31,18 +32,15 @@ public final class CurrencyItemTradeStorage extends AbstractTradeEntryStorage<Cu
     public CurrencyItemTrade findSellableByItem(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return null;
         for (CurrencyItemTrade trade : entries().values()) {
-            if (trade.allowsSell() && ItemStack.isSameItemSameComponents(stack, trade.item())) {
+            if (trade.allowsSell() && ItemResource.of(trade.item()).equals(ItemResource.of(stack))) {
                 return trade;
             }
         }
         return null;
     }
 
-    /** 是否存在可卖出的条目。 */
-    public boolean hasSellable() {
-        for (CurrencyItemTrade trade : entries().values()) {
-            if (trade.allowsSell()) return true;
-        }
-        return false;
+    @Override
+    protected CurrencyItemTrade createEmptyEntry() {
+        return new CurrencyItemTrade();
     }
 }

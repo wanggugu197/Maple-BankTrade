@@ -2,38 +2,45 @@ package com.maple.maple_banktrade.api.trade.machine;
 
 import net.minecraft.resources.Identifier;
 
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.base.registry.TradeRegistry;
 import com.maple.maple_banktrade.api.trade.base.registry.TradeType;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.jspecify.annotations.NonNull;
 
-/**
- * 机器多资源交易类型：身份 + 是否允许自动交易 + 空存储器工厂。
- *
- * @param allowAutoTrade 本类型是否允许注册/运行 {@link MachineTrade#autoTrade()} 条目；默认 {@code false}
- */
+import java.util.Objects;
+
+@Getter
+@Setter
 @Accessors(fluent = true)
-public record MachineTradeType(@NonNull Identifier id, boolean allowAutoTrade)
-        implements TradeType<MachineTradeStorage> {
+public final class MachineTradeType implements TradeType<MachineTradeStorage>, IPersistedSerializable {
 
-    public MachineTradeType {
-        java.util.Objects.requireNonNull(id, "id");
+    @Persisted
+    private Identifier id;
+
+    @Persisted
+    private boolean allowAutoTrade;
+
+    // 无参构造器（反序列化必需）
+    public MachineTradeType() {
+        this.id = MapleBankTrade.id("default_machine");
+        this.allowAutoTrade = false;
     }
 
-    /** 使用 trade_type/path 创建交易类型（不允许自动交易）。 */
-    public static MachineTradeType of(String path) {
-        return of(path, false);
+    public MachineTradeType(Identifier id, boolean allowAutoTrade) {
+        this.id = Objects.requireNonNull(id, "id");
+        this.allowAutoTrade = allowAutoTrade;
     }
 
-    /** 使用 trade_type/path 创建交易类型。 */
-    public static MachineTradeType of(String path, boolean allowAutoTrade) {
-        return new MachineTradeType(MapleBankTrade.id("trade_type/" + path), allowAutoTrade);
+    public static MachineTradeType of(Identifier id) {
+        return of(id, false);
     }
 
-    /** 仅 ID 构造（不允许自动交易）。 */
-    public MachineTradeType(@NonNull Identifier id) {
-        this(id, false);
+    public static MachineTradeType of(Identifier id, boolean allowAutoTrade) {
+        return new MachineTradeType(id, allowAutoTrade);
     }
 
     @Override
@@ -41,7 +48,6 @@ public record MachineTradeType(@NonNull Identifier id, boolean allowAutoTrade)
         return new MachineTradeStorage(id, allowAutoTrade);
     }
 
-    /** 注册类型并返回存储器（幂等）。 */
     public MachineTradeStorage register() {
         MachineTradeStorage existing = TradeRegistry.requireStorage(id, MachineTradeStorage.class);
         return existing != null ? existing : TradeRegistry.registerType(this);

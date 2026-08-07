@@ -238,7 +238,7 @@ public final class BankPermissionsCardUIRegistration {
         String raw = entry.getStringOr(K_NAME, "");
         if (raw.isEmpty()) return Component.translatable("ui.maple_banktrade.perm_card.unknown_card");
         Identifier id = Identifier.tryParse(raw);
-        return id == null ? Component.literal(raw) : Component.translatable(BankCardFactory.getTranslationKey(id));
+        return id == null ? Component.literal(raw) : Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(id));
     }
 
     /** 悬停：银行名、卡名、权限、UUID。 */
@@ -259,7 +259,7 @@ public final class BankPermissionsCardUIRegistration {
         Identifier id = Identifier.tryParse(raw);
         if (id == null) return Component.literal(raw);
         BankInfo info = BankInfo.of(BankType.requireById(id));
-        return info == null ? Component.literal(id.toString()) : Component.translatable(BankInfo.getTranslationKey(info.type()));
+        return info == null ? Component.literal(id.toString()) : Component.translatable(BankInfo.getBankInfoTranslationKey(info.type()));
     }
 
     // ---- server ----

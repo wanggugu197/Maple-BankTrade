@@ -8,7 +8,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.style.BasicStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.maple.maple_banktrade.api.bank.base.BankType;
-import com.maple.maple_banktrade.data.lang.MBTLangHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -60,8 +59,7 @@ public record BankInfo(BankType type, List<Component> description, IGuiTexture b
     }
 
     /** 按路径与贴图注册银行显示信息与双语文本。 */
-    public static void register(BankType type, String cnName, String enName, List<Component> description, IGuiTexture background) {
-        MBTLangHandler.addLang(getTranslationKey(type), cnName, enName);
+    public static void register(BankType type, List<Component> description, IGuiTexture background) {
         register(new BankInfo(type, description, background));
     }
 
@@ -77,7 +75,7 @@ public record BankInfo(BankType type, List<Component> description, IGuiTexture b
     }
 
     /** 获取银行显示名称的翻译键。 */
-    public static String getTranslationKey(BankType type) {
+    public static String getBankInfoTranslationKey(BankType type) {
         Identifier id = type.id();
         return "bank." + id.getNamespace() + "." + id.getPath();
     }
@@ -89,7 +87,7 @@ public record BankInfo(BankType type, List<Component> description, IGuiTexture b
     /** 组装银行 tooltip：名称、描述与持卡数量。 */
     private Component[] createBankTooltips(int cardCount) {
         Component[] components = new Component[description.size() + 2];
-        components[0] = Component.translatable(getTranslationKey(type));
+        components[0] = Component.translatable(getBankInfoTranslationKey(type));
         for (int i = 0; i < description.size(); i++) {
             components[i + 1] = description.get(i);
         }

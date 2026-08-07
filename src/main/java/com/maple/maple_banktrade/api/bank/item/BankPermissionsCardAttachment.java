@@ -112,12 +112,12 @@ public class BankPermissionsCardAttachment extends ItemAttachment<ComponentItem>
     }
 
     private static Component cardName(BankCard card) {
-        return Component.translatable(BankCardFactory.getTranslationKey(card.getNameIndex()));
+        return Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(card.getNameIndex()));
     }
 
     private static Component bankName(BankCard card) {
         BankInfo info = BankInfo.of(BankType.requireById(card.getBankTypeId()));
-        return info == null ? Component.literal(card.getBankTypeId().toString()) : Component.translatable(BankInfo.getTranslationKey(info.type()));
+        return info == null ? Component.literal(card.getBankTypeId().toString()) : Component.translatable(BankInfo.getBankInfoTranslationKey(info.type()));
     }
 
     private static String shortUuid(UUID uuid) {

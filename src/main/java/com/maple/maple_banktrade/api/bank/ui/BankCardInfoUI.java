@@ -53,7 +53,6 @@ public final class BankCardInfoUI {
         UIElement detail = new UIElement()
                 .layout(l -> l
                         .width(BANK_CARD_DETAIL_CONTENT_WIDTH)
-                        .height(BANK_CARD_DETAIL_CONTENT_HEIGHT)
                         .paddingAll(WALLET_PAGE_PADDING));
         if (card == null) return detail;
         if (extraLines != null) extraLines.accept(detail);
@@ -107,13 +106,13 @@ public final class BankCardInfoUI {
 
     /** 获取卡名显示文本。 */
     private static Component getNameIndexName(BankCard card) {
-        return Component.translatable(BankCardFactory.getTranslationKey(card.getNameIndex()));
+        return Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(card.getNameIndex()));
     }
 
     /** 获取银行显示名称。 */
     private static Component getBankName(Identifier bankTypeId) {
         BankInfo info = BankInfo.of(BankType.requireById(bankTypeId));
-        return info == null ? Component.literal(bankTypeId.toString()) : Component.translatable(BankInfo.getTranslationKey(info.type()));
+        return info == null ? Component.literal(bankTypeId.toString()) : Component.translatable(BankInfo.getBankInfoTranslationKey(info.type()));
     }
 
     /** 获取权限显示名称。 */

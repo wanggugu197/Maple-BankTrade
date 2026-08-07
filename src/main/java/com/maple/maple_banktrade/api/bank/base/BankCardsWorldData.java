@@ -108,7 +108,7 @@ public class BankCardsWorldData extends SavedData {
         // 写入银行卡并自动去重
         cards.forEach(card -> {
             if (this.cards.containsKey(card.getCardUuid())) {
-                MapleBankTrade.LOGGER.error("跳过重复 UUID 的银行卡: {}", card.getCardUuid());
+                MapleBankTrade.LOGGER.error("Skipping duplicate UUID bank card: {}", card.getCardUuid());
                 return;
             }
             this.cards.put(card.getCardUuid(), card);
@@ -116,7 +116,7 @@ public class BankCardsWorldData extends SavedData {
         // 批量恢复权限记录
         cardPermissions.forEach((playerUuid, permissions) -> permissions.forEach((cardUuid, permission) -> {
             if (!this.cards.containsKey(cardUuid)) {
-                MapleBankTrade.LOGGER.error("跳过玩家 {} 对不存在银行卡 {} 的权限: {}", playerUuid, cardUuid, permission);
+                MapleBankTrade.LOGGER.error("Skipping permission for player {} on non-existent bank card {}: {}", playerUuid, cardUuid, permission);
                 return;
             }
             putPermission(playerUuid, cardUuid, permission);
@@ -503,9 +503,9 @@ public class BankCardsWorldData extends SavedData {
     private static <T> DataResult<Pair<List<BankCard>, T>> decodeCards(DynamicOps<T> ops, T input) {
         List<BankCard> result = new ArrayList<>();
         ops.getList(input)
-                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("无法读取银行卡列表，跳过全部银行卡: {}", message))
+                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Failed to read bank card list, skipping all cards: {}", message))
                 .ifPresent(list -> list.accept(value -> BankCard.CODEC.decode(ops, value)
-                        .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过无法反序列化的银行卡: {}", message))
+                        .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping bank card that failed to deserialize: {}", message))
                         .ifPresent(pair -> result.add(pair.getFirst()))));
         return DataResult.success(Pair.of(List.copyOf(result), ops.empty()));
     }
@@ -514,22 +514,22 @@ public class BankCardsWorldData extends SavedData {
     private static <T> DataResult<Pair<Map<UUID, Map<UUID, BankCardPermission>>, T>> decodeCardPermissions(DynamicOps<T> ops, T input) {
         Map<UUID, Map<UUID, BankCardPermission>> result = new HashMap<>();
         ops.getMapValues(input)
-                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("无法读取银行卡权限表，跳过全部权限: {}", message))
+                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Failed to read bank card permission table, skipping all permissions: {}", message))
                 .ifPresent(players -> players.forEach(playerEntry -> {
                     UUID playerUuid = UUID_STRING_CODEC.parse(ops, playerEntry.getFirst())
-                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过无法反序列化的银行卡权限玩家 ID: {}", message))
+                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping player ID that failed to deserialize for bank card permissions: {}", message))
                             .orElse(null);
                     if (playerUuid == null) return;
 
                     Map<UUID, BankCardPermission> permissions = new HashMap<>();
                     ops.getMapValues(playerEntry.getSecond())
-                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过玩家 {} 的银行卡权限表: {}", playerUuid, message))
+                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping permission table for player {}: {}", playerUuid, message))
                             .ifPresent(cards -> cards.forEach(cardEntry -> {
                                 UUID cardUuid = UUID_STRING_CODEC.parse(ops, cardEntry.getFirst())
-                                        .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过玩家 {} 的银行卡权限记录，卡 ID 无法反序列化: {}", playerUuid, message))
+                                        .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping permission record for player {}, card UUID failed to deserialize: {}", playerUuid, message))
                                         .orElse(null);
                                 BankCardPermission permission = CARD_PERMISSION_CODEC.parse(ops, cardEntry.getSecond())
-                                        .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过玩家 {} 的银行卡权限记录，权限值无法反序列化: {}", playerUuid, message))
+                                        .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping permission record for player {}, permission value failed to deserialize: {}", playerUuid, message))
                                         .orElse(null);
                                 if (cardUuid != null && permission != null) {
                                     permissions.put(cardUuid, permission);

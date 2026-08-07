@@ -6,7 +6,6 @@ import net.minecraft.util.StringRepresentable;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.maple.maple_banktrade.MapleBankTrade;
-import com.maple.maple_banktrade.data.lang.MBTLangHandler;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import org.jspecify.annotations.NonNull;
@@ -56,7 +55,7 @@ public record CurrencyType(Identifier id,
     }
 
     /** 生成货币翻译键。 */
-    public static String getTranslationKey(Identifier id) {
+    public static String getCurrencyTypeTranslationKey(Identifier id) {
         return "currency." + id.getNamespace() + "." + id.getPath();
     }
 
@@ -70,12 +69,11 @@ public record CurrencyType(Identifier id,
     // ==============================================
 
     /** 注册货币类型；重复注册时返回已有实例。 */
-    public static CurrencyType register(Identifier id, String cnName, String enName, List<Component> description, IGuiTexture currencyTexture, IGuiTexture backgroundTexture) {
+    public static CurrencyType register(Identifier id, List<Component> description, IGuiTexture currencyTexture, IGuiTexture backgroundTexture) {
         if (REGISTRY.containsKey(id)) {
             MapleBankTrade.LOGGER.error("Currency type with id {} already exists", id);
             return REGISTRY.get(id);
         }
-        MBTLangHandler.addLang(getTranslationKey(id), cnName, enName);
         return register(new CurrencyType(id, description, currencyTexture, backgroundTexture));
     }
 

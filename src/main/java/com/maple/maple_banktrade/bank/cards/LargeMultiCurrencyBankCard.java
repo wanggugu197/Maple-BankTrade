@@ -37,7 +37,7 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
         }
     }, BigInteger::toString);
 
-    private static final Codec<Map<Identifier, BigInteger>> BALANCES_CODEC = new Codec<>() {
+    public static final Codec<Map<Identifier, BigInteger>> BALANCES_CODEC = new Codec<>() {
 
         @Override
         public <T> DataResult<T> encode(Map<Identifier, BigInteger> input, DynamicOps<T> ops, T prefix) {
@@ -48,18 +48,18 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
         public <T> DataResult<Pair<Map<Identifier, BigInteger>, T>> decode(DynamicOps<T> ops, T input) {
             Map<Identifier, BigInteger> result = new HashMap<>();
             ops.getMapValues(input)
-                    .resultOrPartial(message -> MapleBankTrade.LOGGER.error("无法读取大额多货币银行卡余额表，跳过全部余额: {}", message))
+                    .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Failed to read large multi-currency bank card balance table, skipping all balances: {}", message))
                     .ifPresent(entries -> entries.forEach(entry -> {
                         Identifier currencyId = Identifier.CODEC.parse(ops, entry.getFirst())
-                                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过大额多货币银行卡余额项，货币 ID 无法反序列化: {}", message))
+                                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping large multi-currency bank card balance entry, currency ID failed to deserialize: {}", message))
                                 .orElse(null);
                         if (currencyId == null) return;
                         if (CurrencyType.requireById(currencyId) == null) {
-                            MapleBankTrade.LOGGER.error("跳过大额多货币银行卡余额项，货币未注册: {}", currencyId);
+                            MapleBankTrade.LOGGER.error("Skipping large multi-currency bank card balance entry, currency not registered: {}", currencyId);
                             return;
                         }
                         BIG_INTEGER_CODEC.parse(ops, entry.getSecond())
-                                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过大额多货币银行卡 {} 余额项，金额无法反序列化: {}", currencyId, message))
+                                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping balance entry for large multi-currency bank card {}, amount failed to deserialize: {}", currencyId, message))
                                 .ifPresent(amount -> result.put(currencyId, amount));
                     }));
             return DataResult.success(Pair.of(result, ops.empty()));
@@ -90,9 +90,13 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
         this(identity, CurrencyStorageBankCard.createInitialBalances(currencyTypes, BigInteger.ZERO));
     }
 
-    protected LargeMultiCurrencyBankCard(BankCardIdentity identity, Map<Identifier, BigInteger> balances) {
-        super(identity, CARD_TYPE_ID);
-        this.balances = new HashMap<>();
+    public LargeMultiCurrencyBankCard(BankCardIdentity identity, Map<Identifier, BigInteger> balances) {
+        this(identity, CARD_TYPE_ID, balances);
+    }
+
+    protected LargeMultiCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId, Map<Identifier, BigInteger> balances) {
+        super(identity, cardTypeId);
+        this.balances = new LinkedHashMap<>();
         balances.forEach((type, amount) -> {
             Identifier currencyId = normalizeCurrencyId(type);
             if (currencyId != null) {

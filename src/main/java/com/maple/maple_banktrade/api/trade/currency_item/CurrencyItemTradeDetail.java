@@ -14,16 +14,5 @@ public record CurrencyItemTradeDetail(UUID cardUuid,
                                       CurrencyResource currency,
                                       BigInteger currencyAmount,
                                       ItemStack item,
-                                      int itemAmount,
                                       int tradeCount,
-                                      boolean bought) {
-
-    public CurrencyItemTradeDetail {
-        item = item == null ? ItemStack.EMPTY : item.copyWithCount(itemAmount);
-    }
-
-    /** 是否为卖出（非购买）。 */
-    public boolean sold() {
-        return !bought;
-    }
-}
+                                      boolean bought) {}

@@ -60,9 +60,13 @@ public class SingleCurrencyBankCard extends BankCard implements CurrencyStorageB
         this(identity, currencyType, 0L);
     }
 
+    public SingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, long balance) {
+        this(identity, CARD_TYPE_ID, currencyType, balance);
+    }
+
     /** 从存档字段恢复单货币卡。 */
-    protected SingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, long balance) {
-        super(identity, CARD_TYPE_ID);
+    protected SingleCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId, CurrencyType currencyType, long balance) {
+        super(identity, cardTypeId);
         this.currencyTypeId = Objects.requireNonNull(currencyType, "currencyType").id();
         this.balance = normalizeLongAmount(balance);
     }

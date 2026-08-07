@@ -4,76 +4,111 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.resource.CurrencyResource;
 import com.maple.maple_banktrade.api.trade.base.registry.TradeInfo;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import java.math.BigInteger;
-import java.util.function.Supplier;
+import java.util.Objects;
 
 /**
  * 货币-物品交易条目：买卖同价，模式区分是否可卖。
  */
-public record CurrencyItemTrade(Supplier<ItemStack> itemSupplier,
-                                int itemAmountPerTrade,
-                                CurrencyResource currency,
-                                BigInteger pricePerTrade,
-                                Mode mode)
-        implements TradeInfo {
+@Getter
+@Accessors(fluent = true)
+@EqualsAndHashCode
+public final class CurrencyItemTrade implements TradeInfo {
 
-    /**
-     * 交易模式：至少允许购买，无“仅卖出”。
-     */
-    public enum Mode {
+    // ==============================================
+    // 持久化与同步字段
+    // ==============================================
 
-        BUY_ONLY,
-        BUY_AND_SELL;
+    @Persisted
+    private ItemStack item;
 
-        /** 是否允许卖出。 */
-        public boolean allowsSell() {
-            return this == BUY_AND_SELL;
-        }
+    @Persisted
+    private int itemAmountPerTrade;
+
+    @Persisted
+    private CurrencyResource currency;
+
+    @Persisted
+    private BigInteger pricePerTrade;
+
+    @Persisted
+    private Mode mode;
+
+    // ==============================================
+    // 构造器
+    // ==============================================
+
+    /** 无参构造器 */
+    public CurrencyItemTrade() {
+        this.item = ItemStack.EMPTY;
+        this.itemAmountPerTrade = 0;
+        this.currency = CurrencyResource.EMPTY;
+        this.pricePerTrade = BigInteger.ZERO;
+        this.mode = Mode.BUY_ONLY;
     }
 
-    public CurrencyItemTrade {
-        currency = currency == null ? CurrencyResource.EMPTY : currency;
-        pricePerTrade = pricePerTrade == null ? BigInteger.ZERO : pricePerTrade;
-        mode = mode == null ? Mode.BUY_AND_SELL : mode;
+    /** 全参构造器 */
+    public CurrencyItemTrade(ItemStack item, int itemAmountPerTrade,
+                             CurrencyResource currency, BigInteger pricePerTrade,
+                             Mode mode) {
+        this.item = item.copyWithCount(1);
+        this.itemAmountPerTrade = itemAmountPerTrade;
+        this.currency = Objects.requireNonNullElse(currency, CurrencyResource.EMPTY);
+        this.pricePerTrade = Objects.requireNonNullElse(pricePerTrade, BigInteger.ZERO);
+        this.mode = Objects.requireNonNullElse(mode, Mode.BUY_AND_SELL);
     }
 
-    /** 按物品、货币与单价创建条目（每次 1 个物品）。 */
+    // ==============================================
+    // 静态工厂
+    // ==============================================
+
     public static CurrencyItemTrade of(Item item, Identifier currencyTypeId, long price, Mode mode) {
         return of(item, 1, currencyTypeId, BigInteger.valueOf(price), mode);
     }
 
-    /** 按物品数量、货币与单价创建条目。 */
-    public static CurrencyItemTrade of(Item item,
-                                       int itemAmountPerTrade,
-                                       Identifier currencyTypeId,
-                                       BigInteger pricePerTrade,
+    public static CurrencyItemTrade of(Item item, int itemAmountPerTrade,
+                                       Identifier currencyTypeId, BigInteger pricePerTrade,
                                        Mode mode) {
         return new CurrencyItemTrade(
-                item == null ? null : item::getDefaultInstance,
+                new ItemStack(item),
                 itemAmountPerTrade,
                 CurrencyResource.of(currencyTypeId),
                 pricePerTrade,
                 mode);
     }
 
-    /** 返回按每次交易数量复制的物品栈。 */
-    public ItemStack item() {
-        if (itemSupplier == null) return ItemStack.EMPTY;
-        ItemStack stack = itemSupplier.get();
-        return stack == null ? ItemStack.EMPTY : stack.copyWithCount(itemAmountPerTrade);
-    }
+    // ==============================================
+    // 业务方法
+    // ==============================================
 
-    /** 是否允许卖出。 */
     public boolean allowsSell() {
         return mode.allowsSell();
     }
 
-    /** 校验条目是否可用于注册与交易。 */
     @Override
     public boolean isValid() {
-        return itemSupplier != null && itemAmountPerTrade > 0 && !currency.isEmpty() && pricePerTrade.signum() > 0;
+        return !item.isEmpty() && itemAmountPerTrade > 0 &&
+                !currency.isEmpty() && pricePerTrade.signum() > 0;
+    }
+
+    // ==============================================
+    // 枚举
+    // ==============================================
+
+    public enum Mode {
+
+        BUY_ONLY,
+        BUY_AND_SELL;
+
+        public boolean allowsSell() {
+            return this == BUY_AND_SELL;
+        }
     }
 }

@@ -293,8 +293,8 @@ public final class TradingStationUi {
                     "ui.maple_banktrade.trading_station.bound_cards.entry_unknown", shortUuid(uuid));
         }
         BankInfo bank = BankInfo.of(BankType.requireById(card.getBankTypeId()));
-        Component bankName = bank == null ? Component.literal(card.getBankTypeId().toString()) : Component.translatable(BankInfo.getTranslationKey(bank.type()));
-        Component cardName = Component.translatable(BankCardFactory.getTranslationKey(card.getNameIndex()));
+        Component bankName = bank == null ? Component.literal(card.getBankTypeId().toString()) : Component.translatable(BankInfo.getBankInfoTranslationKey(bank.type()));
+        Component cardName = Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(card.getNameIndex()));
         return Component.translatable(
                 "ui.maple_banktrade.trading_station.bound_cards.entry", bankName, cardName, shortUuid(uuid));
     }
@@ -311,13 +311,6 @@ public final class TradingStationUi {
     }
 
     // ── 槽位 / 能量 ───────────────────────────────────
-
-    public static UIElement itemColumn(Component title, ItemStacksResourceHandler items) {
-        return new UIElement()
-                .layout(l -> l.width(130).alignItems(AlignItems.CENTER))
-                .addChildren(titleText(title), slotGrid(items.size(), i -> new ItemSlot().bind(items, i)));
-    }
-
     public static UIElement ioColumn(
                                      Component title,
                                      ItemStacksResourceHandler items,
@@ -442,7 +435,7 @@ public final class TradingStationUi {
                                                       Identifier tradeTypeId,
                                                       Map.Entry<Identifier, MachineTrade> entry) {
         Identifier tradeId = entry.getKey();
-        UIElement tradeUI = entry.getValue().getMachineTradeIcon();
+        UIElement tradeUI = MachineTrade.getMachineTradeIcon(entry.getValue());
 
         tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
             if (e.button == 0) {

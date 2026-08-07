@@ -45,9 +45,13 @@ public class TradableSingleCurrencyBankCard extends SingleCurrencyBankCard imple
         this(identity, currencyType, 0L, tradeTypeId);
     }
 
+    public TradableSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, long balance, Identifier tradeTypeId) {
+        this(identity, CARD_TYPE_ID, currencyType, balance, tradeTypeId);
+    }
+
     /** 从存档字段恢复可交易单货币卡。 */
-    protected TradableSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, long balance, Identifier tradeTypeId) {
-        super(identity, currencyType, balance);
+    protected TradableSingleCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId, CurrencyType currencyType, long balance, Identifier tradeTypeId) {
+        super(identity, cardTypeId, currencyType, balance);
         this.tradeTypeId = tradeTypeId == null ? NO_TRADE_TYPE_ID : tradeTypeId;
     }
 }

@@ -9,6 +9,7 @@ import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
 import com.maple.maple_banktrade.api.machine.base.TradingStationStorageSpec;
 import com.maple.maple_banktrade.common.block.*;
+import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
 import com.mapleutillib.utils.RLUtils;
 import com.mapleutillib.utils.generator.ModBlockModelGeneratorHelper;
 import com.mapleutillib.utils.generator.ModItemModelGeneratorHelper;
@@ -17,7 +18,6 @@ import static com.maple.maple_banktrade.MapleBankTrade.REGISTRY;
 import static com.maple.maple_banktrade.common.MBTTab.TAB_BANK;
 import static com.maple.maple_banktrade.common.MBTTags.TRADING_STATION_BLOCK;
 import static com.maple.maple_banktrade.common.MBTTags.TRADING_STATION_ITEM;
-import static com.maple.maple_banktrade.common.trade.MachineTradeRegistration.*;
 
 /**
  * 模组内置方块/物品等内容注册入口（非 API）。
@@ -39,7 +39,7 @@ public class MBTRegistration {
      * blockstate / items 映射。
      */
     public static final BlockEntry<TradingStationBlock> TRADING_STATION = REGISTRY
-            .block("trading_station", p -> new TradingStationBlock(p, TRADING_STATION_TYPES))
+            .block("trading_station", p -> new TradingStationBlock(p, TradeTypeRegistration.TRADING_STATION_TYPES))
             .langCn("交易站")
             .initialProperties(Blocks.OAK_PLANKS)
             .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
@@ -64,7 +64,7 @@ public class MBTRegistration {
      * 默认 item_desk 配方；仍具备物品/流体/能量/卡存储。
      */
     public static final BlockEntry<ItemCardTradingStationBlock> ITEM_CARD_TRADING_STATION = REGISTRY
-            .block("item_card_trading_station", p -> new ItemCardTradingStationBlock(p, ITEM_CARD_TRADING_STATION_TYPES))
+            .block("item_card_trading_station", p -> new ItemCardTradingStationBlock(p, TradeTypeRegistration.ITEM_CARD_TRADING_STATION_TYPES))
             .langCn("物品卡贸易站")
             .lang("Item-Card Trading Station")
             .initialProperties(Blocks.WHITE_WOOL)
@@ -89,7 +89,7 @@ public class MBTRegistration {
      * 自动贸易站：开启自动交易，绑定矿石+岩浆与怪物掉落物自动出售类型。
      */
     public static final BlockEntry<AutoTradingStationBlock> AUTO_TRADING_STATION = REGISTRY
-            .block("auto_trading_station", p -> new AutoTradingStationBlock(p, AUTO_TRADING_STATION_TYPES))
+            .block("auto_trading_station", p -> new AutoTradingStationBlock(p, TradeTypeRegistration.AUTO_TRADING_STATION_TYPES))
             .langCn("自动贸易站")
             .lang("Auto Trading Station")
             .initialProperties(Blocks.GOLD_BLOCK)

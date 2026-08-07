@@ -55,9 +55,13 @@ public class TaggedBankCard extends BankCard {
         this(identity, Set.of());
     }
 
-    /** 从存档字段恢复标记卡。 */
     protected TaggedBankCard(BankCardIdentity identity, Set<Identifier> tags) {
-        super(identity, CARD_TYPE_ID);
+        this(identity, CARD_TYPE_ID, tags);
+    }
+
+    /** 从存档字段恢复标记卡。 */
+    protected TaggedBankCard(BankCardIdentity identity, Identifier cardTypeId, Set<Identifier> tags) {
+        super(identity, cardTypeId);
         this.tags = new HashSet<>(tags);
     }
 

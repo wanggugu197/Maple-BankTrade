@@ -1,7 +1,9 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
 
@@ -11,238 +13,209 @@ import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.base.registry.TradeInfo;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.MachineTradeCheckHook;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.MachineTradeSuccessHook;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.MachineTradeVisibilityCheck;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.CurrencyIO;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.FluidIO;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.ItemIO;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-
-import javax.annotation.Nullable;
 
 /**
- * 机器多资源交易条目：单次配方 I/O + 可选展示信息 + 三个自定义钩子。
+ * 机器多资源交易条目：单次配方 I/O + 可选展示信息 + 三个自定义钩子（通过注册表 ID + 配置引用）。
+ * <p>
+ * 实现 {@link IPersistedSerializable} 以支持 LDLib2 持久化与同步。
+ * </p>
  */
 @Getter
+@Setter(value = AccessLevel.PACKAGE)
 @Accessors(fluent = true)
+@EqualsAndHashCode
 public final class MachineTrade implements TradeInfo {
 
     // ==============================================
-    // 字段
+    // 持久化字段
     // ==============================================
 
-    private final List<ItemIO> itemInputs;
-    private final List<ItemIO> itemOutputs;
-    private final List<FluidIO> fluidInputs;
-    private final List<FluidIO> fluidOutputs;
-    private final long energyExtract;
-    private final long energyInsert;
-    private final List<CurrencyIO> currencyExtract;
-    private final List<CurrencyIO> currencyInsert;
-    /**
-     * 是否参与自动交易匹配。
-     * <p>
-     * 为 true 时要求 {@code itemInputs.size() + fluidInputs.size() == 1}（恰好一种物或流输入），
-     * 且所在 {@link MachineTradeType#allowAutoTrade()} 必须为 true。
-     * </p>
-     */
-    private final boolean autoTrade;
-    /** 可选 UI 图标；未设置时为 {@link IGuiTexture#EMPTY}。 */
-    private final IGuiTexture machineTradeIcon;
-    /** 可选描述行；未设置时为空列表。 */
-    private final List<Component> description;
-    private final MachineTradeVisibilityCheck visibility;
-    private final MachineTradeCheckHook extraCheck;
-    private final MachineTradeSuccessHook afterSuccess;
+    @Persisted
+    private List<ItemIO> itemInputs;
+
+    @Persisted
+    private List<ItemIO> itemOutputs;
+
+    @Persisted
+    private List<FluidIO> fluidInputs;
+
+    @Persisted
+    private List<FluidIO> fluidOutputs;
+
+    @Persisted
+    private long energyExtract;
+
+    @Persisted
+    private long energyInsert;
+
+    @Persisted
+    private List<CurrencyIO> currencyExtract;
+
+    @Persisted
+    private List<CurrencyIO> currencyInsert;
+
+    @Persisted
+    private boolean autoTrade;
+
+    private IGuiTexture machineTradeIcon;
+
+    @Persisted
+    private List<Component> description;
+
+    // 钩子 ID 与配置（配置为 CompoundTag，工厂自行解析）
+    @Persisted
+    private Identifier visibilityHookId;
+
+    @Persisted
+    private CompoundTag visibilityConfig;
+
+    @Persisted
+    private Identifier checkHookId;
+
+    @Persisted
+    private CompoundTag checkConfig;
+
+    @Persisted
+    private Identifier successHookId;
+
+    @Persisted
+    private CompoundTag successConfig;
 
     // ==============================================
-    // 构造
+    // 缓存
     // ==============================================
 
-    private MachineTrade(Builder builder) {
-        this.itemInputs = List.copyOf(builder.itemInputs);
-        this.itemOutputs = List.copyOf(builder.itemOutputs);
-        this.fluidInputs = List.copyOf(builder.fluidInputs);
-        this.fluidOutputs = List.copyOf(builder.fluidOutputs);
-        this.energyExtract = builder.energyExtract;
-        this.energyInsert = builder.energyInsert;
-        this.currencyExtract = List.copyOf(builder.currencyExtract);
-        this.currencyInsert = List.copyOf(builder.currencyInsert);
-        this.autoTrade = builder.autoTrade;
-        this.machineTradeIcon = builder.machineTradeIcon == null ? IGuiTexture.EMPTY : builder.machineTradeIcon;
-        this.description = builder.description == null ? List.of() : List.copyOf(builder.description);
-        this.visibility = builder.visibility == null ? MachineTradeHooks.ALWAYS_VISIBLE : builder.visibility;
-        this.extraCheck = builder.extraCheck == null ? MachineTradeHooks.PASS : builder.extraCheck;
-        this.afterSuccess = builder.afterSuccess == null ? MachineTradeHooks.NOOP : builder.afterSuccess;
+    @Setter(AccessLevel.NONE)
+    private transient volatile MachineTradeHooks.MachineTradeVisibilityCheck cachedVisibility;
+    @Setter(AccessLevel.NONE)
+    private transient volatile MachineTradeHooks.MachineTradeCheckHook cachedCheck;
+    @Setter(AccessLevel.NONE)
+    private transient volatile MachineTradeHooks.MachineTradeSuccessHook cachedSuccess;
+
+    // ==============================================
+    // 构造器
+    // ==============================================
+
+    /** 无参构造器（供 LDLib2 反序列化使用） */
+    public MachineTrade() {
+        this.itemInputs = new ArrayList<>();
+        this.itemOutputs = new ArrayList<>();
+        this.fluidInputs = new ArrayList<>();
+        this.fluidOutputs = new ArrayList<>();
+        this.energyExtract = 0;
+        this.energyInsert = 0;
+        this.currencyExtract = new ArrayList<>();
+        this.currencyInsert = new ArrayList<>();
+        this.autoTrade = false;
+        this.machineTradeIcon = IGuiTexture.EMPTY;
+        this.description = new ArrayList<>();
+        this.visibilityHookId = MachineTradeHookRegistry.DEFAULT_VISIBILITY;
+        this.visibilityConfig = new CompoundTag();
+        this.checkHookId = MachineTradeHookRegistry.DEFAULT_CHECK;
+        this.checkConfig = new CompoundTag();
+        this.successHookId = MachineTradeHookRegistry.DEFAULT_SUCCESS;
+        this.successConfig = new CompoundTag();
     }
 
-    /** 创建构建器。 */
-    public static Builder builder() {
-        return new Builder();
-    }
-
     // ==============================================
-    // 查询
+    // 业务方法
     // ==============================================
 
-    /** 是否设置了非空图标。 */
     public boolean hasIcon() {
         return machineTradeIcon != null && machineTradeIcon != IGuiTexture.EMPTY;
     }
 
-    /** 是否有描述。 */
     public boolean hasDescription() {
         return !description.isEmpty();
     }
 
-    /**
-     * 自动交易输入是否合法：恰好一个物品输入或一个流体输入（二者数量之和为 1）。
-     */
     public boolean hasValidAutoTradeInputs() {
         return itemInputs.size() + fluidInputs.size() == 1;
     }
 
-    // ==============================================
-    // TradeInfo
-    // ==============================================
-
-    /** 至少一侧 I/O 有效，且数值合法；autoTrade 时另要求单输入。 */
     @Override
     public boolean isValid() {
         if (energyExtract < 0 || energyInsert < 0 || energyExtract > Integer.MAX_VALUE || energyInsert > Integer.MAX_VALUE) {
             return false;
         }
-        if (!itemInputs.stream().allMatch(ItemIO::isValid) || !itemOutputs.stream().allMatch(ItemIO::isValid) || !fluidInputs.stream().allMatch(FluidIO::isValid) || !fluidOutputs.stream().allMatch(FluidIO::isValid) || !currencyExtract.stream().allMatch(CurrencyIO::isValid) || !currencyInsert.stream().allMatch(CurrencyIO::isValid) || !hasAnyIo()) {
+        if (!itemInputs.stream().allMatch(ItemIO::isValid) ||
+                !itemOutputs.stream().allMatch(ItemIO::isValid) ||
+                !fluidInputs.stream().allMatch(FluidIO::isValid) ||
+                !fluidOutputs.stream().allMatch(FluidIO::isValid) ||
+                !currencyExtract.stream().allMatch(CurrencyIO::isValid) ||
+                !currencyInsert.stream().allMatch(CurrencyIO::isValid) ||
+                !hasAnyIo()) {
             return false;
         }
-        if (autoTrade && !hasValidAutoTradeInputs()) {
-            return false;
-        }
-        return true;
+        return !autoTrade || hasValidAutoTradeInputs();
     }
 
     private boolean hasAnyIo() {
-        return !itemInputs.isEmpty() || !itemOutputs.isEmpty() || !fluidInputs.isEmpty() || !fluidOutputs.isEmpty() || energyExtract > 0 || energyInsert > 0 || !currencyExtract.isEmpty() || !currencyInsert.isEmpty();
+        return !itemInputs.isEmpty() || !itemOutputs.isEmpty() ||
+                !fluidInputs.isEmpty() || !fluidOutputs.isEmpty() ||
+                energyExtract > 0 || energyInsert > 0 ||
+                !currencyExtract.isEmpty() || !currencyInsert.isEmpty();
     }
 
     // ==============================================
-    // Builder
+    // 钩子缓存
     // ==============================================
 
-    /**
-     * 机器交易条目构建器。
-     */
-    @Setter
-    @Accessors(fluent = true, chain = true)
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class Builder {
-
-        private final List<ItemIO> itemInputs = new ArrayList<>();
-        private final List<ItemIO> itemOutputs = new ArrayList<>();
-        private final List<FluidIO> fluidInputs = new ArrayList<>();
-        private final List<FluidIO> fluidOutputs = new ArrayList<>();
-        @Setter(AccessLevel.NONE)
-        private long energyExtract;
-        @Setter(AccessLevel.NONE)
-        private long energyInsert;
-        private final List<CurrencyIO> currencyExtract = new ArrayList<>();
-        private final List<CurrencyIO> currencyInsert = new ArrayList<>();
-        @Nullable
-        private IGuiTexture machineTradeIcon;
-        @Nullable
-        private List<Component> description;
-        private MachineTradeVisibilityCheck visibility;
-        private MachineTradeCheckHook extraCheck;
-        private MachineTradeSuccessHook afterSuccess;
-        /** 默认 false；为 true 时 build 要求 item+fluid 输入数量之和为 1。 */
-        private boolean autoTrade;
-
-        public Builder addItemInput(ItemIO io) {
-            itemInputs.add(Objects.requireNonNull(io, "io"));
-            return this;
-        }
-
-        public Builder addItemOutput(ItemIO io) {
-            itemOutputs.add(Objects.requireNonNull(io, "io"));
-            return this;
-        }
-
-        public Builder addFluidInput(FluidIO io) {
-            fluidInputs.add(Objects.requireNonNull(io, "io"));
-            return this;
-        }
-
-        public Builder addFluidOutput(FluidIO io) {
-            fluidOutputs.add(Objects.requireNonNull(io, "io"));
-            return this;
-        }
-
-        public Builder energyExtract(long amount) {
-            if (amount < 0) throw new IllegalArgumentException("energyExtract must be non-negative");
-            this.energyExtract = amount;
-            return this;
-        }
-
-        public Builder energyInsert(long amount) {
-            if (amount < 0) throw new IllegalArgumentException("energyInsert must be non-negative");
-            this.energyInsert = amount;
-            return this;
-        }
-
-        public Builder addCurrencyExtract(CurrencyIO io) {
-            currencyExtract.add(Objects.requireNonNull(io, "io"));
-            return this;
-        }
-
-        public Builder addCurrencyInsert(CurrencyIO io) {
-            currencyInsert.add(Objects.requireNonNull(io, "io"));
-            return this;
-        }
-
-        /** 追加一行描述。 */
-        public Builder addDescription(Component line) {
-            Objects.requireNonNull(line, "line");
-            if (this.description == null) {
-                this.description = new ArrayList<>();
-            } else if (!(this.description instanceof ArrayList)) {
-                this.description = new ArrayList<>(this.description);
+    public MachineTradeHooks.MachineTradeVisibilityCheck getVisibilityHook() {
+        if (cachedVisibility == null) {
+            synchronized (this) {
+                if (cachedVisibility == null) {
+                    cachedVisibility = MachineTradeHookRegistry.getVisibility(visibilityHookId, visibilityConfig);
+                }
             }
-            this.description.add(line);
-            return this;
         }
+        return cachedVisibility;
+    }
 
-        /** 构建条目；无效时抛异常。autoTrade 时强制单输入约束。 */
-        public MachineTrade build() {
-            MachineTrade trade = new MachineTrade(this);
-            if (trade.autoTrade() && !trade.hasValidAutoTradeInputs()) {
-                throw new IllegalStateException(
-                        "Invalid MachineTrade: autoTrade requires itemInputs.size() + fluidInputs.size() == 1" + " (got items=" + trade.itemInputs().size() + ", fluids=" + trade.fluidInputs().size() + ")");
+    public MachineTradeHooks.MachineTradeCheckHook getCheckHook() {
+        if (cachedCheck == null) {
+            synchronized (this) {
+                if (cachedCheck == null) {
+                    cachedCheck = MachineTradeHookRegistry.getCheck(checkHookId, checkConfig);
+                }
             }
-            if (!trade.isValid()) {
-                throw new IllegalStateException("Invalid MachineTrade: empty or illegal I/O");
-            }
-            return trade;
         }
+        return cachedCheck;
+    }
+
+    public MachineTradeHooks.MachineTradeSuccessHook getSuccessHook() {
+        if (cachedSuccess == null) {
+            synchronized (this) {
+                if (cachedSuccess == null) {
+                    cachedSuccess = MachineTradeHookRegistry.getSuccess(successHookId, successConfig);
+                }
+            }
+        }
+        return cachedSuccess;
     }
 
     // ==============================================
-    // UI构造
+    // UI 构造
     // ==============================================
 
-    public UIElement getMachineTradeIcon() {
+    public static UIElement getMachineTradeIcon(MachineTrade trade) {
         var base = new UIElement()
                 .layout(l -> l
                         .width(26).height(26)
@@ -254,50 +227,44 @@ public final class MachineTrade implements TradeInfo {
         var icon = new UIElement()
                 .layout(l -> l.width(18).height(18));
 
-        // ==============================================
-        // 动态构建 Tooltip 链：Description -> 输入 -> 输出
-        // ==============================================
         List<Component> tooltipLines = new ArrayList<>();
 
-        // 1. 优先放入自定义描述
-        if (description != null) {
-            tooltipLines.addAll(description);
+        if (trade.description != null) {
+            tooltipLines.addAll(trade.description);
         }
 
-        boolean hasInputs = !itemInputs.isEmpty() || !fluidInputs.isEmpty() || energyExtract > 0 || !currencyExtract.isEmpty();
-        boolean hasOutputs = !itemOutputs.isEmpty() || !fluidOutputs.isEmpty() || energyInsert > 0 || !currencyInsert.isEmpty();
+        boolean hasInputs = !trade.itemInputs.isEmpty() || !trade.fluidInputs.isEmpty() || trade.energyExtract > 0 || !trade.currencyExtract.isEmpty();
+        boolean hasOutputs = !trade.itemOutputs.isEmpty() || !trade.fluidOutputs.isEmpty() || trade.energyInsert > 0 || !trade.currencyInsert.isEmpty();
 
-        // 如果存在描述，且后续有输入或输出，追加一个空行做视觉隔离
         if (!tooltipLines.isEmpty() && (hasInputs || hasOutputs)) {
             tooltipLines.add(Component.empty());
         }
 
-        // 2. 整理并添加【输入】信息
         if (hasInputs) {
             tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.inputs")
                     .withStyle(ChatFormatting.YELLOW));
 
-            for (ItemIO io : itemInputs) {
-                ItemStack temp = io.resource().toStack(io.amount());
+            for (ItemIO io : trade.itemInputs) {
+                ItemStack temp = io.toStack();
                 if (!temp.isEmpty()) {
                     tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.item_entry", io.amount())
                             .append(temp.getHoverName())
                             .withStyle(ChatFormatting.GRAY));
                 }
             }
-            for (FluidIO io : fluidInputs) {
-                FluidStack temp = io.resource().toStack(io.amount());
+            for (FluidIO io : trade.fluidInputs) {
+                FluidStack temp = io.toStack();
                 if (!temp.isEmpty()) {
                     tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.fluid_entry", io.amount())
                             .append(temp.getHoverName())
                             .withStyle(ChatFormatting.GRAY));
                 }
             }
-            if (energyExtract > 0) {
-                tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.energy_extract", energyExtract)
+            if (trade.energyExtract > 0) {
+                tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.energy_extract", trade.energyExtract)
                         .withStyle(ChatFormatting.GOLD));
             }
-            for (CurrencyIO io : currencyExtract) {
+            for (CurrencyIO io : trade.currencyExtract) {
                 if (io.isValid()) {
                     tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.currency_entry", io.amount().toString())
                             .append(io.resource().type().getHoverName())
@@ -306,7 +273,6 @@ public final class MachineTrade implements TradeInfo {
             }
         }
 
-        // 3. 整理并添加【输出】信息
         if (hasOutputs) {
             if (hasInputs) {
                 tooltipLines.add(Component.empty());
@@ -314,27 +280,27 @@ public final class MachineTrade implements TradeInfo {
             tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.outputs")
                     .withStyle(ChatFormatting.GREEN));
 
-            for (ItemIO io : itemOutputs) {
-                ItemStack temp = io.resource().toStack(io.amount());
+            for (ItemIO io : trade.itemOutputs) {
+                ItemStack temp = io.toStack();
                 if (!temp.isEmpty()) {
                     tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.item_entry", io.amount())
                             .append(temp.getHoverName())
                             .withStyle(ChatFormatting.GRAY));
                 }
             }
-            for (FluidIO io : fluidOutputs) {
-                FluidStack temp = io.resource().toStack(io.amount());
+            for (FluidIO io : trade.fluidOutputs) {
+                FluidStack temp = io.toStack();
                 if (!temp.isEmpty()) {
                     tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.fluid_entry", io.amount())
                             .append(temp.getHoverName())
                             .withStyle(ChatFormatting.GRAY));
                 }
             }
-            if (energyInsert > 0) {
-                tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.energy_insert", energyInsert)
+            if (trade.energyInsert > 0) {
+                tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.energy_insert", trade.energyInsert)
                         .withStyle(ChatFormatting.GOLD));
             }
-            for (CurrencyIO io : currencyInsert) {
+            for (CurrencyIO io : trade.currencyInsert) {
                 if (io.isValid()) {
                     tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.currency_entry", io.amount().toString())
                             .append(io.resource().type().getHoverName())
@@ -343,36 +309,32 @@ public final class MachineTrade implements TradeInfo {
             }
         }
 
-        // 应用最终生成的 Tooltip 数组
         icon.style(s -> s.tooltips(tooltipLines.toArray(new Component[0])));
 
-        // ==============================================
-        // 渲染背景图（保持你原有的动态材质匹配逻辑）
-        // ==============================================
-        if (machineTradeIcon != IGuiTexture.EMPTY) {
-            icon.style(s -> s.background(machineTradeIcon));
+        if (trade.machineTradeIcon != IGuiTexture.EMPTY) {
+            icon.style(s -> s.background(trade.machineTradeIcon));
         } else {
-            if (!itemOutputs.isEmpty()) {
-                ItemStack[] itemOuts = itemOutputs.stream()
-                        .map(io -> io.resource().toStack(io.amount()))
+            if (!trade.itemOutputs.isEmpty()) {
+                ItemStack[] itemOuts = trade.itemOutputs.stream()
+                        .map(ItemIO::toStack)
                         .filter(stack -> !stack.isEmpty())
                         .toArray(ItemStack[]::new);
                 icon.style(s -> s.background(new ItemStackTexture(itemOuts)));
-            } else if (!itemInputs.isEmpty()) {
-                ItemStack[] itemIns = itemInputs.stream()
-                        .map(io -> io.resource().toStack(io.amount()))
+            } else if (!trade.itemInputs.isEmpty()) {
+                ItemStack[] itemIns = trade.itemInputs.stream()
+                        .map(ItemIO::toStack)
                         .filter(stack -> !stack.isEmpty())
                         .toArray(ItemStack[]::new);
                 icon.style(s -> s.background(new ItemStackTexture(itemIns)));
-            } else if (!fluidOutputs.isEmpty()) {
-                FluidStack[] fluidOuts = fluidOutputs.stream()
-                        .map(io -> io.resource().toStack(io.amount()))
+            } else if (!trade.fluidOutputs.isEmpty()) {
+                FluidStack[] fluidOuts = trade.fluidOutputs.stream()
+                        .map(FluidIO::toStack)
                         .filter(stack -> !stack.isEmpty())
                         .toArray(FluidStack[]::new);
                 icon.style(s -> s.background(new FluidStackTexture(fluidOuts)));
-            } else if (!fluidInputs.isEmpty()) {
-                FluidStack[] fluidIns = fluidInputs.stream()
-                        .map(io -> io.resource().toStack(io.amount()))
+            } else if (!trade.fluidInputs.isEmpty()) {
+                FluidStack[] fluidIns = trade.fluidInputs.stream()
+                        .map(FluidIO::toStack)
                         .filter(stack -> !stack.isEmpty())
                         .toArray(FluidStack[]::new);
                 icon.style(s -> s.background(new FluidStackTexture(fluidIns)));
@@ -383,5 +345,13 @@ public final class MachineTrade implements TradeInfo {
 
         base.addChild(icon);
         return base;
+    }
+
+    // ==============================================
+    // Builder 工厂方法
+    // ==============================================
+
+    public static MachineTradeBuilder builder() {
+        return new MachineTradeBuilder();
     }
 }

@@ -97,9 +97,26 @@
   background: empty;
 }
 
-.mbt-wallet-detail-content {
+.mbt-wallet-detail-scroller {
   width: 260;
   height: 130;
+  padding-all: 0;
+  background: empty;
+  scroller-view-mode: vertical;
+  scroller-vertical-display: never;
+  scroller-horizontal-display: never;
+  scroller-view-margin: 0;
+}
+
+.mbt-wallet-detail-scroller .__scroller_view_view-port__ {
+  background: empty;
+  padding-all: 0;
+}
+
+.mbt-wallet-detail-scroller-container {
+  flex-direction: column;
+  background: empty;
+  padding-all: 0;
 }
 
 .mbt-wallet-detail-inventory {

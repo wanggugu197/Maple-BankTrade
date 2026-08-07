@@ -4,11 +4,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
-import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTrade;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTrade.Mode;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeStorage;
-import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeType;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 
 /**
@@ -17,25 +15,12 @@ import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 public final class CurrencyItemTradeRegistration {
 
     // ==============================================
-    // 交易类型
-    // ==============================================
-
-    public static final CurrencyItemTradeType STONE_AND_ORES = new CurrencyItemTradeType(MapleBankTrade.id("trade_type/stone_and_ores"));
-    public static final CurrencyItemTradeType PLANTS_AND_FOOD = new CurrencyItemTradeType(MapleBankTrade.id("trade_type/plants_and_food"));
-    public static final CurrencyItemTradeType MOB_DROPS = new CurrencyItemTradeType(MapleBankTrade.id("trade_type/mob_drops"));
-
-    private static boolean registered;
-
-    // ==============================================
     // 初始化
     // ==============================================
 
     /** 注册全部内置交易类型与价目（幂等）。 */
-    public static void init() {
-        if (registered) return;
-        registered = true;
-
-        fill(STONE_AND_ORES,
+    public static void register() {
+        fill(TradeTypeRegistration.StoneAndOres,
                 e("cobblestone", Items.COBBLESTONE, 1),
                 e("stone", Items.STONE, 1),
                 e("deepslate", Items.DEEPSLATE, 1),
@@ -56,9 +41,90 @@ public final class CurrencyItemTradeRegistration {
                 e("diamond", Items.DIAMOND, 150),
                 e("emerald", Items.EMERALD, 120),
                 e("netherite_scrap", Items.NETHERITE_SCRAP, 200),
-                e("ancient_debris", Items.ANCIENT_DEBRIS, 250));
+                e("ancient_debris", Items.ANCIENT_DEBRIS, 250),
+                e("1cobblestone", Items.COBBLESTONE, 1),
+                e("1stone", Items.STONE, 1),
+                e("1deepslate", Items.DEEPSLATE, 1),
+                e("1granite", Items.GRANITE, 1),
+                e("1diorite", Items.DIORITE, 1),
+                e("1andesite", Items.ANDESITE, 1),
+                e("1coal", Items.COAL, 4),
+                e("1raw_copper", Items.RAW_COPPER, 6),
+                e("1raw_iron", Items.RAW_IRON, 12),
+                e("1raw_gold", Items.RAW_GOLD, 20),
+                e("1copper_ingot", Items.COPPER_INGOT, 8),
+                e("1iron_ingot", Items.IRON_INGOT, 30),
+                e("1gold_ingot", Items.GOLD_INGOT, 40),
+                e("1redstone", Items.REDSTONE, 5),
+                e("1lapis_lazuli", Items.LAPIS_LAZULI, 6),
+                e("1quartz", Items.QUARTZ, 8),
+                e("1amethyst_shard", Items.AMETHYST_SHARD, 10),
+                e("1diamond", Items.DIAMOND, 150),
+                e("1emerald", Items.EMERALD, 120),
+                e("1netherite_scrap", Items.NETHERITE_SCRAP, 200),
+                e("1ancient_debris", Items.ANCIENT_DEBRIS, 250),
+                e("2stone", Items.STONE, 1),
+                e("2deepslate", Items.DEEPSLATE, 1),
+                e("2granite", Items.GRANITE, 1),
+                e("2diorite", Items.DIORITE, 1),
+                e("2andesite", Items.ANDESITE, 1),
+                e("2coal", Items.COAL, 4),
+                e("2raw_copper", Items.RAW_COPPER, 6),
+                e("2raw_iron", Items.RAW_IRON, 12),
+                e("2raw_gold", Items.RAW_GOLD, 20),
+                e("2copper_ingot", Items.COPPER_INGOT, 8),
+                e("2iron_ingot", Items.IRON_INGOT, 30),
+                e("2gold_ingot", Items.GOLD_INGOT, 40),
+                e("2redstone", Items.REDSTONE, 5),
+                e("2lapis_lazuli", Items.LAPIS_LAZULI, 6),
+                e("2quartz", Items.QUARTZ, 8),
+                e("2amethyst_shard", Items.AMETHYST_SHARD, 10),
+                e("2diamond", Items.DIAMOND, 150),
+                e("2emerald", Items.EMERALD, 120),
+                e("2netherite_scrap", Items.NETHERITE_SCRAP, 200),
+                e("2ancient_debris", Items.ANCIENT_DEBRIS, 250),
+                e("3stone", Items.STONE, 1),
+                e("3deepslate", Items.DEEPSLATE, 1),
+                e("3granite", Items.GRANITE, 1),
+                e("3diorite", Items.DIORITE, 1),
+                e("3andesite", Items.ANDESITE, 1),
+                e("3coal", Items.COAL, 4),
+                e("3raw_copper", Items.RAW_COPPER, 6),
+                e("3raw_iron", Items.RAW_IRON, 12),
+                e("3raw_gold", Items.RAW_GOLD, 20),
+                e("3copper_ingot", Items.COPPER_INGOT, 8),
+                e("3iron_ingot", Items.IRON_INGOT, 30),
+                e("3gold_ingot", Items.GOLD_INGOT, 40),
+                e("3redstone", Items.REDSTONE, 5),
+                e("3lapis_lazuli", Items.LAPIS_LAZULI, 6),
+                e("3quartz", Items.QUARTZ, 8),
+                e("3amethyst_shard", Items.AMETHYST_SHARD, 10),
+                e("3diamond", Items.DIAMOND, 150),
+                e("3emerald", Items.EMERALD, 120),
+                e("3netherite_scrap", Items.NETHERITE_SCRAP, 200),
+                e("3ancient_debris", Items.ANCIENT_DEBRIS, 250),
+                e("4stone", Items.STONE, 1),
+                e("4deepslate", Items.DEEPSLATE, 1),
+                e("4granite", Items.GRANITE, 1),
+                e("4diorite", Items.DIORITE, 1),
+                e("4andesite", Items.ANDESITE, 1),
+                e("4coal", Items.COAL, 4),
+                e("4raw_copper", Items.RAW_COPPER, 6),
+                e("4raw_iron", Items.RAW_IRON, 12),
+                e("4raw_gold", Items.RAW_GOLD, 20),
+                e("4copper_ingot", Items.COPPER_INGOT, 8),
+                e("4iron_ingot", Items.IRON_INGOT, 30),
+                e("4gold_ingot", Items.GOLD_INGOT, 40),
+                e("4redstone", Items.REDSTONE, 5),
+                e("4lapis_lazuli", Items.LAPIS_LAZULI, 6),
+                e("4quartz", Items.QUARTZ, 8),
+                e("4amethyst_shard", Items.AMETHYST_SHARD, 10),
+                e("4diamond", Items.DIAMOND, 150),
+                e("4emerald", Items.EMERALD, 120),
+                e("4netherite_scrap", Items.NETHERITE_SCRAP, 200),
+                e("4ancient_debris", Items.ANCIENT_DEBRIS, 250));
 
-        fill(PLANTS_AND_FOOD,
+        fill(TradeTypeRegistration.PlantsAndFood,
                 e("wheat_seeds", Items.WHEAT_SEEDS, 1),
                 e("wheat", Items.WHEAT, 2),
                 e("carrot", Items.CARROT, 3),
@@ -78,7 +144,7 @@ public final class CurrencyItemTradeRegistration {
                 e("cooked_chicken", Items.COOKED_CHICKEN, 8),
                 e("golden_carrot", Items.GOLDEN_CARROT, 40));
 
-        fill(MOB_DROPS,
+        fill(TradeTypeRegistration.MobDrops,
                 e("rotten_flesh", Items.ROTTEN_FLESH, 1),
                 e("bone", Items.BONE, 3),
                 e("bone_meal", Items.BONE_MEAL, 1),
@@ -102,8 +168,7 @@ public final class CurrencyItemTradeRegistration {
     // ==============================================
 
     /** 注册类型并向存储器填充价目条目。 */
-    private static void fill(CurrencyItemTradeType type, CoinEntry... entries) {
-        CurrencyItemTradeStorage storage = type.register();
+    private static void fill(CurrencyItemTradeStorage storage, CoinEntry... entries) {
         Identifier coins = CurrencyRegistration.COINS.id();
         for (CoinEntry entry : entries) {
             storage.register(entry.path(), CurrencyItemTrade.of(entry.item(), coins, entry.price(), Mode.BUY_AND_SELL));

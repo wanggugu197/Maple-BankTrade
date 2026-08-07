@@ -13,6 +13,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.BankHelper;
@@ -74,15 +75,17 @@ public final class BankCardDetailUIRegistration {
         BankCard card = resolveVisibleCard(player, cardUuid, cardTag);
         CardInfo info = card == null ? null : CardInfo.of(card.getNameIndex());
 
-        UIElement content = new UIElement().addClass("mbt-wallet-detail-content");
+        ScrollerView scroller = new ScrollerView();
+        scroller.addClass("mbt-wallet-detail-scroller");
+        scroller.viewContainer(container -> container.addClass("mbt-wallet-detail-scroller-container"));
         UIElement inventory = new InventorySlots().addClass("mbt-wallet-detail-inventory");
         UIElement root = new UIElement().addClass("mbt-wallet-detail-page");
 
         if (info != null) {
             // 每张卡背景不同 → 必须 INLINE，不能进 LSS
-            content.style(style -> style.backgroundTexture(info.detailBackground()));
+            scroller.style(style -> style.backgroundTexture(info.detailBackground()));
             inventory.style(style -> style.backgroundTexture(info.detailBackground()));
-            content.addChild(info.detailsUIFactory().create(player, card));
+            scroller.addScrollViewChild(info.detailsUIFactory().create(player, card));
         }
 
         Button closeButton = new Button().setText("×", false);
@@ -90,7 +93,7 @@ public final class BankCardDetailUIRegistration {
         closeButton.setOnClick(_ -> player.closeContainer());
         closeButton.setOnServerClick(_ -> player.closeContainer());
 
-        root.addChildren(content, inventory, closeButton);
+        root.addChildren(scroller, inventory, closeButton);
         return UI.of(root, WalletUIStylesheets.createWalletStylesheets());
     }
 

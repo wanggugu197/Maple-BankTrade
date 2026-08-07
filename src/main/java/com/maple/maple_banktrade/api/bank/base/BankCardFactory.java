@@ -7,7 +7,6 @@ import net.minecraft.world.item.ItemStack;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.item.BankDataComponent;
-import com.maple.maple_banktrade.data.lang.MBTLangHandler;
 
 import java.util.*;
 
@@ -42,14 +41,13 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     // ==============================================
 
     /** 注册银行卡创建定义，重复注册时返回已有定义。 */
-    public static BankCardFactory register(Identifier nameIndex, String cnName, String enName, BankType bankType, Factory factory, ResourceKey<CreativeModeTab> tabResourceKey) {
+    public static BankCardFactory register(Identifier nameIndex, BankType bankType, Factory factory, ResourceKey<CreativeModeTab> tabResourceKey) {
         if (nameIndex == null || bankType == null || factory == null || tabResourceKey == null) return null;
         if (BANK_CARD_FACTORY_MAP.containsKey(nameIndex)) {
             MapleBankTrade.LOGGER.error("Bank card factory with name index {} already exists", nameIndex);
             return BANK_CARD_FACTORY_MAP.get(nameIndex);
         }
         BankCardFactory cardFactory = new BankCardFactory(nameIndex, bankType, factory);
-        MBTLangHandler.addLang(BankCardFactory.getTranslationKey(nameIndex), cnName, enName);
         BANK_CARD_FACTORY_MAP.put(nameIndex, cardFactory);
         REGISTRY.modifyCreativeModeTab(tabResourceKey, tab -> {
             ItemStack stack = BANK_CARD_AUTHENTICATION_KEY.asStack();
@@ -60,7 +58,7 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     }
 
     /** 获取银行卡名称索引对应的翻译键。 */
-    public static String getTranslationKey(Identifier nameIndex) {
+    public static String getBankCardFactoryTranslationKey(Identifier nameIndex) {
         return "bank_card." + nameIndex.getNamespace() + "." + nameIndex.getPath();
     }
 

@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
 import com.maple.maple_banktrade.api.machine.base.TradingStationStorageSpec;
 import com.maple.maple_banktrade.common.MBTRegistration;
-import com.maple.maple_banktrade.common.trade.MachineTradeRegistration;
+import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
 
 import java.util.List;
 
@@ -28,11 +28,11 @@ public class TradingStationBlockEntity extends BaseTradingStationBlockEntity {
 
     @Override
     protected List<Identifier> fallbackTradeTypeIds() {
-        return MachineTradeRegistration.TRADING_STATION_TYPES;
+        return TradeTypeRegistration.TRADING_STATION_TYPES;
     }
 
     @Override
     protected Identifier fallbackTradeTypeId() {
-        return MachineTradeRegistration.MACHINE_BENCH.id();
+        return TradeTypeRegistration.MACHINE_BENCH.id();
     }
 }

@@ -1,71 +1,82 @@
 package com.maple.maple_banktrade.api.trade.base.registry;
 
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
+import com.lowdragmc.lowdraglib2.Platform;
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
+import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.MapleBankTrade;
 
 import java.util.*;
 
-/**
- * 基于 LinkedHashMap 的交易条目存储器基类。
- *
- * @param <E> 交易条目类型
- */
-public abstract class AbstractTradeEntryStorage<E> implements TradeEntryStorage<E> {
-
-    // ==============================================
-    // 字段
-    // ==============================================
+public abstract class AbstractTradeEntryStorage<E extends TradeInfo> implements TradeEntryStorage<E> {
 
     private final Identifier tradeTypeId;
+
+    // 服务端实际存储
     private final Map<Identifier, E> entries = new LinkedHashMap<>();
 
-    // ==============================================
-    // 构造
-    // ==============================================
+    // 客户端同步缓存（完整数据）
+    private final Map<Identifier, E> clientEntries = new LinkedHashMap<>();
 
-    /** 绑定交易类型 ID 创建空存储器。 */
+    // 客户端元数据缓存（ID → 版本号）
+    private final Map<Identifier, Integer> metaCache = new LinkedHashMap<>();
+
     protected AbstractTradeEntryStorage(Identifier tradeTypeId) {
         this.tradeTypeId = Objects.requireNonNull(tradeTypeId, "tradeTypeId");
     }
 
-    // ==============================================
-    // 查询
-    // ==============================================
-
-    /** 返回对应交易类型 ID。 */
     @Override
     public Identifier tradeTypeId() {
         return tradeTypeId;
     }
 
-    /** 按 ID 查找条目。 */
+    /**
+     * 判断当前是否在服务端环境（而非客户端）
+     */
+    private boolean isServer() {
+        return ServerLifecycleHooks.getCurrentServer() != null;
+    }
+
     @Override
     public Optional<E> find(Identifier tradeId) {
         if (tradeId == null) return Optional.empty();
-        return Optional.ofNullable(entries.get(tradeId));
+        if (isServer()) {
+            return Optional.ofNullable(entries.get(tradeId));
+        } else {
+            return Optional.ofNullable(clientEntries.get(tradeId));
+        }
     }
 
-    /** 按 ID 查找条目，不存在时返回 null。 */
     @Override
     public E require(Identifier tradeId) {
-        return tradeId == null ? null : entries.get(tradeId);
+        if (tradeId == null) return null;
+        if (isServer()) {
+            return entries.get(tradeId);
+        } else {
+            return clientEntries.get(tradeId);
+        }
     }
 
-    /** 返回全部条目的只读视图。 */
     @Override
     public Map<Identifier, E> entries() {
-        return Collections.unmodifiableMap(entries);
+        if (isServer()) {
+            return Collections.unmodifiableMap(entries);
+        } else {
+            return Collections.unmodifiableMap(clientEntries);
+        }
     }
 
-    // ==============================================
-    // 注册
-    // ==============================================
+    /**
+     * 子类必须实现，返回一个空的条目实例，用于客户端反序列化。
+     */
+    protected abstract E createEmptyEntry();
 
-    /** 校验条目是否可注册。 */
-    protected abstract boolean isValidEntry(E entry);
-
-    /** 注册条目；ID 已存在时返回已有条目且不覆盖。 */
     @Override
     public E register(Identifier tradeId, E entry) {
         Objects.requireNonNull(tradeId, "tradeId");
@@ -79,8 +90,57 @@ public abstract class AbstractTradeEntryStorage<E> implements TradeEntryStorage<
             MapleBankTrade.LOGGER.error("Trade entry already exists: {}/{}", tradeTypeId, tradeId);
             return existing;
         }
-
         entries.put(tradeId, entry);
         return entry;
     }
+
+    private void broadcastEntryChange(Identifier entryId, E entry) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) return;
+        HolderLookup.Provider provider = server.registryAccess();
+        CompoundTag tag = PersistedParser.serializeNBT(entry, provider);
+        TradeRpcHandlers.TradeEntryData data = new TradeRpcHandlers.TradeEntryData(entryId, tag);
+        CompoundTag payload = TradeRpcHandlers.serializeEntryDataList(List.of(data));
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            RPCPacketDistributor.rpcToPlayer(player, "trade_sync_entries", this.tradeTypeId, payload);
+        }
+    }
+
+    // ---------- 客户端专用方法 ----------
+    public void replaceClientCache(Map<Identifier, ? extends TradeInfo> newEntries) {
+        if (!Platform.isClient()) return;
+        clientEntries.clear();
+        for (Map.Entry<Identifier, ? extends TradeInfo> e : newEntries.entrySet()) {
+            @SuppressWarnings("unchecked")
+            E entry = (E) e.getValue();
+            clientEntries.put(e.getKey(), entry);
+        }
+    }
+
+    public void updateClientEntry(Identifier entryId, E entry) {
+        if (!Platform.isClient()) return;
+        clientEntries.put(entryId, entry);
+    }
+
+    public boolean hasClientData() {
+        return !clientEntries.isEmpty();
+    }
+
+    public void clearAllEntries() {
+        if (isServer()) {
+            entries.clear();
+            clientEntries.clear();
+            metaCache.clear();
+            onClear();
+        }
+    }
+
+    protected void onClear() {}
+
+    // ---------- 辅助 ----------
+    private int getVersion(E entry) {
+        return entry != null ? entry.hashCode() : 0;
+    }
+
+    protected abstract boolean isValidEntry(E entry);
 }

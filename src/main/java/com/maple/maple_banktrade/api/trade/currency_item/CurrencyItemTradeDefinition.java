@@ -106,8 +106,7 @@ public final class CurrencyItemTradeDefinition implements TradeDefinition<TradeC
                     context.cardUuid(),
                     trade.currency(),
                     plan.currencyAmount(),
-                    trade.item(),
-                    plan.itemAmount(),
+                    trade.item().copyWithCount(plan.itemAmount()),
                     plan.tradeCount(),
                     plan.buy()));
         }

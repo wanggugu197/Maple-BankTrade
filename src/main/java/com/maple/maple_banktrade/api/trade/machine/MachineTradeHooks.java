@@ -1,5 +1,6 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
@@ -8,27 +9,27 @@ import lombok.experimental.UtilityClass;
 import java.util.List;
 
 /**
- * 机器交易自定义钩子。
+ * 机器交易自定义钩子接口定义及默认实现。
+ * 注意：默认实现仅用于注册表，实际条目应通过 ID 引用。
  */
 @UtilityClass
 public class MachineTradeHooks {
 
     /** 始终可见。 */
-    public static final MachineTradeVisibilityCheck ALWAYS_VISIBLE = (context, trade) -> true;
+    public static final MachineTradeVisibilityCheck ALWAYS_VISIBLE = (_, _) -> true;
 
     /** 无附加检查，始终通过。 */
-    public static final MachineTradeCheckHook PASS = (context, request, trade) -> List.of();
+    public static final MachineTradeCheckHook PASS = (_, _, _) -> List.of();
 
     /** 无成功后处理。 */
-    public static final MachineTradeSuccessHook NOOP = (context, request, plan, result) -> {};
+    public static final MachineTradeSuccessHook NOOP = (_, _, _, _) -> {};
 
     /**
-     * 交易可见性：用于列表/UI 过滤，不进入 {@code TradeRunner}。
+     * 交易可见性：用于列表/UI 过滤，不进入 TradeRunner。
      */
     @FunctionalInterface
     public interface MachineTradeVisibilityCheck {
 
-        /** 当前上下文下该条目是否可见。 */
         boolean isVisible(MachineTradeContext context, MachineTrade trade);
     }
 
@@ -38,9 +39,6 @@ public class MachineTradeHooks {
     @FunctionalInterface
     public interface MachineTradeCheckHook {
 
-        /**
-         * 返回空列表表示通过；非空 messages 表示硬拒绝。
-         */
         List<Component> check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade);
     }
 
@@ -50,10 +48,28 @@ public class MachineTradeHooks {
     @FunctionalInterface
     public interface MachineTradeSuccessHook {
 
-        /** 仅在 execute 成功后调用；{@code plan.tradeCount()} 为实际次数。 */
         void afterSuccess(MachineTradeContext context,
                           MachineTradeRequest request,
                           MachineTradePlan plan,
                           TradeExecuteResult<MachineTradeDetail> result);
+    }
+
+    // ---------- 工厂接口（供注册表使用） ----------
+    @FunctionalInterface
+    public interface VisibilityCheckFactory {
+
+        MachineTradeVisibilityCheck create(CompoundTag config);
+    }
+
+    @FunctionalInterface
+    public interface CheckHookFactory {
+
+        MachineTradeCheckHook create(CompoundTag config);
+    }
+
+    @FunctionalInterface
+    public interface SuccessHookFactory {
+
+        MachineTradeSuccessHook create(CompoundTag config);
     }
 }

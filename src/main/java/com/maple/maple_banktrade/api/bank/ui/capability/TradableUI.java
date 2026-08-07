@@ -23,6 +23,7 @@ import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTrade;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeHandler;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeStorage;
 import com.mapleutillib.api.resource.ObservableItemResourceHandler;
+import com.mapleutillib.utils.FormattingUtil;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.FlexWrap;
 
@@ -91,28 +92,26 @@ public class TradableUI {
                         .paddingBottom(4)
                         .paddingHorizontal(6));
 
-        if (storage.hasSellable()) {
-            ObservableItemResourceHandler sellHandler = new ObservableItemResourceHandler(1);
-            boolean[] trading = { false };
-            sellHandler.setOnChanged((index, _) -> {
-                if (index != 0 || trading[0]) return;
-                trading[0] = true;
-                try {
-                    boolean success = canTrade(player, card.getCardUuid()) && CurrencyItemTradeHandler.sellAll(
-                            sellHandler, 0, card.getCardUuid(), player.level().getServer(), storage)
-                            .success();
-                    ItemStack remaining = drainInput(sellHandler);
-                    if (!remaining.isEmpty() && (!success || !player.getInventory().add(remaining))) {
-                        player.drop(remaining, false);
-                    }
-                } finally {
-                    trading[0] = false;
+        ObservableItemResourceHandler sellHandler = new ObservableItemResourceHandler(1);
+        boolean[] trading = { false };
+        sellHandler.setOnChanged((index, _) -> {
+            if (index != 0 || trading[0]) return;
+            trading[0] = true;
+            try {
+                boolean success = canTrade(player, card.getCardUuid()) && CurrencyItemTradeHandler.sellAll(
+                        sellHandler, 0, card.getCardUuid(), player.level().getServer(), storage)
+                        .success();
+                ItemStack remaining = drainInput(sellHandler);
+                if (!remaining.isEmpty() && (!success || !player.getInventory().add(remaining))) {
+                    player.drop(remaining, false);
                 }
-            });
-            head.addChild(new ItemSlot().bind(new ItemResourceHandlerSlot(sellHandler, 0))
-                    .layout(l -> l.width(0).height(0))
-                    .style(s -> s.backgroundTexture(IGuiTexture.EMPTY)));
-        }
+            } finally {
+                trading[0] = false;
+            }
+        });
+        head.addChild(new ItemSlot().bind(new ItemResourceHandlerSlot(sellHandler, 0))
+                .layout(l -> l.width(0).height(0))
+                .style(s -> s.backgroundTexture(IGuiTexture.EMPTY)));
 
         for (Map.Entry<Identifier, CurrencyItemTrade> entry : storage.entries().entrySet()) {
             CurrencyItemTrade trade = entry.getValue();
@@ -122,7 +121,7 @@ public class TradableUI {
                 style.backgroundTexture(IGuiTexture.EMPTY)
                         .appendTooltips(Component.translatable(
                                 "currency.maple_banktrade.trade_price",
-                                trade.pricePerTrade().toString(),
+                                FormattingUtil.DECIMAL_FORMAT_0F.format(trade.pricePerTrade()),
                                 trade.currency().type().getHoverName()));
                 if (!trade.allowsSell()) {
                     style.appendTooltips(Component.translatable("currency.maple_banktrade.trade_buy_only"));

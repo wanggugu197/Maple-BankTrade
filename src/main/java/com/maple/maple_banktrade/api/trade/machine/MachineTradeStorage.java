@@ -53,10 +53,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         if (entry == null || !entry.isValid()) {
             return false;
         }
-        if (entry.autoTrade() && !allowAutoTrade) {
-            return false;
-        }
-        return true;
+        return !entry.autoTrade() || allowAutoTrade;
     }
 
     /** 在本类型路径下注册条目：typePath/entryPath。 */
@@ -82,7 +79,8 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         List<Map.Entry<Identifier, MachineTrade>> visible = new ArrayList<>();
         for (Map.Entry<Identifier, MachineTrade> entry : entries().entrySet()) {
             MachineTrade trade = entry.getValue();
-            if (trade.visibility().isVisible(context, trade)) {
+            MachineTradeHooks.MachineTradeVisibilityCheck visibility = trade.getVisibilityHook();
+            if (visibility.isVisible(context, trade)) {
                 visible.add(entry);
             }
         }
@@ -104,8 +102,11 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         if (match == null) {
             return null;
         }
-        if (context != null && !match.getValue().visibility().isVisible(context, match.getValue())) {
-            return null;
+        if (context != null) {
+            MachineTradeHooks.MachineTradeVisibilityCheck visibility = match.getValue().getVisibilityHook();
+            if (!visibility.isVisible(context, match.getValue())) {
+                return null;
+            }
         }
         return match;
     }
@@ -125,8 +126,12 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         if (match == null) {
             return null;
         }
-        if (context != null && !match.getValue().visibility().isVisible(context, match.getValue())) {
-            return null;
+        if (context != null) {
+            MachineTrade trade = match.getValue();
+            MachineTradeHooks.MachineTradeVisibilityCheck visibility = match.getValue().getVisibilityHook();
+            if (!visibility.isVisible(context, trade)) {
+                return null;
+            }
         }
         return match;
     }
@@ -156,7 +161,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
                     if (!io.isResolvable()) {
                         continue;
                     }
-                    ItemResource resource = io.resource();
+                    ItemResource resource = ItemResource.of(io.toStack());
                     Map.Entry<Identifier, MachineTrade> prev = items.putIfAbsent(resource, entry);
                     if (prev != null) {
                         String msg = "Duplicate autoTrade item input in " + tradeTypeId() + ": " + prev.getKey() + " and " + entry.getKey() + " both match " + resource;
@@ -168,7 +173,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
                     if (!io.isResolvable()) {
                         continue;
                     }
-                    FluidResource resource = io.resource();
+                    FluidResource resource = FluidResource.of(io.toStack());
                     Map.Entry<Identifier, MachineTrade> prev = fluids.putIfAbsent(resource, entry);
                     if (prev != null) {
                         String msg = "Duplicate autoTrade fluid input in " + tradeTypeId() + ": " + prev.getKey() + " and " + entry.getKey() + " both match " + resource;
@@ -182,5 +187,17 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         itemAutoIndex = Map.copyOf(items);
         fluidAutoIndex = Map.copyOf(fluids);
         autoIndexDirty = false;
+    }
+
+    @Override
+    protected MachineTrade createEmptyEntry() {
+        return new MachineTrade();
+    }
+
+    @Override
+    protected void onClear() {
+        autoIndexDirty = true;
+        itemAutoIndex = Map.of();
+        fluidAutoIndex = Map.of();
     }
 }

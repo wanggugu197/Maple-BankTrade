@@ -75,10 +75,14 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
         this(identity, CurrencyStorageBankCard.createInitialBalances(currencyTypes, 0L));
     }
 
+    public MultiCurrencyBankCard(BankCardIdentity identity, Map<Identifier, Long> balances) {
+        this(identity, CARD_TYPE_ID, balances);
+    }
+
     /** 从存档字段恢复多货币卡。 */
-    protected MultiCurrencyBankCard(BankCardIdentity identity, Map<Identifier, Long> balances) {
-        super(identity, CARD_TYPE_ID);
-        this.balances = new HashMap<>();
+    protected MultiCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId, Map<Identifier, Long> balances) {
+        super(identity, cardTypeId);
+        this.balances = new LinkedHashMap<>();
         balances.forEach((type, amount) -> {
             Identifier currencyId = normalizeCurrencyId(type);
             if (currencyId != null) {
@@ -151,18 +155,18 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     private static <T> DataResult<Pair<Map<Identifier, Long>, T>> decodeBalances(DynamicOps<T> ops, T input) {
         Map<Identifier, Long> result = new HashMap<>();
         ops.getMapValues(input)
-                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("无法读取多货币银行卡余额表，跳过全部余额: {}", message))
+                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Failed to read multi-currency bank card balance table, skipping all balances: {}", message))
                 .ifPresent(entries -> entries.forEach(entry -> {
                     Identifier currencyId = Identifier.CODEC.parse(ops, entry.getFirst())
-                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过多货币银行卡余额项，货币 ID 无法反序列化: {}", message))
+                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping multi-currency bank card balance entry, currency ID failed to deserialize: {}", message))
                             .orElse(null);
                     if (currencyId == null) return;
                     if (CurrencyType.requireById(currencyId) == null) {
-                        MapleBankTrade.LOGGER.error("跳过多货币银行卡余额项，货币未注册: {}", currencyId);
+                        MapleBankTrade.LOGGER.error("Skipping multi-currency bank card balance entry, currency not registered: {}", currencyId);
                         return;
                     }
                     Codec.LONG.parse(ops, entry.getSecond())
-                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("跳过多货币银行卡 {} 余额项，金额无法反序列化: {}", currencyId, message)).ifPresent(amount -> result.put(currencyId, amount));
+                            .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping balance entry for multi-currency bank card {}, amount failed to deserialize: {}", currencyId, message)).ifPresent(amount -> result.put(currencyId, amount));
                 }));
         return DataResult.success(Pair.of(result, ops.empty()));
     }

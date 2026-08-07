@@ -64,7 +64,8 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
             return TradeCheckResult.of(MachineTradePlan.denied(desired));
         }
 
-        List<Component> extraMessages = trade.extraCheck().check(context, request, trade);
+        MachineTradeHooks.MachineTradeCheckHook checkHook = trade.getCheckHook();
+        List<Component> extraMessages = checkHook.check(context, request, trade);
         if (extraMessages != null && !extraMessages.isEmpty()) {
             return TradeCheckResult.of(MachineTradePlan.denied(desired), List.copyOf(extraMessages));
         }
@@ -126,11 +127,8 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
             return;
         }
         try {
-            plan.trade().afterSuccess().afterSuccess(
-                    input.context(),
-                    input.request(),
-                    plan,
-                    input.executionResult());
+            MachineTradeHooks.MachineTradeSuccessHook successHook = plan.trade().getSuccessHook();
+            successHook.afterSuccess(input.context(), input.request(), plan, input.executionResult());
         } catch (Exception e) {
             MapleBankTrade.LOGGER.error("MachineTrade afterSuccess hook failed for {}", input.request().tradeId(), e);
         }
@@ -181,14 +179,14 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
                 return 0;
             }
             constrained = true;
-            max = minNonNeg(max, countItem(context.itemInput(), io.resource()) / io.amount());
+            max = minNonNeg(max, countItem(context.itemInput(), ItemResource.of(io.itemStack())) / io.amount());
         }
         for (FluidIO io : trade.fluidInputs()) {
             if (!io.isResolvable() || io.amount() <= 0) {
                 return 0;
             }
             constrained = true;
-            max = minNonNeg(max, countFluid(context.fluidInput(), io.resource()) / io.amount());
+            max = minNonNeg(max, countFluid(context.fluidInput(), FluidResource.of(io.fluidStack())) / io.amount());
         }
         if (trade.energyExtract() > 0) {
             constrained = true;
@@ -216,14 +214,14 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
                 return 0;
             }
             constrained = true;
-            max = minNonNeg(max, freeItemSpace(context.itemOutput(), io.resource()) / io.amount());
+            max = minNonNeg(max, freeItemSpace(context.itemOutput(), ItemResource.of(io.itemStack())) / io.amount());
         }
         for (FluidIO io : trade.fluidOutputs()) {
             if (!io.isResolvable() || io.amount() <= 0) {
                 return 0;
             }
             constrained = true;
-            max = minNonNeg(max, freeFluidSpace(context.fluidOutput(), io.resource()) / io.amount());
+            max = minNonNeg(max, freeFluidSpace(context.fluidOutput(), FluidResource.of(io.fluidStack())) / io.amount());
         }
         if (trade.energyInsert() > 0) {
             constrained = true;
@@ -398,7 +396,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
 
     private static boolean extractItems(ItemStacksResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
         for (ItemIO io : list) {
-            int got = handler instanceof ObservableItemResourceHandler obs ? obs.extractBypassFilter(io.resource(), io.amount(), tx) : handler.extract(io.resource(), io.amount(), tx);
+            int got = handler instanceof ObservableItemResourceHandler obs ? obs.extractBypassFilter(ItemResource.of(io.itemStack()), io.amount(), tx) : handler.extract(ItemResource.of(io.itemStack()), io.amount(), tx);
             if (got != io.amount()) {
                 return false;
             }
@@ -408,7 +406,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
 
     private static boolean insertItems(ItemStacksResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
         for (ItemIO io : list) {
-            int put = handler instanceof ObservableItemResourceHandler obs ? obs.insertBypassFilter(io.resource(), io.amount(), tx) : handler.insert(io.resource(), io.amount(), tx);
+            int put = handler instanceof ObservableItemResourceHandler obs ? obs.insertBypassFilter(ItemResource.of(io.itemStack()), io.amount(), tx) : handler.insert(ItemResource.of(io.itemStack()), io.amount(), tx);
             if (put != io.amount()) {
                 return false;
             }
@@ -418,7 +416,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
 
     private static boolean extractFluids(FluidStacksResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
         for (FluidIO io : list) {
-            int got = handler instanceof ObservableFluidResourceHandler obs ? obs.extractBypassFilter(io.resource(), io.amount(), tx) : handler.extract(io.resource(), io.amount(), tx);
+            int got = handler instanceof ObservableFluidResourceHandler obs ? obs.extractBypassFilter(FluidResource.of(io.fluidStack()), io.amount(), tx) : handler.extract(FluidResource.of(io.fluidStack()), io.amount(), tx);
             if (got != io.amount()) {
                 return false;
             }
@@ -428,7 +426,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
 
     private static boolean insertFluids(FluidStacksResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
         for (FluidIO io : list) {
-            int put = handler instanceof ObservableFluidResourceHandler obs ? obs.insertBypassFilter(io.resource(), io.amount(), tx) : handler.insert(io.resource(), io.amount(), tx);
+            int put = handler instanceof ObservableFluidResourceHandler obs ? obs.insertBypassFilter(FluidResource.of(io.fluidStack()), io.amount(), tx) : handler.insert(FluidResource.of(io.fluidStack()), io.amount(), tx);
             if (put != io.amount()) {
                 return false;
             }

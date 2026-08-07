@@ -85,7 +85,6 @@ public interface CurrencyStorageBankCard {
     }
 
     /** 创建固定货币键的初始余额表，跳过空货币。 */
-    @SafeVarargs
     static <V> Map<Identifier, V> createInitialBalances(V initialValue, CurrencyType... currencyTypes) {
         return createInitialBalances(currencyTypes == null ? List.of() : Arrays.asList(currencyTypes), initialValue);
     }

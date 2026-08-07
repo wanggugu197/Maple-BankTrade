@@ -60,8 +60,6 @@ public class WalletUIRegistration extends PlayerUIMenuType {
     private static final int PRIMARY_MOUSE_BUTTON = 0;
     /** 卡详情内容区宽度。 */
     public static final int BANK_CARD_DETAIL_CONTENT_WIDTH = 260;
-    /** 卡详情内容区高度。 */
-    public static final int BANK_CARD_DETAIL_CONTENT_HEIGHT = 130;
     /** 银行槽位同步字符串分隔符。 */
     private static final String BANK_SLOT_SYNC_SEPARATOR = "|";
     /** 列表同步 Tag 字段键。 */
