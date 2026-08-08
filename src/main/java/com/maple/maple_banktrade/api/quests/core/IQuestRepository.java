@@ -1,0 +1,70 @@
+package com.maple.maple_banktrade.api.quests.core;
+
+import com.maple.maple_banktrade.api.quests.enums.TaskType;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * 统一数据访问接口（定义与状态+历史）
+ */
+public interface IQuestRepository {
+
+    // ----- 定义查询 -----
+    Optional<ITaskDefinition> getDefinition(String id);
+
+    List<ITaskDefinition> getRoots();
+
+    List<ITaskDefinition> getChildren(String parentId);
+
+    // ----- 状态查询 & 修改 -----
+    ITaskState getOrCreateState(String taskId);   // 若不存在则新建（状态为HIDDEN）
+
+    Map<String, ITaskState> getAllStates();       // 全量快照（用于批量计算）
+
+    void saveState(ITaskState state);             // 持久化（标记脏数据）
+
+    // ----- 历史记录操作 -----
+    List<ICompletionRecord> getCompletionRecords(String taskId);
+
+    void addCompletionRecord(ICompletionRecord record);
+
+    void pruneRecords(String taskId, int maxKeep); // 裁剪旧记录
+
+    // ==============================================
+    // 便利查询方法（默认实现基于 getDefinition / getAllDefinitions）
+    // ==============================================
+
+    /**
+     * 获取所有已注册的任务定义。
+     * 默认抛 {@link UnsupportedOperationException}，具体仓储需覆盖实现。
+     */
+    default List<ITaskDefinition> getAllDefinitions() {
+        throw new UnsupportedOperationException("getAllDefinitions not implemented");
+    }
+
+    /**
+     * 按类型筛选任务定义。
+     */
+    default List<ITaskDefinition> getDefinitionsByType(TaskType type) {
+        return getAllDefinitions().stream()
+                .filter(d -> d.getType() == type)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 检查指定 ID 的任务定义是否存在。
+     */
+    default boolean hasDefinition(String id) {
+        return getDefinition(id).isPresent();
+    }
+
+    /**
+     * 获取已注册的任务定义总数。
+     */
+    default int getDefinitionCount() {
+        return getAllDefinitions().size();
+    }
+}

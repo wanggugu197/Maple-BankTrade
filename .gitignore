@@ -10,6 +10,7 @@
 out/
 # mpeltonen/sbt-idea 插件
 .idea_modules/
+.trae/
 
 # JIRA 插件
 atlassian-ide-plugin.xml
