@@ -194,11 +194,28 @@ public final class MachineTradeRegistration {
                 .addItemOutput(ItemIO.of(Items.BREAD, 1))
                 .build());
 
+        MachineItemDesk.register("buy_ccccc", new MachineTradeBuilder()
+                .addItemInput(ItemIO.of(Items.IRON_INGOT, 1))
+                .addItemOutput(ItemIO.of(Items.GOLD_INGOT, 1))
+                .build());
+
         MachineItemDesk.register("buy_aaa", new MachineTradeBuilder()
                 .addCurrencyExtract(CurrencyIO.of(coins, 6))
                 .addItemOutput(ItemIO.of(Items.DIAMOND_BLOCK, 1))
                 .visibility(CheckHasRegister.VISIBILITY_FILTER_BY_NAME,
                         CheckHasRegister.createVisibilityFilterByNameCompoundTag(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
+                .build());
+
+        MachineItemDesk.register("buy_bbb", new MachineTradeBuilder()
+                .addItemInput(ItemIO.of(Items.EMERALD, 1))
+                .addItemOutput(ItemIO.of(Items.DIAMOND_BLOCK, 1))
+                .visibility(CheckHasRegister.VISIBILITY_FILTER_BY_NAME,
+                        CheckHasRegister.createVisibilityFilterByNameCompoundTag(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
+                .build());
+
+        MachineItemDesk.register("buy_dddd", new MachineTradeBuilder()
+                .addItemInput(ItemIO.of(Items.CLAY, 1))
+                .addItemOutput(ItemIO.of(Items.EMERALD, 1))
                 .build());
     }
 

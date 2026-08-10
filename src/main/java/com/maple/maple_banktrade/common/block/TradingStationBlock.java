@@ -11,12 +11,14 @@ import com.maple.maple_banktrade.api.machineTrade.station.TradingStationStorageS
 import com.maple.maple_banktrade.common.MBTRegistration;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import lombok.Getter;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
 public class TradingStationBlock extends BaseTradingStationBlock {
 
+    @Getter
     private final TradingStationStorageSpec storageSpec;
 
     public TradingStationBlock(Properties properties,
@@ -44,7 +46,7 @@ public class TradingStationBlock extends BaseTradingStationBlock {
 
     @Override
     protected BaseTradingStationBlockEntity createStationEntity(BlockPos pos, BlockState state) {
-        return new TradingStationBlockEntity(pos, state, stationEntityType(), storageSpec, isRunsAutoTrade());
+        return new TradingStationBlockEntity(stationEntityType(), pos, state);
     }
 
     @Override

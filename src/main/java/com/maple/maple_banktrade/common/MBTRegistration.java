@@ -1,13 +1,19 @@
 package com.maple.maple_banktrade.common;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 import com.gto.registrylib.composite.ComponentItem;
+import com.gto.registrylib.tooltip.SubNode;
 import com.gto.registrylib.util.entry.BlockEntityTypeEntry;
 import com.gto.registrylib.util.entry.BlockEntry;
 import com.gto.registrylib.util.entry.ItemEntry;
 import com.maple.maple_banktrade.MapleBankTrade;
+import com.maple.maple_banktrade.api.bank.data.TradableType;
 import com.maple.maple_banktrade.api.machineTrade.itemAttachment.MachineTradeItemAttachment;
 import com.maple.maple_banktrade.api.machineTrade.station.BaseTradingStationBlockEntity;
 import com.maple.maple_banktrade.api.machineTrade.station.TradingStationStorageSpec;
@@ -15,14 +21,14 @@ import com.maple.maple_banktrade.common.block.TradingStationBlock;
 import com.maple.maple_banktrade.common.block.TradingStationBlockEntity;
 import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
 import com.mapleutillib.api.composite.UIComponentItem;
+import com.mapleutillib.api.registry.ModRegistryCore;
 import com.mapleutillib.utils.RLUtils;
 import com.mapleutillib.utils.generator.ModBlockModelGeneratorHelper;
 import com.mapleutillib.utils.generator.ModItemModelGeneratorHelper;
 
 import static com.maple.maple_banktrade.MapleBankTrade.REGISTRY;
 import static com.maple.maple_banktrade.common.MBTTab.TAB_BANK;
-import static com.maple.maple_banktrade.common.MBTTags.TRADING_STATION_BLOCK;
-import static com.maple.maple_banktrade.common.MBTTags.TRADING_STATION_ITEM;
+import static com.maple.maple_banktrade.common.MBTTags.*;
 
 /**
  * 模组内置方块/物品等内容注册入口（非 API）。
@@ -119,9 +125,7 @@ public class MBTRegistration {
             .register();
 
     public static final BlockEntityTypeEntry<TradingStationBlockEntity> COMMON_TRADING_STATION_ENTITY = REGISTRY
-            .blockEntity(REGISTRY, "common_trading_station_entity",
-                    (type, pos, state) -> new TradingStationBlockEntity(pos, state, type,
-                            TradingStationStorageSpec.builder().build(), false))
+            .blockEntity(REGISTRY, "common_trading_station_entity", TradingStationBlockEntity::new)
             .validBlocks(TRADING_STATION, ITEM_CARD_TRADING_STATION, AUTO_TRADING_STATION)
             .register();
 
@@ -129,10 +133,27 @@ public class MBTRegistration {
         BaseTradingStationBlockEntity.registerCapabilities(event, COMMON_TRADING_STATION_ENTITY.get());
     }
 
-    public static final ItemEntry<ComponentItem> ITEM_DESK = REGISTRY
-            .componentItem("transaction_symbol", UIComponentItem::new)
-            .langCn("交易符")
-            .attach(new MachineTradeItemAttachment(TradeTypeRegistration.MACHINE_ITEM_DESK.id()))
-            .addTab(TAB_BANK.getKey())
-            .register();
+    public static final ItemEntry<ComponentItem> ITEM_DESK = createTransactionTalisman(
+            REGISTRY, TAB_BANK.getKey(),
+            TradeTypeRegistration.MACHINE_ITEM_DESK.id(), RLUtils.mc("item/diamond"));
+
+    public static ItemEntry<ComponentItem> createTransactionTalisman(ModRegistryCore registryCore, ResourceKey<CreativeModeTab> tab,
+                                                                     Identifier type, Identifier overlay) {
+        return registryCore
+                .componentItem("transaction_talisman_" + type.toString().replace(":", "_"), UIComponentItem::new)
+                .lang("Transaction Talisman")
+                .langCn("交易符令")
+                .attach(new MachineTradeItemAttachment(type))
+                .addTag(TRADING_TALISMAN_ITEM)
+                .addTab(tab)
+                .addTooltip((collector, _) -> {
+                    collector.node(new SubNode.Basic(Component.translatable("tooltip.maple_banktrade.transaction_talisman", Component.translatable(TradableType.getTradableTypeTranslationKey(type)))));
+                    TradableType.requireById(type).description().forEach(c -> collector.node(new SubNode.Basic(c)));
+                })
+                .model(() -> (item, prov) -> ModItemModelGeneratorHelper.createMultiLayerItem(prov, item,
+                        MapleBankTrade.id("item/transaction_talisman"),
+                        MapleBankTrade.id("item/talisman"),
+                        overlay))
+                .register();
+    }
 }

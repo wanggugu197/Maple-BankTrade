@@ -1,5 +1,6 @@
 package com.maple.maple_banktrade.api.machineTrade.ui;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -15,16 +16,15 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.maple.maple_banktrade.MapleBankTrade;
+import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.maple.maple_banktrade.api.bank.data.TradableType;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.FlexWrap;
+import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.NonNull;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MachineTradeUIHelper {
 
@@ -35,38 +35,37 @@ public class MachineTradeUIHelper {
     public static UIElement buildTradesTab(MachineTradeUiHost host, Identifier tradeTypeId) {
         var scroller = createScrollerView();
         TradableType type = TradableType.requireById(tradeTypeId);
-        if (type != null) {
-            scroller.addScrollViewChild(buildTradeTypeHeader(type));
-        }
-        var grid = new UIElement().layout(l -> l.width(260).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
+        if (type != null) scroller.addScrollViewChild(buildTradeTypeHeader(type));
 
-        var value = new BindableValue<Identifier[]>().setValue(new Identifier[] {}, false);
-        value.registerValueListener(v -> {
-            MapleBankTrade.LOGGER.info("{} value changed {}",tradeTypeId, Arrays.toString(v));
-            grid.clearAllChildren();
-            addTrades(host, tradeTypeId, grid, v);
+        var grid = new UIElement().layout(l -> l.width(260).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
+        addTrades(host, tradeTypeId, grid);
+
+        String[] strings = host.listTradesForUi(tradeTypeId).stream()
+                .map(entry -> StringUtils.substringAfterLast(entry.getKey().getPath(), "/"))
+                .toArray(String[]::new);
+        var value = new BindableValue<String[]>().setValue(strings, true);
+        value.bind(DataBindingBuilder.create(value::getValue, _ -> {}).build());
+        value.registerValueListener(ids -> {
+            Set<String> idSet = new HashSet<>(Arrays.asList(ids));
+            grid.getChildren().stream()
+                    .filter(child -> !idSet.contains(child.getId()))
+                    .forEach(child -> {
+                        child.style(s -> s.overlay(Sprites.RECT_RD));
+                        child.getChildren().getFirst().style(s -> s.tooltips(Component.translatable("trade.maple_banktrade.machine.tooltip.unlocked")
+                                .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD)));
+                    });
         });
-        value.bind(DataBindingBuilder.create(() ->
-                        host.listTradesForUi(tradeTypeId).stream().map(Map.Entry::getKey).toArray(Identifier[]::new),
-                _ -> {}).build());
-        addTrades(host, tradeTypeId, grid, value.getValue());
 
         scroller.addScrollViewChildren(grid, value);
         return scroller;
     }
 
-    public static void addTrades(MachineTradeUiHost host, Identifier tradeTypeId, UIElement grid, Identifier[] ids) {
-        List<Map.Entry<Identifier, MachineTrade>> trades = host.listTradesForUi(tradeTypeId).stream()
-                .filter(entry -> Arrays.stream(ids).toList().contains(entry.getKey()))
-                .toList();
-
+    public static void addTrades(MachineTradeUiHost host, Identifier tradeTypeId, UIElement grid) {
+        List<Map.Entry<Identifier, MachineTrade>> trades = host.listAllTrades(tradeTypeId);
         if (trades.isEmpty()) {
-            grid.addChild(new Label().setText(
-                    Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
+            grid.addChild(new Label().setText(Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
         } else {
-            for (Map.Entry<Identifier, MachineTrade> entry : trades) {
-                grid.addChild(buildTradeButton(host, tradeTypeId, entry));
-            }
+            trades.forEach(entry -> grid.addChild(buildTradeButton(host, tradeTypeId, entry)));
         }
     }
 
@@ -102,32 +101,22 @@ public class MachineTradeUIHelper {
                                                       Identifier tradeTypeId,
                                                       Map.Entry<Identifier, MachineTrade> entry) {
         Identifier tradeId = entry.getKey();
-        UIElement tradeUI = MachineTrade.getMachineTradeIcon(entry.getValue());
-
+        UIElement tradeUI = MachineTrade.getMachineTradeIcon(entry.getValue())
+                .setId(StringUtils.substringAfterLast(entry.getKey().getPath(), "/"));
         tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
-            if (e.button == 0) {
-                e.modifiers = tradeCountFromKeyboard(e);
-            }
+            if (e.button == 0) e.modifiers = tradeCountFromKeyboard(e);
         });
         tradeUI.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
-            if (e.button == 0) {
-                host.runTradeFromUi(tradeTypeId, tradeId, Math.max(1, e.modifiers));
-            }
+            if (e.button == 0) host.runTradeFromUi(tradeTypeId, tradeId, Math.max(1, e.modifiers));
         });
         return tradeUI;
     }
 
     /** 客户端：Alt=64 / Ctrl=8 / Shift=4 / 默认 1。直接写入 {@link UIEvent#modifiers} 传给服务端。 */
     public static int tradeCountFromKeyboard(UIEvent event) {
-        if (event.isAltDown()) {
-            return ALT_TRADE_COUNT;
-        }
-        if (event.isCtrlDown()) {
-            return CTRL_TRADE_COUNT;
-        }
-        if (event.isShiftDown()) {
-            return SHIFT_TRADE_COUNT;
-        }
+        if (event.isAltDown()) return ALT_TRADE_COUNT;
+        if (event.isCtrlDown()) return CTRL_TRADE_COUNT;
+        if (event.isShiftDown()) return SHIFT_TRADE_COUNT;
         return 1;
     }
 

@@ -2,7 +2,11 @@ package com.maple.maple_banktrade.api.machineTrade.ui;
 
 import net.minecraft.resources.Identifier;
 
+import com.maple.maple_banktrade.api.trade.base.registry.TradeRegistry;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeContext;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeHandler;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeStorage;
 
 import java.util.List;
 import java.util.Map;
@@ -21,12 +25,6 @@ public interface MachineTradeUiHost {
     List<Identifier> tradeTypeIds();
 
     /**
-     * UI 用配方列表：优先可见项，可回退到已注册全部条目。
-     * 实现可委托 {@code listVisibleTrades} / {@code listRegisteredTrades}。
-     */
-    List<Map.Entry<Identifier, MachineTrade>> listTradesForUi(Identifier tradeTypeId);
-
-    /**
      * UI 点击配方后在服务端执行。
      *
      * @param desiredCount 由修饰键解码的期望次数（≥1）
@@ -43,6 +41,9 @@ public interface MachineTradeUiHost {
      */
     boolean unbindCardFromUi(UUID cardUuid);
 
+    /** 创建运行交易的上下文 */
+    MachineTradeContext createTradeContext(Identifier tradeTypeId);
+
     /**
      * 本站硬件/类型是否支持自动交易（对应 BE 构造时的 allowAutoTrade）。
      * 为 false 时不显示自动交易开关。
@@ -58,4 +59,27 @@ public interface MachineTradeUiHost {
 
     /** UI Switch 写入配置；仅服务端应改世界状态。 */
     default void setAutoTradeEnabled(boolean enabled) {}
+
+    /** 获取交易存储器 */
+    default MachineTradeStorage tradeStorage(Identifier tradeTypeId) {
+        return TradeRegistry.requireStorage(tradeTypeId, MachineTradeStorage.class);
+    }
+
+    /**
+     * UI 用配方可见项列表。
+     */
+    default List<Map.Entry<Identifier, MachineTrade>> listTradesForUi(Identifier tradeTypeId) {
+        MachineTradeContext context = createTradeContext(tradeTypeId);
+        if (context != null) return MachineTradeHandler.listVisible(context);
+        return List.of();
+    }
+
+    /**
+     * UI 配方全部列表。
+     */
+    default List<Map.Entry<Identifier, MachineTrade>> listAllTrades(Identifier tradeTypeId) {
+        MachineTradeStorage storage = tradeStorage(tradeTypeId);
+        if (storage != null) return List.copyOf(storage.entries().entrySet());
+        return List.of();
+    }
 }

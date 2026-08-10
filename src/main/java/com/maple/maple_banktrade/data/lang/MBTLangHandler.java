@@ -133,6 +133,28 @@ public class MBTLangHandler {
                 "卡上 UUID 均已绑定（当前 %s 张）。",
                 "All card UUIDs already bound (currently %s).");
 
+        addLang("command.mbt_bank.factories.empty", "当前没有已注册的银行卡创建定义。", "No registered bank card factories.");
+        addLang("command.mbt_bank.factories.header", "可创建的银行卡：", "Creatable bank cards:");
+        addLang("command.mbt_bank.factories.entry", "- %s | id=%s | bank=%s", "- %s | id=%s | bank=%s");
+        addLang("command.mbt_bank.create.unknown_factory", "未知银行卡创建定义：%s", "Unknown bank card factory: %s");
+        addLang("command.mbt_bank.create.failed", "银行卡创建失败：%s", "Failed to create bank card: %s");
+        addLang("command.mbt_bank.create.success", "已创建银行卡：%s", "Created bank card: %s");
+        addLang("command.mbt_bank.card.summary", "%s | bank=%s | type=%s | name=%s | permission=%s", "%s | bank=%s | type=%s | name=%s | permission=%s");
+        addLang("command.mbt_bank.list.empty", "你还没有可用的银行卡。使用 /mbt_bank factories 查看可创建类型。", "You do not have any usable bank cards. Use /mbt_bank factories to view creatable types.");
+        addLang("command.mbt_bank.list.header", "你的银行卡：", "Your bank cards:");
+        addLang("command.mbt_bank.list.entry", "- %s", "- %s");
+        addLang("command.mbt_bank.wallet.opened", "已打开钱包。", "Opened wallet.");
+        addLang("command.mbt_bank.info.not_found", "银行卡不存在：%s", "Bank card does not exist: %s");
+        addLang("command.mbt_bank.info.no_permission", "你没有使用此银行卡的权限：%s", "You do not have permission to use this bank card: %s");
+        addLang("command.mbt_bank.info.header", "银行卡信息：", "Bank card info:");
+        addLang("command.mbt_bank.info.bank", "银行: %s", "Bank: %s");
+        addLang("command.mbt_bank.info.card_type", "卡类型: %s", "Card type: %s");
+        addLang("command.mbt_bank.info.name_index", "名称索引: %s", "Name index: %s");
+        addLang("command.mbt_bank.info.permission", "权限: %s", "Permission: %s");
+        addLang("command.mbt_bank.balance.empty", "余额: 无支持货币", "Balance: no supported currencies");
+        addLang("command.mbt_bank.balance.header", "余额:", "Balance:");
+        addLang("command.mbt_bank.balance.entry", "- %s: %s", "- %s: %s");
+
         // 交易站 UI（交易类型名称/描述见 TradableTypeRegistration）
         addLang("ui.maple_banktrade.trading_station.tab.inventory", "库存", "Inventory");
         addLang("ui.maple_banktrade.trading_station.input", "输入", "Input");
@@ -156,6 +178,7 @@ public class MBTLangHandler {
                 "When on, matching recipes sell automatically from inputs.");
 
         // 机器交易配方 Tooltip
+        addLang("trade.maple_banktrade.machine.tooltip.unlocked", "未解锁", "Unlocked");
         addLang("trade.maple_banktrade.machine.tooltip.inputs", "输入:", "Inputs:");
         addLang("trade.maple_banktrade.machine.tooltip.outputs", "输出:", "Outputs:");
         addLang("trade.maple_banktrade.machine.tooltip.item_entry", " - %sx ", " - %sx ");
@@ -164,26 +187,7 @@ public class MBTLangHandler {
         addLang("trade.maple_banktrade.machine.tooltip.energy_insert", " - 产出 %s FE", " - Insert %s FE");
         addLang("trade.maple_banktrade.machine.tooltip.currency_entry", " - %s ", " - %s ");
 
-        addLang("command.mbt_bank.factories.empty", "当前没有已注册的银行卡创建定义。", "No registered bank card factories.");
-        addLang("command.mbt_bank.factories.header", "可创建的银行卡：", "Creatable bank cards:");
-        addLang("command.mbt_bank.factories.entry", "- %s | id=%s | bank=%s", "- %s | id=%s | bank=%s");
-        addLang("command.mbt_bank.create.unknown_factory", "未知银行卡创建定义：%s", "Unknown bank card factory: %s");
-        addLang("command.mbt_bank.create.failed", "银行卡创建失败：%s", "Failed to create bank card: %s");
-        addLang("command.mbt_bank.create.success", "已创建银行卡：%s", "Created bank card: %s");
-        addLang("command.mbt_bank.card.summary", "%s | bank=%s | type=%s | name=%s | permission=%s", "%s | bank=%s | type=%s | name=%s | permission=%s");
-        addLang("command.mbt_bank.list.empty", "你还没有可用的银行卡。使用 /mbt_bank factories 查看可创建类型。", "You do not have any usable bank cards. Use /mbt_bank factories to view creatable types.");
-        addLang("command.mbt_bank.list.header", "你的银行卡：", "Your bank cards:");
-        addLang("command.mbt_bank.list.entry", "- %s", "- %s");
-        addLang("command.mbt_bank.wallet.opened", "已打开钱包。", "Opened wallet.");
-        addLang("command.mbt_bank.info.not_found", "银行卡不存在：%s", "Bank card does not exist: %s");
-        addLang("command.mbt_bank.info.no_permission", "你没有使用此银行卡的权限：%s", "You do not have permission to use this bank card: %s");
-        addLang("command.mbt_bank.info.header", "银行卡信息：", "Bank card info:");
-        addLang("command.mbt_bank.info.bank", "银行: %s", "Bank: %s");
-        addLang("command.mbt_bank.info.card_type", "卡类型: %s", "Card type: %s");
-        addLang("command.mbt_bank.info.name_index", "名称索引: %s", "Name index: %s");
-        addLang("command.mbt_bank.info.permission", "权限: %s", "Permission: %s");
-        addLang("command.mbt_bank.balance.empty", "余额: 无支持货币", "Balance: no supported currencies");
-        addLang("command.mbt_bank.balance.header", "余额:", "Balance:");
-        addLang("command.mbt_bank.balance.entry", "- %s: %s", "- %s: %s");
+        // 交易符令 Tooltip
+        addLang("tooltip.maple_banktrade.transaction_talisman", "可打开商店 - %s", "Openable store - %s");
     }
 }

@@ -7,9 +7,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.transfer.energy.EmptyEnergyHandler;
+import net.neoforged.neoforge.transfer.energy.SimpleEnergyHandler;
 import net.neoforged.neoforge.transfer.fluid.FluidStacksResourceHandler;
-import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 
 import com.gto.registrylib.composite.ComponentItem;
 import com.lowdragmc.lowdraglib2.gui.factory.HeldItemUIMenuType;
@@ -20,17 +19,17 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.inventory.InventorySlots;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.DescSynced;
 import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.machineTrade.ui.MachineTradeUIHelper;
 import com.maple.maple_banktrade.api.machineTrade.ui.MachineTradeUiHost;
-import com.maple.maple_banktrade.api.trade.base.registry.TradeRegistry;
-import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
+import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeContext;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeDetail;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeHandler;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeStorage;
+import com.maple.maple_banktrade.utils.PlayerInventoryItemStacksResourceHandler;
 import com.mapleutillib.api.composite.UIItemAttachment;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
@@ -42,8 +41,7 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
 
     private final Identifier tradeType;
 
-    @DescSynced
-    private Player player;
+    private ServerPlayer player;
 
     public MachineTradeItemAttachment(Identifier tradeType) {
         this.tradeType = tradeType;
@@ -60,7 +58,9 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
 
     @Override
     public ModularUI createUI(ComponentItem item, HeldItemUIMenuType.HeldItemUIHolder holder) {
-        player = holder.player;
+        if (holder.player instanceof ServerPlayer serverPlayer) {
+            player = serverPlayer;
+        }
         var root = new UIElement()
                 .style(s -> s.background(IGuiTexture.EMPTY))
                 .layout(l -> l.gapAll(0).alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER));
@@ -88,26 +88,7 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
     }
 
     /**
-     * UI 用配方列表：优先可见项，可回退到已注册全部条目。
-     * 实现可委托 {@code listVisibleTrades} / {@code listRegisteredTrades}。
-     */
-    @Override
-    public List<Map.Entry<Identifier, MachineTrade>> listTradesForUi(Identifier tradeTypeId) {
-        MachineTradeContext context = createTradeContext(tradeTypeId);
-        if (context != null) {
-            return MachineTradeHandler.listVisible(context);
-        }
-        MachineTradeStorage storage = tradeStorage(tradeTypeId);
-        if (storage != null) {
-            return List.copyOf(storage.entries().entrySet());
-        }
-        return List.of();
-    }
-
-    /**
      * UI 点击配方后在服务端执行。
-     *
-     * @param desiredCount 由修饰键解码的期望次数（≥1）
      */
     @Override
     public void runTradeFromUi(Identifier tradeTypeId, Identifier tradeId, int desiredCount) {
@@ -116,7 +97,11 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
         if (desiredCount <= 0) return;
         MachineTradeContext context = createTradeContext(tradeTypeId);
         if (context == null) return;
-        MachineTradeHandler.run(context, tradeId, desiredCount);
+        TradeExecuteResult<MachineTradeDetail> result = MachineTradeHandler.run(context, tradeId, desiredCount);
+        if (result.success() && player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.getInventory().setChanged();
+            serverPlayer.inventoryMenu.broadcastChanges();
+        }
     }
 
     /**
@@ -136,22 +121,18 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
         return false;
     }
 
-    public MachineTradeStorage tradeStorage(Identifier tradeTypeId) {
-        return TradeRegistry.requireStorage(tradeTypeId, MachineTradeStorage.class);
-    }
-
+    @Override
     public MachineTradeContext createTradeContext(Identifier tradeTypeId) {
         if (player == null) return null;
         Level level = player.level();
         MinecraftServer server = level.getServer();
         MachineTradeStorage storage = tradeStorage(tradeTypeId);
-        if (server == null || storage == null) return null;
-        ItemStacksResourceHandler itemHandler = new ItemStacksResourceHandler(player.getInventory().getNonEquipmentItems());
+        PlayerInventoryItemStacksResourceHandler itemHandler = new PlayerInventoryItemStacksResourceHandler(player);
         FluidStacksResourceHandler fluidHandler = new FluidStacksResourceHandler(0, 0);
         return new MachineTradeContext(
                 null, level, server,
-                itemHandler, itemHandler,
-                fluidHandler, fluidHandler, EmptyEnergyHandler.INSTANCE,
+                itemHandler, itemHandler, fluidHandler, fluidHandler,
+                new SimpleEnergyHandler(0),
                 new HashSet<>(MBTBankStates.getBankCards(player.level().getServer()).getUsableCardsForPlayer(BankHelper.getUuid(player))),
                 storage);
     }

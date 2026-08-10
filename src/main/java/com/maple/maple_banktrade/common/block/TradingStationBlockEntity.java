@@ -7,7 +7,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.machineTrade.station.BaseTradingStationBlockEntity;
-import com.maple.maple_banktrade.api.machineTrade.station.TradingStationStorageSpec;
 
 import java.util.List;
 
@@ -16,11 +15,10 @@ public class TradingStationBlockEntity extends BaseTradingStationBlockEntity {
     private final List<Identifier> fallbackIds = List.of();
     private final Identifier fallbackId = MapleBankTrade.id("dummy");
 
-    public TradingStationBlockEntity(BlockPos pos, BlockState state,
-                                     BlockEntityType<?> type,
-                                     TradingStationStorageSpec storageSpec,
-                                     boolean allowAutoTrade) {
-        super(type, pos, state, storageSpec, allowAutoTrade);
+    public TradingStationBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        TradingStationBlock block = (TradingStationBlock) state.getBlock();
+
+        super(type, pos, state, block.getStorageSpec(), block.isRunsAutoTrade());
     }
 
     @Override

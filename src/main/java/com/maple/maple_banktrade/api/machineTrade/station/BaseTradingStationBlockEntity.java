@@ -33,7 +33,6 @@ import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.machineTrade.ui.MachineTradeUiHost;
 import com.maple.maple_banktrade.api.machineTrade.ui.TradingStationUi;
-import com.maple.maple_banktrade.api.trade.base.registry.TradeRegistry;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
 import com.maple.maple_banktrade.api.trade.machine.*;
 import com.mapleutillib.api.baseBlock.DirectionBlockEntity;
@@ -339,11 +338,6 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         return ids.isEmpty() ? fallbackTradeTypeId() : ids.getFirst();
     }
 
-    @Nullable
-    public MachineTradeStorage tradeStorage() {
-        return tradeTypeId() == null ? null : TradeRegistry.requireStorage(tradeTypeId(), MachineTradeStorage.class);
-    }
-
     // ── 卡 UUID（原地改 Set → markDirty） ──
 
     /** 只读视图；修改请用 add/remove API。 */
@@ -361,48 +355,10 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         markDirty("cardUuids");
     }
 
-    public boolean addCardUuid(@Nullable UUID cardUuid) {
-        if (cardUuid == null || !cardUuids.add(cardUuid)) {
-            return false;
-        }
-        notifyCardUuidsChanged();
-        return true;
-    }
-
     public boolean removeCardUuid(@Nullable UUID cardUuid) {
         if (cardUuid == null || !cardUuids.remove(cardUuid)) {
             return false;
         }
-        notifyCardUuidsChanged();
-        return true;
-    }
-
-    public boolean hasCardUuid(@Nullable UUID cardUuid) {
-        return cardUuid != null && cardUuids.contains(cardUuid);
-    }
-
-    public void clearCardUuids() {
-        if (cardUuids.isEmpty()) {
-            return;
-        }
-        cardUuids.clear();
-        notifyCardUuidsChanged();
-    }
-
-    public boolean setCardUuids(@Nullable Collection<UUID> uuids) {
-        LinkedHashSet<UUID> next = new LinkedHashSet<>();
-        if (uuids != null) {
-            for (UUID uuid : uuids) {
-                if (uuid != null) {
-                    next.add(uuid);
-                }
-            }
-        }
-        if (cardUuids.equals(next)) {
-            return false;
-        }
-        cardUuids.clear();
-        cardUuids.addAll(next);
         notifyCardUuidsChanged();
         return true;
     }
@@ -424,13 +380,13 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         return added;
     }
 
-    private Set<BankCard> resolveCards() {
-        if (!(getLevel() instanceof ServerLevel serverLevel)) {
+    private Set<BankCard> resolveCards(@Nullable Iterable<UUID> uuids) {
+        if (!(getLevel() instanceof ServerLevel serverLevel) || uuids == null) {
             return Set.of();
         }
         BankCardsWorldData data = MBTBankStates.getBankCards(serverLevel.getServer());
         LinkedHashSet<BankCard> cards = new LinkedHashSet<>();
-        for (UUID uuid : cardUuids) {
+        for (UUID uuid : uuids) {
             if (uuid == null) {
                 continue;
             }
@@ -443,18 +399,18 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
     }
 
     // ── 交易上下文 / 执行 ──
-    @Nullable
-    public MachineTradeContext createTradeContext() {
-        if (!isServerSide()) return null;
+
+    @Override
+    public MachineTradeContext createTradeContext(Identifier tradeTypeId) {
         Level level = getLevel();
         if (level == null) return null;
         MinecraftServer server = level.getServer();
-        MachineTradeStorage storage = tradeStorage();
+        MachineTradeStorage storage = tradeStorage(tradeTypeId);
         if (server == null || storage == null) return null;
         return new MachineTradeContext(
                 this, level, server,
                 itemInput, itemOutput, fluidInput, fluidOutput, energy,
-                resolveCards(),
+                resolveCards(cardUuids),
                 storage);
     }
 
@@ -481,7 +437,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         if (!isAutoTradeActive() || tradeTypeId == null) {
             return 0;
         }
-        MachineTradeContext context = createTradeContext();
+        MachineTradeContext context = createTradeContext(tradeTypeId);
         return context == null ? 0 : MachineTradeHandler.autoRun(context);
     }
 
@@ -511,28 +467,15 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         if (desiredCount <= 0) {
             return TradeExecuteResult.failure(null);
         }
-        MachineTradeContext context = createTradeContext();
+        MachineTradeContext context = createTradeContext(tradeTypeId);
         if (context == null) {
             return TradeExecuteResult.failure(null);
         }
+        // 占位：避免成交改输入槽时立刻连环 auto
         return withTradeBusy(() -> MachineTradeHandler.run(context, tradeId, desiredCount));
     }
 
     // ── UI Host ──
-
-    @Override
-    public List<Map.Entry<Identifier, MachineTrade>> listTradesForUi(Identifier tradeTypeId) {
-        MachineTradeContext context = createTradeContext();
-        if (context != null) {
-            return MachineTradeHandler.listVisible(context);
-        }
-        MachineTradeStorage storage = tradeStorage();
-        if (storage != null) {
-            return List.copyOf(storage.entries().entrySet());
-        }
-        return List.of();
-    }
-
     @Override
     public void runTradeFromUi(Identifier tradeTypeId, Identifier tradeId, int desiredCount) {
         runTrade(tradeTypeId, tradeId, desiredCount);

@@ -18,6 +18,7 @@ public class MBTTags {
     // 标签
     // ==============================================
     public static final TagKey<Item> TRADING_STATION_ITEM = createItemTag("trading_station");
+    public static final TagKey<Item> TRADING_TALISMAN_ITEM = createItemTag("trading_talisman");
     public static final TagKey<Block> TRADING_STATION_BLOCK = createBlockTag("trading_station");
 
     // ==============================================
