@@ -2,37 +2,34 @@ package com.maple.maple_banktrade.common.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
-import com.maple.maple_banktrade.api.machine.base.TradingStationStorageSpec;
-import com.maple.maple_banktrade.common.MBTRegistration;
-import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
+import com.maple.maple_banktrade.MapleBankTrade;
+import com.maple.maple_banktrade.api.machineTrade.station.BaseTradingStationBlockEntity;
+import com.maple.maple_banktrade.api.machineTrade.station.TradingStationStorageSpec;
 
 import java.util.List;
 
-/**
- * 全功能贸易站：大容量规格 + 全部内置机器配方类型。
- */
 public class TradingStationBlockEntity extends BaseTradingStationBlockEntity {
 
-    public static final TradingStationStorageSpec STORAGE_SPEC = TradingStationStorageSpec.fullStation();
+    private final List<Identifier> fallbackIds = List.of();
+    private final Identifier fallbackId = MapleBankTrade.id("dummy");
 
-    public TradingStationBlockEntity(BlockPos pos, BlockState state) {
-        this(pos, state, false);
-    }
-
-    public TradingStationBlockEntity(BlockPos pos, BlockState state, boolean allowAutoTrade) {
-        super(MBTRegistration.TRADING_STATION_ENTITY.get(), pos, state, STORAGE_SPEC, allowAutoTrade);
+    public TradingStationBlockEntity(BlockPos pos, BlockState state,
+                                     BlockEntityType<?> type,
+                                     TradingStationStorageSpec storageSpec,
+                                     boolean allowAutoTrade) {
+        super(type, pos, state, storageSpec, allowAutoTrade);
     }
 
     @Override
     protected List<Identifier> fallbackTradeTypeIds() {
-        return TradeTypeRegistration.TRADING_STATION_TYPES;
+        return fallbackIds;
     }
 
     @Override
     protected Identifier fallbackTradeTypeId() {
-        return TradeTypeRegistration.MACHINE_BENCH.id();
+        return fallbackId;
     }
 }

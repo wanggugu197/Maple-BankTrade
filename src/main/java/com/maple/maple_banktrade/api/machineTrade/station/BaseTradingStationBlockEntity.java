@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.api.machine.base;
+package com.maple.maple_banktrade.api.machineTrade.station;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,10 +31,9 @@ import com.lowdragmc.lowdraglib2.syncdata.storage.FieldManagedStorage;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
-import com.maple.maple_banktrade.api.machine.ui.TradingStationUi;
-import com.maple.maple_banktrade.api.machine.ui.TradingStationUiHost;
+import com.maple.maple_banktrade.api.machineTrade.ui.MachineTradeUiHost;
+import com.maple.maple_banktrade.api.machineTrade.ui.TradingStationUi;
 import com.maple.maple_banktrade.api.trade.base.registry.TradeRegistry;
-import com.maple.maple_banktrade.api.trade.base.result.TradeCheckResult;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
 import com.maple.maple_banktrade.api.trade.machine.*;
 import com.mapleutillib.api.baseBlock.DirectionBlockEntity;
@@ -66,7 +65,7 @@ import javax.annotation.Nullable;
  * </p>
  */
 public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
-                                                    implements ISyncPersistRPCBlockEntity, TradingStationUiHost {
+                                                    implements ISyncPersistRPCBlockEntity, MachineTradeUiHost {
 
     /** 自动交易周期：10 秒。 */
     public static final int AUTO_TRADE_INTERVAL_TICKS = 20 * 10;
@@ -326,7 +325,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
 
     @Override
     public List<Identifier> tradeTypeIds() {
-        if (getBlockState().getBlock() instanceof MachineTradeTypeBlock host) {
+        if (getBlockState().getBlock() instanceof MachineTradeType host) {
             List<Identifier> configured = host.machineTradeTypes();
             if (configured != null && !configured.isEmpty()) {
                 return List.copyOf(configured);
@@ -342,12 +341,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
 
     @Nullable
     public MachineTradeStorage tradeStorage() {
-        return tradeStorage(tradeTypeId());
-    }
-
-    @Nullable
-    public MachineTradeStorage tradeStorage(Identifier tradeTypeId) {
-        return tradeTypeId == null ? null : TradeRegistry.requireStorage(tradeTypeId, MachineTradeStorage.class);
+        return tradeTypeId() == null ? null : TradeRegistry.requireStorage(tradeTypeId(), MachineTradeStorage.class);
     }
 
     // ── 卡 UUID（原地改 Set → markDirty） ──
@@ -430,17 +424,13 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         return added;
     }
 
-    public Set<BankCard> resolveBoundCards() {
-        return resolveCards(cardUuids);
-    }
-
-    private Set<BankCard> resolveCards(@Nullable Iterable<UUID> uuids) {
-        if (!(getLevel() instanceof ServerLevel serverLevel) || uuids == null) {
+    private Set<BankCard> resolveCards() {
+        if (!(getLevel() instanceof ServerLevel serverLevel)) {
             return Set.of();
         }
         BankCardsWorldData data = MBTBankStates.getBankCards(serverLevel.getServer());
         LinkedHashSet<BankCard> cards = new LinkedHashSet<>();
-        for (UUID uuid : uuids) {
+        for (UUID uuid : cardUuids) {
             if (uuid == null) {
                 continue;
             }
@@ -453,43 +443,19 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
     }
 
     // ── 交易上下文 / 执行 ──
-
     @Nullable
     public MachineTradeContext createTradeContext() {
-        return createTradeContext(tradeTypeId(), resolveBoundCards());
-    }
-
-    @Nullable
-    public MachineTradeContext createTradeContext(Identifier tradeTypeId) {
-        return createTradeContext(tradeTypeId, resolveBoundCards());
-    }
-
-    @Nullable
-    public MachineTradeContext createTradeContext(
-                                                  Identifier tradeTypeId,
-                                                  @Nullable Set<BankCard> bankCards) {
-        if (!isServerSide()) {
-            return null;
-        }
+        if (!isServerSide()) return null;
         Level level = getLevel();
         if (level == null) return null;
         MinecraftServer server = level.getServer();
-        MachineTradeStorage storage = tradeStorage(tradeTypeId);
-        if (server == null || storage == null) {
-            return null;
-        }
+        MachineTradeStorage storage = tradeStorage();
+        if (server == null || storage == null) return null;
         return new MachineTradeContext(
                 this, level, server,
                 itemInput, itemOutput, fluidInput, fluidOutput, energy,
-                bankCards != null ? bankCards : resolveBoundCards(),
+                resolveCards(),
                 storage);
-    }
-
-    @Nullable
-    public MachineTradeContext createTradeContextFromCardIds(
-                                                             Identifier tradeTypeId,
-                                                             @Nullable Iterable<UUID> uuids) {
-        return createTradeContext(tradeTypeId, resolveCards(uuids));
     }
 
     /**
@@ -515,7 +481,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         if (!isAutoTradeActive() || tradeTypeId == null) {
             return 0;
         }
-        MachineTradeContext context = createTradeContext(tradeTypeId);
+        MachineTradeContext context = createTradeContext();
         return context == null ? 0 : MachineTradeHandler.autoRun(context);
     }
 
@@ -536,81 +502,35 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         return true;
     }
 
-    public TradeExecuteResult<MachineTradeDetail> runTrade(Identifier tradeId, int desiredCount) {
-        return runTrade(tradeTypeId(), tradeId, desiredCount, null);
-    }
-
     public TradeExecuteResult<MachineTradeDetail> runTrade(
                                                            Identifier tradeTypeId,
                                                            Identifier tradeId,
                                                            int desiredCount) {
-        return runTrade(tradeTypeId, tradeId, desiredCount, null);
-    }
-
-    public TradeExecuteResult<MachineTradeDetail> runTrade(
-                                                           Identifier tradeTypeId,
-                                                           Identifier tradeId,
-                                                           int desiredCount,
-                                                           @Nullable Set<BankCard> bankCards) {
         Objects.requireNonNull(tradeTypeId, "tradeTypeId");
         Objects.requireNonNull(tradeId, "tradeId");
         if (desiredCount <= 0) {
             return TradeExecuteResult.failure(null);
         }
-        MachineTradeContext context = createTradeContext(tradeTypeId, bankCards);
+        MachineTradeContext context = createTradeContext();
         if (context == null) {
             return TradeExecuteResult.failure(null);
         }
-        // 占位：避免成交改输入槽时立刻连环 auto
         return withTradeBusy(() -> MachineTradeHandler.run(context, tradeId, desiredCount));
-    }
-
-    public TradeCheckResult<MachineTradePlan> checkTrade(Identifier tradeId, int desiredCount) {
-        return checkTrade(tradeTypeId(), tradeId, desiredCount, null);
-    }
-
-    public TradeCheckResult<MachineTradePlan> checkTrade(
-                                                         Identifier tradeTypeId,
-                                                         Identifier tradeId,
-                                                         int desiredCount,
-                                                         @Nullable Set<BankCard> bankCards) {
-        Objects.requireNonNull(tradeTypeId, "tradeTypeId");
-        Objects.requireNonNull(tradeId, "tradeId");
-        MachineTradeContext context = createTradeContext(tradeTypeId, bankCards);
-        return context == null ? TradeCheckResult.of(MachineTradePlan.denied(desiredCount)) : MachineTradeHandler.check(context, tradeId, desiredCount);
-    }
-
-    public List<Map.Entry<Identifier, MachineTrade>> listVisibleTrades() {
-        return listVisibleTrades(tradeTypeId(), null);
-    }
-
-    public List<Map.Entry<Identifier, MachineTrade>> listVisibleTrades(Identifier tradeTypeId) {
-        return listVisibleTrades(tradeTypeId, null);
-    }
-
-    public List<Map.Entry<Identifier, MachineTrade>> listVisibleTrades(
-                                                                       Identifier tradeTypeId,
-                                                                       @Nullable Set<BankCard> bankCards) {
-        MachineTradeContext context = createTradeContext(tradeTypeId, bankCards);
-        return context == null ? List.of() : MachineTradeHandler.listVisible(context);
-    }
-
-    public List<Map.Entry<Identifier, MachineTrade>> listRegisteredTrades() {
-        return listRegisteredTrades(tradeTypeId());
-    }
-
-    public List<Map.Entry<Identifier, MachineTrade>> listRegisteredTrades(Identifier tradeTypeId) {
-        MachineTradeStorage storage = tradeStorage(tradeTypeId);
-        return storage == null ? List.of() : List.copyOf(storage.entries().entrySet());
     }
 
     // ── UI Host ──
 
     @Override
     public List<Map.Entry<Identifier, MachineTrade>> listTradesForUi(Identifier tradeTypeId) {
-        return TradingStationUi.preferVisibleOrRegistered(
-                () -> listVisibleTrades(tradeTypeId),
-                () -> listRegisteredTrades(tradeTypeId));
+        MachineTradeContext context = createTradeContext();
+        if (context != null) {
+            return MachineTradeHandler.listVisible(context);
+        }
+        MachineTradeStorage storage = tradeStorage();
+        if (storage != null) {
+            return List.copyOf(storage.entries().entrySet());
+        }
+        return List.of();
     }
 
     @Override

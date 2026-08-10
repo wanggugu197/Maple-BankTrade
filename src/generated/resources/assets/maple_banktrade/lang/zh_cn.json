@@ -55,6 +55,7 @@
   "item.maple_banktrade.bank_card_authentication_key.named": "%s认证密钥",
   "item.maple_banktrade.bank_permissions_card": "银行权限卡",
   "item.maple_banktrade.bank_permissions_card_builder": "银行权限卡构造器",
+  "item.maple_banktrade.transaction_symbol": "交易符",
   "item.maple_banktrade.wallet": "钱包",
   "itemGroup.maple_banktrade.maple_banktrade": "枫糖银贸",
   "message.maple_banktrade.auth_key.already_owned": "你已经拥有 %s。",

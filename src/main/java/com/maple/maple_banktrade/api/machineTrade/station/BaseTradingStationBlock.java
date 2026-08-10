@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.api.machine.base;
+package com.maple.maple_banktrade.api.machineTrade.station;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -27,6 +27,7 @@ import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.syncdata.holder.IPersistManagedHolder;
 import com.mapleutillib.api.baseBlock.BaseRotatedBlock;
+import lombok.Getter;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -43,7 +44,7 @@ import java.util.Optional;
  * </p>
  */
 public abstract class BaseTradingStationBlock extends BaseRotatedBlock
-                                              implements BlockUIMenuType.BlockUI, MachineTradeTypeBlock {
+                                              implements BlockUIMenuType.BlockUI, MachineTradeType {
 
     /** 本站绑定的机器交易类型（UI 标签页顺序）。 */
     public final List<Identifier> trade_type;
@@ -54,6 +55,7 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
      * 通常与对应 BE 的 {@code allowAutoTrade} 构造参数一致。
      * </p>
      */
+    @Getter
     private final boolean runsAutoTrade;
 
     protected BaseTradingStationBlock(
@@ -63,11 +65,6 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
         super(properties);
         this.trade_type = trade_type;
         this.runsAutoTrade = runsAutoTrade;
-    }
-
-    /** 本方块是否挂载自动交易 ticker。 */
-    public boolean runsAutoTrade() {
-        return runsAutoTrade;
     }
 
     @Override

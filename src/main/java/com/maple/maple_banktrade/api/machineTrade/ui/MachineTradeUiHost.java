@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.api.machine.ui;
+package com.maple.maple_banktrade.api.machineTrade.ui;
 
 import net.minecraft.resources.Identifier;
 
@@ -15,7 +15,7 @@ import java.util.UUID;
  * 描述交易类型 / 配方列表 / 执行 / 绑定卡解绑，与物品/流体/能量规格无关。
  * </p>
  */
-public interface TradingStationUiHost {
+public interface MachineTradeUiHost {
 
     /** 本站绑定的交易类型 ID（决定配方标签页顺序）。 */
     List<Identifier> tradeTypeIds();

@@ -3,13 +3,18 @@ package com.maple.maple_banktrade.common;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
+import com.gto.registrylib.composite.ComponentItem;
 import com.gto.registrylib.util.entry.BlockEntityTypeEntry;
 import com.gto.registrylib.util.entry.BlockEntry;
+import com.gto.registrylib.util.entry.ItemEntry;
 import com.maple.maple_banktrade.MapleBankTrade;
-import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
-import com.maple.maple_banktrade.api.machine.base.TradingStationStorageSpec;
-import com.maple.maple_banktrade.common.block.*;
+import com.maple.maple_banktrade.api.machineTrade.itemAttachment.MachineTradeItemAttachment;
+import com.maple.maple_banktrade.api.machineTrade.station.BaseTradingStationBlockEntity;
+import com.maple.maple_banktrade.api.machineTrade.station.TradingStationStorageSpec;
+import com.maple.maple_banktrade.common.block.TradingStationBlock;
+import com.maple.maple_banktrade.common.block.TradingStationBlockEntity;
 import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
+import com.mapleutillib.api.composite.UIComponentItem;
 import com.mapleutillib.utils.RLUtils;
 import com.mapleutillib.utils.generator.ModBlockModelGeneratorHelper;
 import com.mapleutillib.utils.generator.ModItemModelGeneratorHelper;
@@ -24,12 +29,6 @@ import static com.maple.maple_banktrade.common.MBTTags.TRADING_STATION_ITEM;
  */
 public class MBTRegistration {
 
-    /**
-     * 触发本类加载，完成交易站等内置内容的 DeferredRegister 登记。
-     * <p>
-     * 实际注册在静态字段初始化中完成；本方法仅作显式入口。
-     * </p>
-     */
     public static void init() {}
 
     /**
@@ -39,7 +38,15 @@ public class MBTRegistration {
      * blockstate / items 映射。
      */
     public static final BlockEntry<TradingStationBlock> TRADING_STATION = REGISTRY
-            .block("trading_station", p -> new TradingStationBlock(p, TradeTypeRegistration.TRADING_STATION_TYPES))
+            .block("trading_station", p -> new TradingStationBlock(
+                    p,
+                    TradeTypeRegistration.TRADING_STATION_TYPES,
+                    false,
+                    TradingStationStorageSpec.builder()
+                            .itemSlots(24, 24)
+                            .fluidTanks(6, 6, 64_000)
+                            .energy(Integer.MAX_VALUE)
+                            .build()))
             .langCn("交易站")
             .initialProperties(Blocks.OAK_PLANKS)
             .blockstate(() -> (block, prov) -> ModBlockModelGeneratorHelper.createHorizontalMultiPartBlock(prov, block,
@@ -54,17 +61,20 @@ public class MBTRegistration {
                             MapleBankTrade.id("block/trading_station"))))
             .register();
 
-    public static final BlockEntityTypeEntry<TradingStationBlockEntity> TRADING_STATION_ENTITY = REGISTRY
-            .blockEntity(REGISTRY, "trading_station_entity", (_, p, s) -> new TradingStationBlockEntity(p, s))
-            .validBlock(TRADING_STATION)
-            .register();
-
     /**
      * 物品卡贸易站：较小 {@link TradingStationStorageSpec}，
      * 默认 item_desk 配方；仍具备物品/流体/能量/卡存储。
      */
-    public static final BlockEntry<ItemCardTradingStationBlock> ITEM_CARD_TRADING_STATION = REGISTRY
-            .block("item_card_trading_station", p -> new ItemCardTradingStationBlock(p, TradeTypeRegistration.ITEM_CARD_TRADING_STATION_TYPES))
+    public static final BlockEntry<TradingStationBlock> ITEM_CARD_TRADING_STATION = REGISTRY
+            .block("item_card_trading_station", p -> new TradingStationBlock(
+                    p,
+                    TradeTypeRegistration.ITEM_CARD_TRADING_STATION_TYPES,
+                    false,
+                    TradingStationStorageSpec.builder()
+                            .itemSlots(18, 18)
+                            .fluidTanks(2, 2, 16_000)
+                            .energy(100_000)
+                            .build()))
             .langCn("物品卡贸易站")
             .lang("Item-Card Trading Station")
             .initialProperties(Blocks.WHITE_WOOL)
@@ -80,16 +90,19 @@ public class MBTRegistration {
                             MapleBankTrade.id("block/trading_station"))))
             .register();
 
-    public static final BlockEntityTypeEntry<ItemCardTradingStationBlockEntity> ITEM_CARD_TRADING_STATION_ENTITY = REGISTRY
-            .blockEntity(REGISTRY, "item_card_trading_station_entity", (_, p, s) -> new ItemCardTradingStationBlockEntity(p, s))
-            .validBlock(ITEM_CARD_TRADING_STATION)
-            .register();
-
     /**
      * 自动贸易站：开启自动交易，绑定矿石+岩浆与怪物掉落物自动出售类型。
      */
-    public static final BlockEntry<AutoTradingStationBlock> AUTO_TRADING_STATION = REGISTRY
-            .block("auto_trading_station", p -> new AutoTradingStationBlock(p, TradeTypeRegistration.AUTO_TRADING_STATION_TYPES))
+    public static final BlockEntry<TradingStationBlock> AUTO_TRADING_STATION = REGISTRY
+            .block("auto_trading_station", p -> new TradingStationBlock(
+                    p,
+                    TradeTypeRegistration.AUTO_TRADING_STATION_TYPES,
+                    true,
+                    TradingStationStorageSpec.builder()
+                            .itemSlots(27, 9)
+                            .fluidTanks(4, 2, 64_000)
+                            .energy(50_000)
+                            .build()))
             .langCn("自动贸易站")
             .lang("Auto Trading Station")
             .initialProperties(Blocks.GOLD_BLOCK)
@@ -105,14 +118,21 @@ public class MBTRegistration {
                             MapleBankTrade.id("block/trading_station"))))
             .register();
 
-    public static final BlockEntityTypeEntry<AutoTradingStationBlockEntity> AUTO_TRADING_STATION_ENTITY = REGISTRY
-            .blockEntity(REGISTRY, "auto_trading_station_entity", (_, p, s) -> new AutoTradingStationBlockEntity(p, s))
-            .validBlock(AUTO_TRADING_STATION)
+    public static final BlockEntityTypeEntry<TradingStationBlockEntity> COMMON_TRADING_STATION_ENTITY = REGISTRY
+            .blockEntity(REGISTRY, "common_trading_station_entity",
+                    (type, pos, state) -> new TradingStationBlockEntity(pos, state, type,
+                            TradingStationStorageSpec.builder().build(), false))
+            .validBlocks(TRADING_STATION, ITEM_CARD_TRADING_STATION, AUTO_TRADING_STATION)
             .register();
 
     public static void registerTradingStationCapabilities(RegisterCapabilitiesEvent event) {
-        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.TRADING_STATION_ENTITY.get());
-        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.ITEM_CARD_TRADING_STATION_ENTITY.get());
-        BaseTradingStationBlockEntity.registerCapabilities(event, MBTRegistration.AUTO_TRADING_STATION_ENTITY.get());
+        BaseTradingStationBlockEntity.registerCapabilities(event, COMMON_TRADING_STATION_ENTITY.get());
     }
+
+    public static final ItemEntry<ComponentItem> ITEM_DESK = REGISTRY
+            .componentItem("transaction_symbol", UIComponentItem::new)
+            .langCn("交易符")
+            .attach(new MachineTradeItemAttachment(TradeTypeRegistration.MACHINE_ITEM_DESK.id()))
+            .addTab(TAB_BANK.getKey())
+            .register();
 }

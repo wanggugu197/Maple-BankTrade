@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.api.machine.ui;
+package com.maple.maple_banktrade.api.machineTrade.ui;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -31,16 +31,13 @@ import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.data.BankInfo;
 import com.maple.maple_banktrade.api.bank.data.TradableType;
-import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.FlexWrap;
-import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 import java.util.function.IntFunction;
-import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -61,17 +58,13 @@ public final class TradingStationUi {
 
     public static final int SLOT_ROW_WIDTH = 18 * 6;
 
-    public static final int SHIFT_TRADE_COUNT = 4;
-    public static final int CTRL_TRADE_COUNT = 8;
-    public static final int ALT_TRADE_COUNT = 64;
-
     private TradingStationUi() {}
 
     // ── 主壳 ──────────────────────────────────────────
 
     public static ModularUI create(
                                    BlockUIMenuType.BlockUIHolder holder,
-                                   TradingStationUiHost host,
+                                   MachineTradeUiHost host,
                                    UIElement inventoryTab) {
         Objects.requireNonNull(holder, "holder");
         Objects.requireNonNull(host, "host");
@@ -88,7 +81,7 @@ public final class TradingStationUi {
                 new Tab().setText(Component.translatable("ui.maple_banktrade.trading_station.tab.inventory")),
                 inventoryTab);
         for (Identifier typeId : host.tradeTypeIds()) {
-            tabView.addTab(buildTradeTypeTab(typeId), buildTradesTab(host, typeId));
+            tabView.addTab(buildTradeTypeTab(typeId), MachineTradeUIHelper.buildTradesTab(host, typeId));
         }
         root.addChild(tabView);
 
@@ -106,9 +99,9 @@ public final class TradingStationUi {
     }
 
     /**
-     * 左下额外小面板：可滚动；仅当 {@link TradingStationUiHost#supportsAutoTrade()} 时显示自动交易 Switch。
+     * 左下额外小面板：可滚动；仅当 {@link MachineTradeUiHost#supportsAutoTrade()} 时显示自动交易 Switch。
      */
-    public static UIElement buildAdditionalPanel(TradingStationUiHost host) {
+    public static UIElement buildAdditionalPanel(MachineTradeUiHost host) {
         Objects.requireNonNull(host, "host");
         var panel = new UIElement()
                 .layout(l -> l.width(98).height(87).paddingAll(3))
@@ -136,10 +129,10 @@ public final class TradingStationUi {
      * 自动交易开关行：标签 + {@link Switch}。
      * <p>
      * S2C 绑定显示 BE 状态；服务端 {@link UIEvents#MOUSE_DOWN} 翻转配置
-     * （Switch 客户端本地切换，服务端改 {@link TradingStationUiHost#setAutoTradeEnabled}）。
+     * （Switch 客户端本地切换，服务端改 {@link MachineTradeUiHost#setAutoTradeEnabled}）。
      * </p>
      */
-    public static UIElement buildAutoTradeSwitchRow(TradingStationUiHost host) {
+    public static UIElement buildAutoTradeSwitchRow(MachineTradeUiHost host) {
         var row = new UIElement()
                 .layout(l -> l
                         .width(88)
@@ -187,7 +180,7 @@ public final class TradingStationUi {
                                                FluidStacksResourceHandler fluidInput,
                                                FluidStacksResourceHandler fluidOutput,
                                                @Nullable EnergyHandler energy,
-                                               @Nullable TradingStationUiHost host) {
+                                               @Nullable MachineTradeUiHost host) {
         Objects.requireNonNull(itemInput, "itemInput");
         Objects.requireNonNull(itemOutput, "itemOutput");
         Objects.requireNonNull(fluidInput, "fluidInput");
@@ -207,7 +200,7 @@ public final class TradingStationUi {
             panel.addChild(buildBoundCardsPanel(host));
         }
 
-        var scroller = createScrollerView();
+        var scroller = MachineTradeUIHelper.createScrollerView();
         scroller.addScrollViewChild(panel);
         return scroller;
     }
@@ -215,7 +208,7 @@ public final class TradingStationUi {
     /**
      * 绑定卡列表。数量/卡名走 S2C；解绑走 {@link Button#setOnServerClick}。
      */
-    public static UIElement buildBoundCardsPanel(TradingStationUiHost host) {
+    public static UIElement buildBoundCardsPanel(MachineTradeUiHost host) {
         Objects.requireNonNull(host, "host");
         var panel = new UIElement()
                 .layout(l -> l.width(250).gapAll(1).paddingAll(4).alignItems(AlignItems.FLEX_START))
@@ -248,7 +241,7 @@ public final class TradingStationUi {
         return panel;
     }
 
-    private static UIElement buildBoundCardRow(TradingStationUiHost host, UUID uuid) {
+    private static UIElement buildBoundCardRow(MachineTradeUiHost host, UUID uuid) {
         var row = new UIElement()
                 .layout(l -> l
                         .width(246)
@@ -356,19 +349,6 @@ public final class TradingStationUi {
                 amount, capacity, String.format("%.4f%%", ratio));
     }
 
-    public static ScrollerView createScrollerView() {
-        ScrollerView list = new ScrollerView()
-                .scrollerStyle(s -> s
-                        .horizontalScrollDisplay(ScrollDisplay.NEVER)
-                        .verticalScrollDisplay(ScrollDisplay.NEVER)
-                        .scrollerViewStyle(0)
-                        .mode(ScrollerMode.VERTICAL));
-        list.layout(l -> l.width(260).height(130)).style(s -> s.background(IGuiTexture.EMPTY));
-        list.viewContainer.layout(l -> l.paddingAll(0)).style(s -> s.background(IGuiTexture.EMPTY));
-        list.viewPort.layout(l -> l.paddingAll(0)).style(s -> s.background(IGuiTexture.EMPTY));
-        return list;
-    }
-
     // ── 配方页 ────────────────────────────────────────
 
     public static Tab buildTradeTypeTab(Identifier tradeTypeId) {
@@ -379,99 +359,6 @@ public final class TradingStationUi {
             tab.style(s -> s.tooltips(type.description().toArray(new Component[0])));
         }
         return tab;
-    }
-
-    public static UIElement buildTradesTab(TradingStationUiHost host, Identifier tradeTypeId) {
-        var scroller = createScrollerView();
-        TradableType type = TradableType.requireById(tradeTypeId);
-        if (type != null) {
-            scroller.addScrollViewChild(buildTradeTypeHeader(type));
-        }
-
-        List<Map.Entry<Identifier, MachineTrade>> trades = host.listTradesForUi(tradeTypeId);
-        var grid = new UIElement()
-                .layout(l -> l.width(260).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
-        if (trades.isEmpty()) {
-            grid.addChild(new Label().setText(
-                    Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
-        } else {
-            for (Map.Entry<Identifier, MachineTrade> entry : trades) {
-                grid.addChild(buildTradeButton(host, tradeTypeId, entry));
-            }
-        }
-        scroller.addScrollViewChild(grid);
-        return scroller;
-    }
-
-    public static UIElement buildTradeTypeHeader(TradableType type) {
-        var header = new UIElement()
-                .layout(l -> l.width(260).paddingAll(4))
-                .style(s -> s.background(type.backgroundTexture()));
-
-        var titleRow = new UIElement().layout(l -> l.flexDirection(FlexDirection.ROW));
-        titleRow.addChild(new UIElement()
-                .style(s -> s.background(type.tradableIcon()))
-                .layout(l -> l.width(12).height(12)));
-        titleRow.addChild(new TextElement()
-                .setText(type.getDisplayName())
-                .textStyle(s -> s.adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(10))
-                .layout(l -> l.width(252)));
-        header.addChild(titleRow);
-
-        for (Component line : type.description()) {
-            header.addChild(new TextElement()
-                    .setText(line)
-                    .textStyle(s -> s.adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(8))
-                    .layout(l -> l.width(252)));
-        }
-        return header;
-    }
-
-    /**
-     * 配方点击：客户端把批量次数写入 {@code modifiers}，服务端 RPC 执行。
-     */
-    public static @NonNull UIElement buildTradeButton(
-                                                      TradingStationUiHost host,
-                                                      Identifier tradeTypeId,
-                                                      Map.Entry<Identifier, MachineTrade> entry) {
-        Identifier tradeId = entry.getKey();
-        UIElement tradeUI = MachineTrade.getMachineTradeIcon(entry.getValue());
-
-        tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
-            if (e.button == 0) {
-                e.modifiers = tradeCountFromKeyboard(e);
-            }
-        });
-        tradeUI.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
-            if (e.button == 0) {
-                host.runTradeFromUi(tradeTypeId, tradeId, Math.max(1, e.modifiers));
-            }
-        });
-        return tradeUI;
-    }
-
-    /** 客户端：Alt=64 / Ctrl=8 / Shift=4 / 默认 1。直接写入 {@link UIEvent#modifiers} 传给服务端。 */
-    public static int tradeCountFromKeyboard(UIEvent event) {
-        if (event.isAltDown()) {
-            return ALT_TRADE_COUNT;
-        }
-        if (event.isCtrlDown()) {
-            return CTRL_TRADE_COUNT;
-        }
-        if (event.isShiftDown()) {
-            return SHIFT_TRADE_COUNT;
-        }
-        return 1;
-    }
-
-    public static List<Map.Entry<Identifier, MachineTrade>> preferVisibleOrRegistered(
-                                                                                      Supplier<List<Map.Entry<Identifier, MachineTrade>>> visible,
-                                                                                      Supplier<List<Map.Entry<Identifier, MachineTrade>>> registered) {
-        List<Map.Entry<Identifier, MachineTrade>> trades = visible.get();
-        if (trades == null || trades.isEmpty()) {
-            trades = registered.get();
-        }
-        return trades == null ? List.of() : trades;
     }
 
     // ── 小工具 ────────────────────────────────────────

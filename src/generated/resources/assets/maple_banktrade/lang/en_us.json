@@ -55,6 +55,7 @@
   "item.maple_banktrade.bank_card_authentication_key.named": "%s Authentication Key",
   "item.maple_banktrade.bank_permissions_card": "Bank Permissions Card",
   "item.maple_banktrade.bank_permissions_card_builder": "Bank Permissions Card Builder",
+  "item.maple_banktrade.transaction_symbol": "Transaction Symbol",
   "item.maple_banktrade.wallet": "Wallet",
   "itemGroup.maple_banktrade.maple_banktrade": "Maple BankTrade",
   "message.maple_banktrade.auth_key.already_owned": "You already own %s.",

@@ -26,7 +26,7 @@ Built-in content can be disabled, leaving the API and wallet systems available.
 | `com.maple.maple_banktrade.api.trade.base` | Generic three-phase trade framework: check, execute, afterSuccess |
 | `com.maple.maple_banktrade.api.trade.currency_item` | Currency-to-item trading runtime |
 | `com.maple.maple_banktrade.api.trade.machine` | Multi-resource machine trading runtime |
-| `com.maple.maple_banktrade.api.machine.base` | Trading station block and block entity host APIs |
+| `com.maple.maple_banktrade.api.machineTrade.station` | Trading station block and block entity host APIs |
 
 Key entry points:
 

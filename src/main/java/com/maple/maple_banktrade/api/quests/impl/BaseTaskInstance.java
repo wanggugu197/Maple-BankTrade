@@ -1,10 +1,6 @@
 package com.maple.maple_banktrade.api.quests.impl;
 
-import com.maple.maple_banktrade.api.quests.core.ICompletionRecord;
-import com.maple.maple_banktrade.api.quests.core.IQuestRepository;
-import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
-import com.maple.maple_banktrade.api.quests.core.ITaskInstance;
-import com.maple.maple_banktrade.api.quests.core.ITaskState;
+import com.maple.maple_banktrade.api.quests.core.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

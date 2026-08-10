@@ -10,6 +10,7 @@ import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.CurrencyIO;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.FluidIO;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.ItemIO;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeStorage;
+import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 
 import static com.maple.maple_banktrade.common.trade.TradeTypeRegistration.*;
@@ -191,6 +192,13 @@ public final class MachineTradeRegistration {
         MachineItemDesk.register("buy_bread", new MachineTradeBuilder()
                 .addCurrencyExtract(CurrencyIO.of(coins, 6))
                 .addItemOutput(ItemIO.of(Items.BREAD, 1))
+                .build());
+
+        MachineItemDesk.register("buy_aaa", new MachineTradeBuilder()
+                .addCurrencyExtract(CurrencyIO.of(coins, 6))
+                .addItemOutput(ItemIO.of(Items.DIAMOND_BLOCK, 1))
+                .visibility(CheckHasRegister.VISIBILITY_FILTER_BY_NAME,
+                        CheckHasRegister.createVisibilityFilterByNameCompoundTag(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
                 .build());
     }
 

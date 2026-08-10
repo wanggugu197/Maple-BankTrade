@@ -3,7 +3,10 @@ package com.maple.maple_banktrade.api.quests.calculator;
 import net.minecraft.resources.Identifier;
 
 import com.maple.maple_banktrade.api.quests.condition.ResolutionContext;
-import com.maple.maple_banktrade.api.quests.core.*;
+import com.maple.maple_banktrade.api.quests.core.ICompletionRecord;
+import com.maple.maple_banktrade.api.quests.core.IQuestRepository;
+import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
+import com.maple.maple_banktrade.api.quests.core.ITaskState;
 import com.maple.maple_banktrade.api.quests.enums.TaskBehavior;
 import com.maple.maple_banktrade.api.quests.enums.TaskStatus;
 import com.maple.maple_banktrade.api.quests.impl.BaseCompletionRecord;

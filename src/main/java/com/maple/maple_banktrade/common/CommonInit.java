@@ -28,6 +28,7 @@ import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 import com.maple.maple_banktrade.common.bank.TradableTypeRegistration;
 import com.maple.maple_banktrade.common.quests.QuestBlueprints;
+import com.maple.maple_banktrade.common.trade.CheckHasRegister;
 import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
 import com.maple.maple_banktrade.common.trade.MachineTradeRegistration;
 import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
@@ -77,6 +78,8 @@ public class CommonInit {
         TradableTypeRegistration.init();
         BankRegistration.init();
         CardRegistration.init();
+        // 钩子注册
+        CheckHasRegister.registerVisibilityFilterByName();
         // 触发交易站等 DeferredRegister 静态登记
         MBTRegistration.init();
         // 各贸易站：物品 / 流体 / 能量能力（基类统一注册）

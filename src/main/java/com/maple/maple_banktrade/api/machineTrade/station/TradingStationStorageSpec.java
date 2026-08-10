@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.api.machine.base;
+package com.maple.maple_banktrade.api.machineTrade.station;
 
 /**
  * 贸易站库存规格：由子类在构造时传入，基类据此创建物品/流体/能量 handler。
@@ -31,36 +31,6 @@ public record TradingStationStorageSpec(
         fluidOutputTanks = Math.max(0, fluidOutputTanks);
         fluidCapacityMb = Math.max(0, fluidCapacityMb);
         energyCapacity = Math.max(0, energyCapacity);
-    }
-
-    /** 全功能交易站默认规格。 */
-    public static TradingStationStorageSpec fullStation() {
-        return builder()
-                .itemSlots(24, 24)
-                .fluidTanks(6, 6, 64_000)
-                .energy(Integer.MAX_VALUE)
-                .build();
-    }
-
-    /** 物品卡贸易站默认规格（较小库存）。 */
-    public static TradingStationStorageSpec itemCardStation() {
-        return builder()
-                .itemSlots(18, 18)
-                .fluidTanks(2, 2, 16_000)
-                .energy(100_000)
-                .build();
-    }
-
-    /**
-     * 自动贸易站规格：偏重物品/流体输入（矿石、掉落物、岩浆），
-     * 输出槽较少（纯出售多为货币入卡）。
-     */
-    public static TradingStationStorageSpec autoStation() {
-        return builder()
-                .itemSlots(27, 9)
-                .fluidTanks(4, 2, 64_000)
-                .energy(50_000)
-                .build();
     }
 
     public static Builder builder() {

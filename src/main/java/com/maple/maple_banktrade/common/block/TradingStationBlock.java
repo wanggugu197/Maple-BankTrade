@@ -5,8 +5,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlock;
-import com.maple.maple_banktrade.api.machine.base.BaseTradingStationBlockEntity;
+import com.maple.maple_banktrade.api.machineTrade.station.BaseTradingStationBlock;
+import com.maple.maple_banktrade.api.machineTrade.station.BaseTradingStationBlockEntity;
+import com.maple.maple_banktrade.api.machineTrade.station.TradingStationStorageSpec;
 import com.maple.maple_banktrade.common.MBTRegistration;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -14,32 +15,40 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
-/**
- * 全功能交易站方块：绑定多机器价目，不开启自动交易 ticker。
- */
 public class TradingStationBlock extends BaseTradingStationBlock {
 
-    public TradingStationBlock(Properties properties, List<Identifier> trade_type) {
-        super(properties, trade_type, false);
+    private final TradingStationStorageSpec storageSpec;
+
+    public TradingStationBlock(Properties properties,
+                               List<Identifier> tradeType,
+                               boolean allowAutoTrade,
+                               TradingStationStorageSpec storageSpec) {
+        super(properties, tradeType, allowAutoTrade);
+        this.storageSpec = storageSpec;
     }
 
-    public static MapCodec<TradingStationBlock> codec(List<Identifier> trade_type) {
+    // 静态工厂方法，用于 codec 捕获 tradeType
+    public static MapCodec<TradingStationBlock> codec(TradingStationBlock block) {
         return RecordCodecBuilder.mapCodec(instance -> instance.group(propertiesCodec())
-                .apply(instance, properties -> new TradingStationBlock(properties, trade_type)));
+                .apply(instance, properties -> new TradingStationBlock(
+                        properties,
+                        block.machineTradeTypes(),
+                        block.isRunsAutoTrade(),
+                        block.storageSpec)));
     }
 
     @Override
     protected @NonNull MapCodec<? extends TradingStationBlock> codec() {
-        return codec(trade_type);
+        return codec(this);
     }
 
     @Override
     protected BaseTradingStationBlockEntity createStationEntity(BlockPos pos, BlockState state) {
-        return new TradingStationBlockEntity(pos, state);
+        return new TradingStationBlockEntity(pos, state, stationEntityType(), storageSpec, isRunsAutoTrade());
     }
 
     @Override
     protected BlockEntityType<? extends BaseTradingStationBlockEntity> stationEntityType() {
-        return MBTRegistration.TRADING_STATION_ENTITY.get();
+        return MBTRegistration.COMMON_TRADING_STATION_ENTITY.get();
     }
 }
