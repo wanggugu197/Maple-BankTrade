@@ -2,7 +2,7 @@
   "multipart": [
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station"
+        "model": "maple_banktrade:block/trading_station/wallet"
       },
       "when": {
         "facing": "north"
@@ -10,7 +10,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station",
+        "model": "maple_banktrade:block/trading_station/wallet",
         "y": 90
       },
       "when": {
@@ -19,7 +19,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station",
+        "model": "maple_banktrade:block/trading_station/wallet",
         "y": 180
       },
       "when": {
@@ -28,7 +28,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station",
+        "model": "maple_banktrade:block/trading_station/wallet",
         "y": 270
       },
       "when": {

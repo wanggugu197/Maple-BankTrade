@@ -4,11 +4,11 @@
     "models": [
       {
         "type": "minecraft:model",
-        "model": "minecraft:block/gold_block"
+        "model": "maple_banktrade:block/trading_station/wallet"
       },
       {
         "type": "minecraft:model",
-        "model": "maple_banktrade:block/trading_station"
+        "model": "minecraft:block/gold_block"
       }
     ]
   }

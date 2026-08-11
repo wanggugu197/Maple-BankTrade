@@ -1,0 +1,6 @@
+{
+  "parent": "maple_banktrade:block/trading_station",
+  "textures": {
+    "icon": "maple_banktrade:block/wallet"
+  }
+}
