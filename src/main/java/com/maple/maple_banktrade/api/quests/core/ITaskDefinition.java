@@ -1,24 +1,27 @@
 package com.maple.maple_banktrade.api.quests.core;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
-
+import com.maple.maple_banktrade.api.quests.condition.BaseQuestCondition;
 import com.maple.maple_banktrade.api.quests.enums.DependencyRequirement;
 import com.maple.maple_banktrade.api.quests.enums.TaskBehavior;
 import com.maple.maple_banktrade.api.quests.enums.TaskType;
-import com.maple.maple_banktrade.api.quests.reward.RewardDef;
+import com.maple.maple_banktrade.api.quests.reward.IReward;
+import com.maple.maple_banktrade.api.quests.tasktype.ITaskType;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * 不可变的任务定义（数据驱动）
+ * 不可变的任务定义（数据驱动）。
+ *
+ * <p>
+ * v3.6 重构：条件、奖励、任务完成类型改为直接存储对象引用，
+ * 不再通过 {@code Identifier} + {@code CompoundTag} 间接存储。
  */
 public interface ITaskDefinition {
 
     String getId();
 
-    TaskType getType();          // 定义 TaskType 枚举：MAIN, SIDE, TEMPORARY
+    TaskType getType();
 
     boolean isGroup();
 
@@ -37,29 +40,18 @@ public interface ITaskDefinition {
     boolean isForceParentVisible();
 
     /**
-     * @return 可见性脚本条件 ID（可为 null 表示无条件）
+     * @return 可见性条件（可为 null 表示无条件）
      */
-    Identifier getVisibilityConditionId();
+    BaseQuestCondition getVisibilityCondition();
 
     /**
-     * @return 可见性脚本条件参数（不可为 null，无参数时返回空 CompoundTag）
+     * @return 解锁条件（可为 null 表示无条件）
      */
-    CompoundTag getVisibilityConditionParams();
+    BaseQuestCondition getUnlockCondition();
 
-    /**
-     * @return 解锁脚本条件 ID（可为 null 表示无条件）
-     */
-    Identifier getUnlockConditionId();
-
-    /**
-     * @return 解锁脚本条件参数（不可为 null，无参数时返回空 CompoundTag）
-     */
-    CompoundTag getUnlockConditionParams();
-
-    // 可选：获取预计算的子节点列表（由加载器填充）
+    /** 预计算的子节点列表（由加载器填充）。 */
     List<String> getChildrenIds();
 
-    // 辅助方法（可选默认实现）
     default boolean isRoot() {
         return getParentId() == null || getParentId().isEmpty();
     }
@@ -80,7 +72,7 @@ public interface ITaskDefinition {
     List<String> getPoolIds();
 
     /**
-     * @return 触发后继链的概率 (0.0~1.0)，用于 HIDDEN_CHAIN，默认1.0（必定触发）
+     * @return 触发后继链的概率 (0.0~1.0)，用于 HIDDEN_CHAIN，默认1.0
      */
     double getNextChainTriggerChance();
 
@@ -90,21 +82,14 @@ public interface ITaskDefinition {
     boolean isAutoResetToHidden();
 
     // ==============================================
-    // 任务完成类型
+    // 任务完成类型（v3.7：改为列表，需全部满足）
     // ==============================================
 
     /**
-     * @return 任务完成类型 ID（如 {@code maple_banktrade:submit_item}），默认 null 表示确认完成
+     * @return 任务完成类型列表，全部满足才能完成。默认空列表表示确认完成。
      */
-    default Identifier getTaskTypeId() {
-        return null;
-    }
-
-    /**
-     * @return 任务完成类型参数（不可为 null，无参数时返回空 CompoundTag）
-     */
-    default CompoundTag getTaskTypeParams() {
-        return new CompoundTag();
+    default List<ITaskType> getTaskTypes() {
+        return Collections.emptyList();
     }
 
     // ==============================================
@@ -112,10 +97,9 @@ public interface ITaskDefinition {
     // ==============================================
 
     /**
-     * @return 奖励定义列表，每个元素包含 {@link Identifier}（奖励类型）和 {@link CompoundTag}（参数）
-     *         默认返回空列表
+     * @return 奖励实例列表，默认返回空列表
      */
-    default List<RewardDef> getRewards() {
+    default List<IReward> getRewards() {
         return Collections.emptyList();
     }
 
@@ -142,27 +126,16 @@ public interface ITaskDefinition {
         return getBehavior().isRandomPool();
     }
 
-    /**
-     * 是否为叶子节点（无子节点）。
-     */
     default boolean isLeaf() {
         List<String> children = getChildrenIds();
         return children == null || children.isEmpty();
     }
 
-    /**
-     * 是否有依赖节点（前置任务）。
-     */
     default boolean hasDependencies() {
         List<String> deps = getDependentNodes();
         return deps != null && !deps.isEmpty();
     }
 
-    /**
-     * 获取有效的完成阈值。
-     * 对于多完成行为，返回 {@link #getRequiredCompletions()}；
-     * 对于普通行为，返回 1。
-     */
     default int getEffectiveCompletionThreshold() {
         return getBehavior().isMultiCompletion() ? getRequiredCompletions() : 1;
     }

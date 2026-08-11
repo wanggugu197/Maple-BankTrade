@@ -1,5 +1,7 @@
 package com.maple.maple_banktrade.api.quests.repository;
 
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.api.quests.QuestDefinitionRegistry;
 import com.maple.maple_banktrade.api.quests.core.ICompletionRecord;
 import com.maple.maple_banktrade.api.quests.core.IQuestRepository;
@@ -29,13 +31,9 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * <p>
- * 参考 {@code BankCardsWorldData} 的 Codec 序列化模式设计：
- * <ul>
- * <li>使用 {@link Codec} 进行 NBT/JSON 序列化</li>
- * <li>宽松读取（跳过无法解析的条目，保证存档兼容性）</li>
- * <li>通过 {@code dirtyCallback} 标记脏数据</li>
- * <li>实现 {@link IQuestRepository}，定义查询委托给 {@link QuestDefinitionRegistry}</li>
- * </ul>
+ * v3.8 重构：{@link BaseTaskState} 实现 {@link IPersistedSerializable}，
+ * 状态序列化使用 {@link PersistedParser#createCodec} 自动生成 Codec，
+ * 无需手动编写 {@code RecordCodecBuilder}。
  *
  * <p>
  * 序列化结构（仅存储状态和历史）：
@@ -43,12 +41,12 @@ import java.util.stream.Collectors;
  * <pre>{@code
  * {
  *   "states": {
- *     "main_forest": { "status": "ACTIVE", "progress": 3, "activeTimestamp": 12345 },
- *     "main_cave": { "status": "HIDDEN", "progress": 0, "activeTimestamp": 0 }
+ *     "main_forest": { "taskId": "main_forest", "status": "ACTIVE", "currentProgress": 3, "activeTimestamp": 12345 },
+ *     "main_cave": { "taskId": "main_cave", "status": "HIDDEN", "currentProgress": 0, "activeTimestamp": 0 }
  *   },
  *   "history": {
  *     "main_forest": [
- *       { "index": 1, "gameTime": 1000, "realTime": 1234567890 }
+ *       { "taskId": "main_forest", "index": 1, "gameTime": 1000, "realTime": 1234567890, "rewardClaimed": false }
  *     ]
  *   }
  * }
@@ -72,37 +70,24 @@ public class PlayerQuestData implements IQuestRepository {
     // Codec
     // ==============================================
 
-    /** 任务状态序列化 Codec。 */
-    private static final Codec<BaseTaskState> STATE_CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codec.STRING.fieldOf("taskId").forGetter(BaseTaskState::getTaskId),
-            Codec.STRING.optionalFieldOf("status", "HIDDEN")
-                    .xmap(com.maple.maple_banktrade.api.quests.enums.TaskStatus::valueOf,
-                            s -> s.name())
-                    .forGetter(BaseTaskState::getStatus),
-            Codec.INT.optionalFieldOf("progress", 0)
-                    .forGetter(BaseTaskState::getCurrentProgress),
-            Codec.LONG.optionalFieldOf("activeTimestamp", 0L)
-                    .forGetter(BaseTaskState::getActiveTimestamp))
-            .apply(instance, (taskId, status, progress, activeTimestamp) -> {
-                BaseTaskState state = new BaseTaskState(taskId);
-                state.setStatus(status);
-                state.setCurrentProgress(progress);
-                state.setActiveTimestamp(activeTimestamp);
-                return state;
-            }));
+    /** 任务状态序列化 Codec（v3.8：使用 PersistedParser 自动生成）。 */
+    private static final Codec<BaseTaskState> STATE_CODEC = PersistedParser.createCodec(BaseTaskState::new);
 
-    /** 完成记录序列化 Codec。 */
+    /** 完成记录序列化 Codec（v3.7：新增 rewardClaimed 字段持久化）。 */
     private static final Codec<BaseCompletionRecord> RECORD_CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("taskId").forGetter(BaseCompletionRecord::getTaskId),
             Codec.INT.fieldOf("index").forGetter(BaseCompletionRecord::getCompletionIndex),
             Codec.LONG.fieldOf("gameTime").forGetter(BaseCompletionRecord::getCompletedGameTime),
             Codec.LONG.optionalFieldOf("realTime", 0L)
-                    .forGetter(BaseCompletionRecord::getRealTimeStamp))
-            .apply(instance, (taskId, index, gameTime, realTime) -> new BaseCompletionRecord.Builder()
+                    .forGetter(BaseCompletionRecord::getRealTimeStamp),
+            Codec.BOOL.optionalFieldOf("rewardClaimed", false)
+                    .forGetter(BaseCompletionRecord::isRewardClaimed))
+            .apply(instance, (taskId, index, gameTime, realTime, rewardClaimed) -> new BaseCompletionRecord.Builder()
                     .taskId(taskId)
                     .completionIndex(index)
                     .completedGameTime(gameTime)
                     .realTimeStamp(realTime)
+                    .rewardClaimed(rewardClaimed)
                     .build()));
 
     /** 严格状态 Map Codec（用于写入）。 */
@@ -301,6 +286,23 @@ public class PlayerQuestData implements IQuestRepository {
             history.put(taskId, toKeep);
             markDirty();
         }
+    }
+
+    /**
+     * 替换指定位置的完成记录（v3.7 新增）。
+     * 用于 markRewardClaimed 时直接替换旧记录。
+     *
+     * @param taskId 任务 ID
+     * @param index  0-based 索引
+     * @param record 新记录
+     * @return true 表示替换成功
+     */
+    public boolean replaceCompletionRecord(String taskId, int index, BaseCompletionRecord record) {
+        List<BaseCompletionRecord> list = history.get(taskId);
+        if (list == null || index < 0 || index >= list.size()) return false;
+        list.set(index, record);
+        markDirty();
+        return true;
     }
 
     // ==============================================

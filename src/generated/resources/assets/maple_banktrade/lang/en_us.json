@@ -57,6 +57,7 @@
   "item.maple_banktrade.bank_permissions_card_builder": "Bank Permissions Card Builder",
   "item.maple_banktrade.transaction_talisman_maple_banktrade_trade_type.machine_item_desk": "Transaction Talisman",
   "item.maple_banktrade.wallet": "Wallet",
+  "item.maple_banktrade.quest_book": "Quest Book",
   "itemGroup.maple_banktrade.maple_banktrade": "Maple BankTrade",
   "message.maple_banktrade.auth_key.already_owned": "You already own %s.",
   "message.maple_banktrade.auth_key.create_failed": "Failed to create %s.",

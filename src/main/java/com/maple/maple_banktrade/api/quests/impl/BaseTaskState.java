@@ -1,5 +1,7 @@
 package com.maple.maple_banktrade.api.quests.impl;
 
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.quests.core.ITaskState;
 import com.maple.maple_banktrade.api.quests.enums.TaskStatus;
 import lombok.Getter;
@@ -7,22 +9,33 @@ import lombok.Setter;
 
 /**
  * 可变的任务进度状态（每个玩家一份）。
+ *
+ * <p>
+ * v3.8 重构：实现 {@link IPersistedSerializable}，通过 {@code @Persisted} 注解
+ * 替代手动 {@code RecordCodecBuilder}，简化持久化代码。
  */
 @Getter
 @Setter
-public class BaseTaskState implements ITaskState {
+public class BaseTaskState implements ITaskState, IPersistedSerializable {
 
-    private final String taskId;
-    private TaskStatus status;
-    private int currentProgress;
-    private long activeTimestamp;
+    @Persisted
+    private String taskId;
+
+    @Persisted
+    private TaskStatus status = TaskStatus.HIDDEN;
+
+    @Persisted
+    private int currentProgress = 0;
+
+    @Persisted
+    private long activeTimestamp = 0;
+
+    /** 无参构造（供 PersistedParser 反序列化使用）。 */
+    public BaseTaskState() {}
 
     /** 创建新状态，默认为 {@link TaskStatus#HIDDEN}。 */
     public BaseTaskState(String taskId) {
         this.taskId = taskId;
-        this.status = TaskStatus.HIDDEN;
-        this.currentProgress = 0;
-        this.activeTimestamp = 0;
     }
 
     /**

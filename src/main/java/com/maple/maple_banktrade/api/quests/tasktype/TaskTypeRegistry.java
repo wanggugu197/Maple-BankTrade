@@ -88,8 +88,8 @@ public final class TaskTypeRegistry {
     // ==============================================
 
     private static void registerAllDefaults() {
-        register(MapleBankTrade.id("confirm"), new ConfirmTaskType());
-        register(MapleBankTrade.id("submit_item"), new SubmitItemTaskType());
+        register(MapleBankTrade.id("confirm"), ConfirmTaskType.INSTANCE);
+        // submit_item 需要 Item + count 参数，使用时直接 new SubmitItemTaskType(item, count)
     }
 
     private TaskTypeRegistry() {}

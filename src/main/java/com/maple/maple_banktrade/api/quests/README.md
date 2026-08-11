@@ -1,8 +1,8 @@
 # 树状+链式任务系统底层架构文档
 
-**版本**: 3.5  
-**最后更新**: 2026-08-09  
-**状态**: 核心数据层 ✅ | 逻辑层 ✅ | 存储层 ✅ | 条件引擎 ✅ | 触发层 ✅ | 任务类型 ✅ | 奖励系统 ✅ | 依赖模式 ✅ | 定义/状态分离 ✅ | UI 层 ❌
+**版本**: 3.6  
+**最后更新**: 2026-08-11  
+**状态**: 核心数据层 ✅ | 逻辑层 ✅ | 存储层 ✅ | 条件引擎 ✅ | 触发层 ✅ | 任务类型 ✅ | 奖励系统 ✅ | 依赖模式 ✅ | 定义/状态分离 ✅ | UI 层 ✅
 
 
 ## 一、概述
@@ -34,7 +34,7 @@
 ### 1.3 包结构
 
 ```
-com.maple.maple_banktrade.api.quests/          # API 层（按职责分子包，11 个）
+com.maple.maple_banktrade.api.quests/          # API 层（按职责分子包，12 个）
 ├── README.md
 ├── QuestDefinitionRegistry.java               # 全局静态任务定义注册表（定义/状态分离）
 ├── enums/                                     # 枚举 (4)
@@ -57,7 +57,7 @@ com.maple.maple_banktrade.api.quests/          # API 层（按职责分子包，
 ├── repository/                                # 仓储实现 (2)
 │   ├── InMemoryQuestRepository.java           # 内存仓储实现
 │   └── PlayerQuestData.java                   # 玩家持久化数据（仅可变内容，Codec序列化）
-├── condition/                                 # 条件系统 (13)
+├── condition/                                 # 条件系统 (12)
 │   ├── IScriptEvaluator.java                  # 条件求值接口
 │   ├── RegistryScriptEvaluator.java           # 注册表条件评估器
 │   ├── QuestConditionRegistry.java            # 条件注册表（仿 MachineTradeHookRegistry）
@@ -82,19 +82,27 @@ com.maple.maple_banktrade.api.quests/          # API 层（按职责分子包，
 │   ├── QuestSavedData.java                    # 世界持久化存储（SavedData 挂载）
 │   ├── QuestDataHelper.java                   # 统一 UUID 入口（类似 BankHelper）
 │   └── QuestDataManager.java                  # 任务数据管理器（委托存储层）
-├── tasktype/                                  # 任务完成类型 (3)
+├── tasktype/                                  # 任务完成类型 (4)
 │   ├── ITaskType.java                         # 任务类型接口
 │   ├── TaskTypeRegistry.java                  # 任务类型注册表
 │   ├── ConfirmTaskType.java                   # 确认完成类型
 │   └── SubmitItemTaskType.java                # 提交物品类型
-└── reward/                                    # 奖励系统 (4)
-    ├── RewardDef.java                          # 奖励定义数据类（Identifier + CompoundTag）
-    ├── IReward.java                           # 奖励接口
-    ├── RewardRegistry.java                    # 奖励注册表
-    └── ItemReward.java                        # 物品奖励实现
+├── reward/                                    # 奖励系统 (4)
+│   ├── RewardDef.java                          # 奖励定义数据类（Identifier + CompoundTag）
+│   ├── IReward.java                           # 奖励接口
+│   ├── RewardRegistry.java                    # 奖励注册表
+│   └── ItemReward.java                        # 物品奖励实现
+└── ui/                                        # 🆕 v3.6 UI 层 (7)
+    ├── QuestUIRegistration.java                # 主 UI 注册（PlayerUIMenuType + TabView）
+    ├── QuestUIStylesheets.java                 # 样式表加载工具
+    ├── QuestUiHelper.java                      # S2C 数据快照构建 + 格式化
+    ├── QuestTaskListPanel.java                 # 左栏 30% 任务列表（按类型分组）
+    ├── QuestTaskDetailPanel.java               # 右栏 70% 任务详情（接取/完成）
+    ├── QuestCompletedPanel.java                # 已完成任务标签页
+    └── QuestTreePanel.java                     # 🆕 创造模式树状结构标签页
 
 com.maple.maple_banktrade.common.quests/        # Common 层（具体蓝图）
-├── QuestBlueprints.java                       # 蓝图注册中心（18个任务）
+├── QuestBlueprints.java                       # 蓝图注册中心（26个任务）
 └── QuestRepositoryLoader.java                 # 仓储加载器（含拓扑验证）
 ```
 
@@ -222,7 +230,7 @@ new RewardDef(MapleBankTrade.id("item"), new CompoundTag() {{
 
 ### 2.4 Common层具体蓝图
 
-`QuestBlueprints.java` 已包含以下 18 个示例任务：
+`QuestBlueprints.java` 已包含以下 26 个示例任务：
 
 | 任务ID | 类型 | 行为 | 说明 |
 | :--- | :--- | :--- | :--- |
@@ -244,6 +252,14 @@ new RewardDef(MapleBankTrade.id("item"), new CompoundTag() {{
 | `side_any_dep` | SIDE | SIMPLE | 🆕 ONE_COMPLETED 依赖模式 |
 | `submit_diamonds` | TEMPORARY | SIMPLE | 🆕 提交3个钻石（submit_item） |
 | `reward_demo` | TEMPORARY | SIMPLE | 🆕 完成获绿宝石+经验瓶（item奖励） |
+| `side_after_kills` | SIDE | SIMPLE | 占位：multi_kill 后解锁 |
+| `final_reward` | SIDE | SIMPLE | 占位：multi_random_pool 后解锁 |
+| `secret_quest_2` | TEMPORARY | SIMPLE | 占位：hidden_quest 概率触发 |
+| `sub_task_a` | SIDE | SIMPLE | 占位：random_pool_task 池子 |
+| `sub_task_b` | SIDE | SIMPLE | 占位：random_pool_task 池子 |
+| `sub_task_c` | SIDE | SIMPLE | 占位：random_pool_task 池子 |
+| `sub_task_x` | SIDE | SIMPLE | 占位：multi_random_pool 池子 |
+| `sub_task_y` | SIDE | SIMPLE | 占位：multi_random_pool 池子 |
 
 ### 2.5 仓储实现
 
@@ -271,7 +287,7 @@ new RewardDef(MapleBankTrade.id("item"), new CompoundTag() {{
 ```
 ┌─────────────────────────────────────────────────┐
 │     QuestDefinitionRegistry（全局静态，不可变）   │
-│     Map<String, ITaskDefinition>  — 18 个蓝图    │
+│     Map<String, ITaskDefinition>  — 26 个蓝图    │
 │     所有玩家共享，服务器启动时初始化一次            │
 └─────────────────────────────────────────────────┘
                     │
@@ -325,7 +341,7 @@ new RewardDef(MapleBankTrade.id("item"), new CompoundTag() {{
 > QuestDataHelper.getOrCreate(server, teamUuid);
 > ```
 
-### 2.6 各层组件（46 个类）
+### 2.6 各层组件（53 个类）
 
 | 包 | 类 | 职责 | 关键 API |
 |:---|:---|:---|:---|
@@ -359,6 +375,13 @@ new RewardDef(MapleBankTrade.id("item"), new CompoundTag() {{
 | `reward` | `IReward` | 🆕 奖励接口 | `grant(params, context)` |
 | `reward` | `RewardRegistry` | 🆕 奖励注册表 | `register(id, factory)`, `grantRewards(rewards, context)` |
 | `reward` | `ItemReward` | 🆕 物品奖励 | 发放物品到背包，满则掉落 |
+| `ui` | `QuestUIRegistration` | 🆕 v3.6 主 UI 注册 | `PlayerUIMenuType.register()` + TabView 组装 |
+| `ui` | `QuestUIStylesheets` | 🆕 v3.6 样式表加载 | 加载 `quest.lss` 样式表 |
+| `ui` | `QuestUiHelper` | 🆕 v3.6 S2C 数据工具 | `buildTaskListSnapshot()`, `buildTaskDetailSnapshot()`, 格式化 |
+| `ui` | `QuestTaskListPanel` | 🆕 v3.6 左栏任务列表 | 按类型分组 + 选中回调 |
+| `ui` | `QuestTaskDetailPanel` | 🆕 v3.6 右栏任务详情 | 完整信息 + 接取/完成按钮 |
+| `ui` | `QuestCompletedPanel` | 🆕 v3.6 已完成标签页 | 显示完成记录和进度 |
+| `ui` | `QuestTreePanel` | 🆕 v3.6 树状结构标签页 | 递归渲染完整任务树（创造模式） |
 
 #### 2.6.1 条件系统设计
 
@@ -390,6 +413,63 @@ new RewardDef(MapleBankTrade.id("item"), new CompoundTag() {{
 - ✅ 孤儿节点检测（父节点、兄弟链、依赖、池引用）
 - ✅ 三色 DFS 环检测
 - ✅ 行为模式与配置一致性检查
+
+### 2.8 UI 层（v3.6 新增）
+
+> 🆕 v3.6 新增：基于 LDLib2 的任务 UI 系统
+
+#### 2.8.1 布局设计
+
+采用两栏布局，通过 `PlayerUIMenuType` 注册，样式表从 `assets/maple_banktrade/lss/quest.lss` 加载。
+
+```
+┌─────────────────────────────────────────────────────┐
+│  [任务]  [已完成]  [🌳结构(创造)]                    │  ← TabView 标签
+├──────────────┬──────────────────────────────────────┤
+│  任务列表     │        任务详情                       │
+│  (30%)       │        (70%)                         │
+│              │                                      │
+│  按类型分组   │  基本信息 / 任务链 / 依赖 / 条件      │
+│  MAIN/支线/  │  奖励 / 操作按钮（接取/完成）         │
+│  临时        │                                      │
+└──────────────┴──────────────────────────────────────┘
+```
+
+#### 2.8.2 标签页
+
+| 标签页 | 实现类 | 说明 |
+|:---|:---|:---|
+| 任务 | `QuestTaskListPanel` + `QuestTaskDetailPanel` | 左栏按类型分组列表 + 右栏详情与操作按钮 |
+| 已完成 | `QuestCompletedPanel` | 显示所有有完成记录的任务及进度 |
+| 🌳结构 | `QuestTreePanel` | 递归渲染完整树状结构（仅创造模式可见） |
+
+#### 2.8.3 数据通道
+
+| 通道 | 方向 | 实现 | 说明 |
+|:---|:---|:---|:---|
+| 任务列表同步 | S2C | `DataBindingBuilder.tagS2C()` | 服务端构建 `buildTaskListSnapshot()` |
+| 任务详情同步 | S2C | `DataBindingBuilder.tagS2C()` | 选中任务后触发 `buildTaskDetailSnapshot()` |
+| 已完成列表 | S2C | `DataBindingBuilder.tagS2C()` | 标签页切换时刷新 |
+| 接取任务 | C2S | `Button.setOnServerClick()` | 调用 `StateTransitionOrchestrator.processActivate()` |
+| 完成任务 | C2S | `Button.setOnServerClick()` | 调用 `StateTransitionOrchestrator.processComplete()` |
+
+#### 2.8.4 物品触发
+
+通过 `QuestBookAttachment`（仿 `WalletAttachment`）绑定到任务书物品，右键打开 UI：
+
+```java
+// 服务端打开
+QuestUIRegistration.openUI(serverPlayer);
+```
+
+#### 2.8.5 样式表
+
+`quest.lss` 资源位于 `assets/maple_banktrade/lss/quest.lss`，包含：
+- 两栏布局（`.mbt-quest-content`）
+- 任务列表项（`.mbt-quest-list-item` / `-selected` / `-completed` / `-locked`）
+- 详情分区（`.mbt-quest-detail-section` / `-title` / `-row` / `-actions`）
+- 树节点（`.mbt-quest-tree-node`）
+- 已完成列表（`.mbt-quest-completed-panel` / `-row`）
 
 
 ## 三、任务系统核心概念
@@ -453,15 +533,19 @@ new RewardDef(MapleBankTrade.id("item"), new CompoundTag() {{
 
 ### 5.1~5.4 Phase 1~4（✅ 已完成）
 
-核心数据层、逻辑层、条件引擎、存储层、触发层均已实现。
+核心数据层、逻辑层、条件引擎、存储层、触发层、UI 层均已实现。
 
-### 5.5 Phase 5：UI集成（1-2周）
+### 5.5 Phase 5：UI集成（✅ 已完成 v3.6）
 
-| 任务 | 描述 | 优先级 |
+| 任务 | 描述 | 状态 |
 | :--- | :--- | :--- |
-| 实现任务UI树渲染 | 显示四态节点 | **P0** |
-| 实现任务详情面板 | 显示进度和条件 | **P1** |
-| 实现任务接取交互 | LOCKED→ACTIVE | **P1** |
+| 实现任务UI树渲染 | 显示四态节点，左栏30%列表 + 右栏70%详情 | ✅ `QuestTaskListPanel` + `QuestTaskDetailPanel` |
+| 实现任务详情面板 | 基本信息、任务链、依赖、条件、奖励 | ✅ `QuestTaskDetailPanel` |
+| 实现任务接取交互 | LOCKED→ACTIVE | ✅ `Button.setOnServerClick()` → `processActivate()` |
+| 实现任务完成交互 | ACTIVE→COMPLETED | ✅ `Button.setOnServerClick()` → `processComplete()` |
+| 实现已完成标签页 | 显示完成记录和进度 | ✅ `QuestCompletedPanel` |
+| 实现树状结构标签页 | 创造模式完整任务树 | ✅ `QuestTreePanel` |
+| 实现样式表 | LSS 两栏布局 + 列表 + 详情 + 树 | ✅ `quest.lss` |
 
 ### 5.6 Phase 6：配置系统（1周）
 
@@ -650,7 +734,7 @@ QuestDataHelper.modifyStorage(server, storage -> {
 ### 附录A：当前代码文件清单
 
 ```
-com.maple.maple_banktrade.api.quests/         # 11 个顶层包，46 个文件
+com.maple.maple_banktrade.api.quests/         # 12 个顶层包，53 个文件
 ├── README.md
 ├── QuestDefinitionRegistry.java               🆕 v3.5
 ├── enums/
@@ -703,15 +787,27 @@ com.maple.maple_banktrade.api.quests/         # 11 个顶层包，46 个文件
 │   ├── TaskTypeRegistry.java                🆕
 │   ├── ConfirmTaskType.java                 🆕
 │   └── SubmitItemTaskType.java              🆕
-└── reward/                                  🆕 v3.4
-    ├── RewardDef.java                         🆕 v3.5
-    ├── IReward.java                         🆕
-    ├── RewardRegistry.java                  🆕 (v3.5 新增 grantRewards(List<RewardDef>))
-    └── ItemReward.java                      🆕
+├── reward/                                  🆕 v3.4
+│   ├── RewardDef.java                         🆕 v3.5
+│   ├── IReward.java                         🆕
+│   ├── RewardRegistry.java                  🆕 (v3.5 新增 grantRewards(List<RewardDef>))
+│   └── ItemReward.java                      🆕
+└── ui/                                      🆕 v3.6
+    ├── QuestUIRegistration.java               🆕 v3.6
+    ├── QuestUIStylesheets.java                🆕 v3.6
+    ├── QuestUiHelper.java                     🆕 v3.6
+    ├── QuestTaskListPanel.java                🆕 v3.6
+    ├── QuestTaskDetailPanel.java              🆕 v3.6
+    ├── QuestCompletedPanel.java               🆕 v3.6
+    └── QuestTreePanel.java                    🆕 v3.6
 
 com.maple.maple_banktrade.common.quests/
-├── QuestBlueprints.java                     ✅ (18 个任务，含 3 个新功能示例)
+├── QuestBlueprints.java                     ✅ (26 个任务，含 3 个新功能示例 + 8 个占位)
 └── QuestRepositoryLoader.java               ✅
+
+resources/
+└── assets/maple_banktrade/lss/
+    └── quest.lss                              🆕 v3.6
 ```
 
 ### 附录B：关键算法伪代码
@@ -832,3 +928,14 @@ function processComplete(taskId, context, gameTime, runtimeContext):
     
     return deltas
 ```
+
+### 附录C：变更日志
+
+| 版本 | 日期 | 变更内容 |
+| :--- | :--- | :--- |
+| 3.6 | 2026-08-11 | 🆕 UI 层：①新增 `ui/` 包（7 个文件），基于 LDLib2 `PlayerUIMenuType` 实现两栏布局（30% 列表 + 70% 详情）；②`QuestTaskListPanel` 按 MAIN/SIDE/TEMPORARY 分组显示任务列表；③`QuestTaskDetailPanel` 显示完整任务信息 + 接取/完成按钮；④`QuestCompletedPanel` 已完成任务标签页；⑤`QuestTreePanel` 创造模式树状结构标签页；⑥`QuestUiHelper` S2C 数据快照构建 + 格式化；⑦`quest.lss` 样式表；⑧修复 8 个蓝图悬空引用；⑨`CommonInit` 注册 `QuestUIRegistration.init()`。共 12 个顶层包，53 个文件 |
+| 3.5 | 2026-08-09 | 🆕 定义/状态分离：①新增 `QuestDefinitionRegistry` 全局静态定义注册表；②`PlayerQuestData` 移除 `definitions` 字段；③`QuestSavedData` 不再管理蓝图注入；④`QuestDataHelper` 移除 `initBlueprints()`；⑤`CommonInit` 改用 `QuestDefinitionRegistry.init()`。共 11 个顶层包，45 个文件 |
+| 3.4 | 2026-08-09 | 🆕 四大模块优化：①任务完成类型系统（`ITaskType` + `TaskTypeRegistry` + `ConfirmTaskType` + `SubmitItemTaskType`）；②奖励系统（`IReward` + `RewardRegistry` + `ItemReward`）；③依赖模式（`DependencyRequirement` 枚举，`VisibilityCalculator` 支持四种模式）；④条件系统优化（`EvaluationContext` + `CompositeCondition` AND/OR/NOT）。共 10 个顶层包，44 个文件 |
+| 3.3 | 2026-08-09 | 包结构优化：移除 `logic/` 父层；合并单文件子包（orchestrator/result/traversal → calculator，scheduler/trigger → scheduler）；`impl/` 分离出 `repository/` |
+| 3.2 | 2026-08-09 | 完整实现 Phase 1~4 核心架构：任务定义、状态、历史、仓储、6 种行为、可见性计算、状态流转编排、树链拓扑、定期触发器、SavedData 存储、条件引擎 |
+| 3.1 | 2026-08-08 | 初始文档：总体架构设计、包结构规划、核心类型定义、Roadmap 规划 |

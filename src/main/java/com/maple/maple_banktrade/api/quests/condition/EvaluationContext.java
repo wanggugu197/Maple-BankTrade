@@ -58,6 +58,14 @@ public class EvaluationContext {
     }
 
     /**
+     * 空上下文（无玩家、无 level），用于无条件评估场景。
+     * 条件评估时 player 为 null，由具体条件自行处理。
+     */
+    public static EvaluationContext empty() {
+        return new EvaluationContext(null, null, null);
+    }
+
+    /**
      * @return 玩家实例，可能为 null
      */
     @Nullable
@@ -66,8 +74,9 @@ public class EvaluationContext {
     }
 
     /**
-     * @return 当前维度，不可为 null
+     * @return 当前维度，可能为 null（空上下文时）
      */
+    @Nullable
     public ServerLevel getLevel() {
         return level;
     }
@@ -75,6 +84,7 @@ public class EvaluationContext {
     /**
      * @return 服务器实例，不可为 null
      */
+    @Nullable
     public MinecraftServer getServer() {
         return server;
     }

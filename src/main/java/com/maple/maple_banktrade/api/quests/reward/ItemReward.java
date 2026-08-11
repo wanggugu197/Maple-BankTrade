@@ -1,8 +1,5 @@
 package com.maple.maple_banktrade.api.quests.reward;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -10,65 +7,78 @@ import net.minecraft.world.item.ItemStack;
 import com.maple.maple_banktrade.MapleBankTrade;
 
 /**
- * 物品奖励 —— 向玩家背包中发放物品。
+ * 物品奖励 —— 直接存储 {@link Item} 实例和数量，不存字符串 ID。
  *
  * <p>
- * 参数格式：
+ * v3.6 重构：移除 {@code CompoundTag} 解析，改为直接存储物品实例。
+ *
+ * <p>
+ * 使用方式：
  * 
  * <pre>{@code
- * {
- *   "item": "minecraft:diamond",  // 物品 ID
- *   "count": 3                     // 数量，默认 1
- * }
+ * 
+ * IReward reward = ItemReward.of(Items.DIAMOND, 3);
  * }</pre>
  */
 public class ItemReward implements IReward {
 
-    private static final Identifier ID = MapleBankTrade.id("item");
+    private final Item item;
+    private final int count;
 
-    @Override
-    public Identifier getId() {
-        return ID;
+    // ==============================================
+    // 构造
+    // ==============================================
+
+    public ItemReward(Item item, int count) {
+        this.item = item;
+        this.count = count > 0 ? count : 1;
     }
 
+    /** 静态工厂：创建指定数量的物品奖励。 */
+    public static ItemReward of(Item item, int count) {
+        return new ItemReward(item, count);
+    }
+
+    /** 静态工厂：创建单个物品奖励。 */
+    public static ItemReward of(Item item) {
+        return new ItemReward(item, 1);
+    }
+
+    // ==============================================
+    // 奖励发放
+    // ==============================================
+
     @Override
-    public void grant(CompoundTag params, Object context) {
+    public void grant(Object context) {
         if (!(context instanceof ServerPlayer player)) return;
-
-        String itemId = params.getStringOr("item", "");
-        if (itemId.isEmpty()) {
-            MapleBankTrade.LOGGER.warn("ItemReward: missing 'item' parameter");
-            return;
-        }
-
-        Item item;
-        try {
-            item = BuiltInRegistries.ITEM.get(Identifier.parse(itemId)).orElse(null).value();
-        } catch (Exception e) {
-            MapleBankTrade.LOGGER.warn("ItemReward: invalid item id '{}'", itemId, e);
-            return;
-        }
-
         if (item == null) {
-            MapleBankTrade.LOGGER.warn("ItemReward: item not found '{}'", itemId);
+            MapleBankTrade.LOGGER.warn("ItemReward: item is null, skipping");
             return;
         }
-
-        int count = params.getIntOr("count", 1);
-        if (count <= 0) count = 1;
 
         ItemStack stack = new ItemStack(item, count);
         if (!player.getInventory().add(stack)) {
-            // 背包满时掉落在地面
             player.drop(stack, false);
         }
 
         MapleBankTrade.LOGGER.debug("ItemReward: granted {}x {} to {}",
-                count, itemId, player.getName().getString());
+                count, item, player.getName().getString());
+    }
+
+    // ==============================================
+    // 查询
+    // ==============================================
+
+    public Item getItem() {
+        return item;
+    }
+
+    public int getCount() {
+        return count;
     }
 
     @Override
     public String toString() {
-        return "ItemReward";
+        return "ItemReward{" + item + " x" + count + "}";
     }
 }

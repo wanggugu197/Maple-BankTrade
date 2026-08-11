@@ -3,19 +3,30 @@ package com.maple.maple_banktrade.api.quests.core;
 import java.util.Map;
 
 /**
- * 不可变的完成记录（只追加）
+ * 不可变的完成记录（只追加）。
+ *
+ * <p>
+ * v3.7 新增：{@link #isRewardClaimed()} 追踪奖励领取状态。
+ * 奖励不再自动发放，需玩家在 UI 手动领取。
  */
 public interface ICompletionRecord {
 
     String getTaskId();
 
-    int getCompletionIndex();       // 第几次完成（从1开始）
+    /** 第几次完成（从1开始）。 */
+    int getCompletionIndex();
 
-    long getCompletedGameTime();    // 完成时的游戏总 tick
+    /** 完成时的游戏总 tick。 */
+    long getCompletedGameTime();
 
-    long getRealTimeStamp();        // 系统毫秒时间戳
+    /** 系统毫秒时间戳。 */
+    long getRealTimeStamp();
 
-    Map<String, Object> getSnapshotData(); // 扩展快照数据
+    /** 扩展快照数据。 */
+    Map<String, Object> getSnapshotData();
+
+    /** 奖励是否已领取。 */
+    boolean isRewardClaimed();
 
     /**
      * 是否携带快照数据（扩展数据非空）。

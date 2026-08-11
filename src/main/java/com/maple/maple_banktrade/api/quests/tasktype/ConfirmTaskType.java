@@ -1,8 +1,5 @@
 package com.maple.maple_banktrade.api.quests.tasktype;
 
-import net.minecraft.resources.Identifier;
-
-import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.quests.core.IQuestRepository;
 import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 
@@ -11,19 +8,18 @@ import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
  *
  * <p>
  * 这是最基础的完成类型，等同于点击即完成。使用时无需配置参数。
+ *
+ * <p>
+ * v3.6 重构：移除 {@code getId()}，使用单例模式直接引用。
  */
 public class ConfirmTaskType implements ITaskType {
 
-    private static final Identifier ID = MapleBankTrade.id("confirm");
-
-    @Override
-    public Identifier getId() {
-        return ID;
-    }
+    /** 单例实例。 */
+    public static final ConfirmTaskType INSTANCE = new ConfirmTaskType();
 
     @Override
     public boolean canComplete(ITaskDefinition def, IQuestRepository repo, Object context) {
-        return true; // 确认完成：无额外条件
+        return true;
     }
 
     @Override

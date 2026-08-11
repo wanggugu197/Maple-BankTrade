@@ -1,5 +1,6 @@
 package com.maple.maple_banktrade.api.quests.calculator;
 
+import com.maple.maple_banktrade.api.quests.condition.BaseQuestCondition;
 import com.maple.maple_banktrade.api.quests.condition.ResolutionContext;
 import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 import com.maple.maple_banktrade.api.quests.core.ITaskState;
@@ -10,8 +11,8 @@ import com.maple.maple_banktrade.api.quests.enums.TaskStatus;
  * 核心可见性计算器。
  *
  * <p>
- * 对单个任务节点计算其当前应有的目标状态（四态之一）。
- * 算法遵循 README 附录 B.1 的伪代码规范。
+ * v3.6 重构：条件评估改为直接调用 {@code condition.evaluate()}，
+ * 不再经过 {@code Identifier} + {@code CompoundTag} → 注册表查找 → 工厂创建。
  *
  * <p>
  * 检查顺序（短路求值）：
@@ -28,16 +29,10 @@ import com.maple.maple_banktrade.api.quests.enums.TaskStatus;
  */
 public final class VisibilityCalculator {
 
-    private VisibilityCalculator() {
-        // 工具类，禁止实例化
-    }
+    private VisibilityCalculator() {}
 
     /**
      * 计算单个任务节点的目标状态。
-     *
-     * @param taskId  任务 ID
-     * @param context 计算上下文（含快照和脚本引擎）
-     * @return 该任务当前应有的目标状态
      */
     public static TaskStatus resolveStatus(String taskId, ResolutionContext context) {
         ITaskDefinition def = context.getDefinition(taskId);
@@ -65,8 +60,9 @@ public final class VisibilityCalculator {
             return TaskStatus.ACTIVE;
         }
 
-        // 4. 可见性条件检查
-        if (!context.evaluateCondition(def.getVisibilityConditionId(), def.getVisibilityConditionParams(), taskId)) {
+        // 4. 可见性条件检查（v3.6：直接调用条件对象）
+        BaseQuestCondition visCond = def.getVisibilityCondition();
+        if (visCond != null && !visCond.evaluate(context.getEvaluationContext())) {
             return TaskStatus.HIDDEN;
         }
 
@@ -78,12 +74,7 @@ public final class VisibilityCalculator {
     // 隐藏条件检查
     // ==============================================
 
-    /**
-     * 判断任务是否应处于隐藏状态。
-     */
     private static boolean isHidden(ITaskDefinition def, ResolutionContext context) {
-        String taskId = def.getId();
-
         // 父节点检查
         String parentId = def.getParentId();
         if (parentId != null && !parentId.isEmpty()) {
@@ -93,7 +84,7 @@ public final class VisibilityCalculator {
             }
         }
 
-        // 兄弟链检查（严格完成）
+        // 兄弟链检查
         String prevSiblingId = def.getPrevSiblingId();
         if (prevSiblingId != null && !prevSiblingId.isEmpty()) {
             if (!context.isStrictlyCompleted(prevSiblingId)) {
@@ -101,13 +92,14 @@ public final class VisibilityCalculator {
             }
         }
 
-        // 依赖检查（按 DependencyRequirement 模式判断）
+        // 依赖检查
         if (!areDependenciesSatisfied(def, context)) {
             return true;
         }
 
-        // 解锁条件检查
-        if (!context.evaluateCondition(def.getUnlockConditionId(), def.getUnlockConditionParams(), taskId)) {
+        // 解锁条件检查（v3.6：直接调用条件对象）
+        BaseQuestCondition unlockCond = def.getUnlockCondition();
+        if (unlockCond != null && !unlockCond.evaluate(context.getEvaluationContext())) {
             return true;
         }
 
@@ -118,9 +110,6 @@ public final class VisibilityCalculator {
     // 辅助方法
     // ==============================================
 
-    /**
-     * 检查依赖节点是否满足条件（按 {@link DependencyRequirement} 模式）。
-     */
     private static boolean areDependenciesSatisfied(ITaskDefinition def, ResolutionContext context) {
         java.util.List<String> deps = def.getDependentNodes();
         if (deps == null || deps.isEmpty()) {
@@ -142,16 +131,9 @@ public final class VisibilityCalculator {
         };
     }
 
-    /**
-     * 判断循环任务是否已达到最大完成次数。
-     */
     private static boolean isMaxRepeatsReached(ITaskDefinition def, ResolutionContext context) {
         int maxRepeats = def.getMaxRepeatTimes();
-        if (maxRepeats < 0) {
-            // -1 表示无限循环
-            return false;
-        }
-        int completedCount = context.getCompletionCount(def.getId());
-        return completedCount >= maxRepeats;
+        if (maxRepeats < 0) return false;
+        return context.getCompletionCount(def.getId()) >= maxRepeats;
     }
 }

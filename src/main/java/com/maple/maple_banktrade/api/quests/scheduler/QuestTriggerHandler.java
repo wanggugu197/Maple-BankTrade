@@ -8,8 +8,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.quests.calculator.VisibilityCalculator;
-import com.maple.maple_banktrade.api.quests.condition.IScriptEvaluator;
-import com.maple.maple_banktrade.api.quests.condition.RegistryScriptEvaluator;
+import com.maple.maple_banktrade.api.quests.condition.EvaluationContext;
 import com.maple.maple_banktrade.api.quests.condition.ResolutionContext;
 import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 import com.maple.maple_banktrade.api.quests.core.ITaskState;
@@ -121,10 +120,10 @@ public final class QuestTriggerHandler {
     private static void refreshPlayerTasks(ServerPlayer player, long gameTime) {
         try {
             PlayerQuestData data = QuestDataManager.getOrCreate(player);
-            RegistryScriptEvaluator evaluator = QuestDataManager.getEvaluator(player);
+            EvaluationContext evalCtx = QuestDataManager.getEvaluator(player);
 
             // 1. 冷却/每日重置
-            List<String> resetIds = CooldownResetService.processCooldownResets(data, gameTime, evaluator);
+            List<String> resetIds = CooldownResetService.processCooldownResets(data, gameTime, evalCtx);
             if (!resetIds.isEmpty()) {
                 MapleBankTrade.LOGGER.debug("[QuestTriggerHandler] Player {} reset {} tasks: {}",
                         player.getName().getString(), resetIds.size(), resetIds);
@@ -132,14 +131,14 @@ public final class QuestTriggerHandler {
 
             // 2. 随机临时任务激活
             String triggered = CooldownResetService.tryRandomTempTask(
-                    data, evaluator, MAX_ACTIVE_TEMP_TASKS, RANDOM);
+                    data, evalCtx, MAX_ACTIVE_TEMP_TASKS, RANDOM);
             if (triggered != null) {
                 MapleBankTrade.LOGGER.debug("[QuestTriggerHandler] Player {} triggered temp task: {}",
                         player.getName().getString(), triggered);
             }
 
             // 3. 全量可见性重算
-            recalculateAllVisibility(data, evaluator);
+            recalculateAllVisibility(data, evalCtx);
 
         } catch (Exception e) {
             MapleBankTrade.LOGGER.error("[QuestTriggerHandler] Error refreshing tasks for player {}",
@@ -153,11 +152,11 @@ public final class QuestTriggerHandler {
      * <p>
      * 遍历所有任务定义，将当前状态与目标状态比较，不一致时更新。
      */
-    private static void recalculateAllVisibility(PlayerQuestData data, IScriptEvaluator evaluator) {
+    private static void recalculateAllVisibility(PlayerQuestData data, EvaluationContext evalCtx) {
         List<ITaskDefinition> allDefs = data.getAllDefinitions();
         if (allDefs.isEmpty()) return;
 
-        ResolutionContext context = new ResolutionContext(data, evaluator, data.getAllStates());
+        ResolutionContext context = new ResolutionContext(data, evalCtx, data.getAllStates());
 
         for (ITaskDefinition def : allDefs) {
             try {

@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.quests.scheduler;
 
 import com.maple.maple_banktrade.api.quests.calculator.VisibilityCalculator;
-import com.maple.maple_banktrade.api.quests.condition.IScriptEvaluator;
+import com.maple.maple_banktrade.api.quests.condition.EvaluationContext;
 import com.maple.maple_banktrade.api.quests.condition.ResolutionContext;
 import com.maple.maple_banktrade.api.quests.core.ICompletionRecord;
 import com.maple.maple_banktrade.api.quests.core.IQuestRepository;
@@ -42,15 +42,15 @@ public final class CooldownResetService {
     /**
      * 批量检查并重置所有符合条件的任务。
      *
-     * @param repository      任务仓储
-     * @param currentTick     当前游戏 tick
-     * @param scriptEvaluator 脚本引擎
+     * @param repository        任务仓储
+     * @param currentTick       当前游戏 tick
+     * @param evaluationContext 条件评估上下文
      * @return 被重置的任务 ID 列表
      */
     public static List<String> processCooldownResets(IQuestRepository repository, long currentTick,
-                                                     IScriptEvaluator scriptEvaluator) {
+                                                     EvaluationContext evaluationContext) {
         Map<String, ITaskState> states = repository.getAllStates();
-        ResolutionContext context = new ResolutionContext(repository, scriptEvaluator, states);
+        ResolutionContext context = new ResolutionContext(repository, evaluationContext, states);
 
         List<String> resetIds = new ArrayList<>();
         for (Map.Entry<String, ITaskState> entry : states.entrySet()) {
@@ -139,12 +139,12 @@ public final class CooldownResetService {
      * 从临时任务池中随机选取一个任务触发。
      *
      * @param repository         任务仓储
-     * @param scriptEvaluator    脚本引擎
+     * @param evaluationContext  条件评估上下文
      * @param maxActiveTempTasks 最大同时激活的临时任务数
      * @param random             随机数生成器
      * @return 被触发的任务 ID，或 null 表示无任务触发
      */
-    public static String tryRandomTempTask(IQuestRepository repository, IScriptEvaluator scriptEvaluator,
+    public static String tryRandomTempTask(IQuestRepository repository, EvaluationContext evaluationContext,
                                            int maxActiveTempTasks, Random random) {
         List<ITaskDefinition> tempDefs = repository.getDefinitionsByType(TaskType.TEMPORARY);
         if (tempDefs.isEmpty()) return null;
@@ -179,7 +179,7 @@ public final class CooldownResetService {
         // 触发
         ITaskState selectedState = repository.getOrCreateState(selected.getId());
         TaskStatus newStatus = VisibilityCalculator.resolveStatus(selected.getId(),
-                new ResolutionContext(repository, scriptEvaluator, states));
+                new ResolutionContext(repository, evaluationContext, states));
         selectedState.setStatus(newStatus);
         repository.saveState(selectedState);
 

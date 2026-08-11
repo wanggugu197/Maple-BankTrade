@@ -1,7 +1,5 @@
 package com.maple.maple_banktrade.api.quests.tasktype;
 
-import net.minecraft.resources.Identifier;
-
 import com.maple.maple_banktrade.api.quests.core.IQuestRepository;
 import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 
@@ -9,28 +7,14 @@ import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
  * 任务完成类型接口 —— 定义任务完成时需要满足的条件和副作用。
  *
  * <p>
+ * v3.6 重构：移除 {@code getId()}，任务类型实例直接存储在任务定义中，
+ * 不再需要通过注册表查找。
+ *
+ * <p>
  * 与 {@link com.maple.maple_banktrade.api.quests.enums.TaskType}（分类：MAIN/SIDE/TEMPORARY）不同，
  * 本接口定义的是"完成方式"（确认完成、提交物品、击杀实体等）。
- *
- * <p>
- * 通过 {@link TaskTypeRegistry} 注册和查找具体实现。
- *
- * <p>
- * 使用示例：
- * 
- * <pre>{@code
- * ITaskType type = TaskTypeRegistry.get(id("submit_item"));
- * if (type.canComplete(def, repo, context)) {
- *     type.onComplete(def, repo, context);
- * }
- * }</pre>
  */
 public interface ITaskType {
-
-    /**
-     * @return 任务类型的唯一标识符
-     */
-    Identifier getId();
 
     /**
      * 检查是否满足完成条件。

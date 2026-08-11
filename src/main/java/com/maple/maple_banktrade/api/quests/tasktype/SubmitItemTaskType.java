@@ -1,96 +1,95 @@
 package com.maple.maple_banktrade.api.quests.tasktype;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.quests.core.IQuestRepository;
 import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 
 /**
- * 提交物品类型 —— 检查背包中是否有足够物品，完成时扣除。
+ * 提交物品类型 —— 直接存储 {@link Item} 实例和数量，不存字符串 ID。
  *
  * <p>
- * 参数通过 {@link ITaskDefinition#getTaskTypeParams()} 配置：
+ * v3.6 重构：移除 {@code CompoundTag} 解析，改为直接存储物品实例。
+ *
+ * <p>
+ * 使用方式：
  * 
  * <pre>{@code
- * {
- *   "item": "minecraft:diamond",   // 物品 ID
- *   "count": 3                      // 需要数量，默认 1
- * }
+ * 
+ * ITaskType type = SubmitItemTaskType.of(Items.DIAMOND, 3);
  * }</pre>
  */
 public class SubmitItemTaskType implements ITaskType {
 
-    private static final Identifier ID = MapleBankTrade.id("submit_item");
+    private final Item item;
+    private final int count;
 
-    @Override
-    public Identifier getId() {
-        return ID;
+    // ==============================================
+    // 构造
+    // ==============================================
+
+    public SubmitItemTaskType(Item item, int count) {
+        this.item = item;
+        this.count = count > 0 ? count : 1;
     }
+
+    /** 静态工厂：创建指定数量的提交物品任务类型。 */
+    public static SubmitItemTaskType of(Item item, int count) {
+        return new SubmitItemTaskType(item, count);
+    }
+
+    /** 静态工厂：创建单个物品的提交任务类型。 */
+    public static SubmitItemTaskType of(Item item) {
+        return new SubmitItemTaskType(item, 1);
+    }
+
+    // ==============================================
+    // 任务完成逻辑
+    // ==============================================
 
     @Override
     public boolean canComplete(ITaskDefinition def, IQuestRepository repo, Object context) {
         if (!(context instanceof ServerPlayer player)) return false;
-
-        CompoundTag params = def.getTaskTypeParams();
-        Item item = resolveItem(params);
-        int count = params.getIntOr("count", 1);
-
-        if (item == null || count <= 0) return false;
-
-        return countItems(player, item) >= count;
+        if (item == null) return false;
+        return countItems(player) >= count;
     }
 
     @Override
     public void onComplete(ITaskDefinition def, IQuestRepository repo, Object context) {
         if (!(context instanceof ServerPlayer player)) return;
-
-        CompoundTag params = def.getTaskTypeParams();
-        Item item = resolveItem(params);
-        int count = params.getIntOr("count", 1);
-
-        if (item == null || count <= 0) return;
-
-        removeItems(player, item, count);
+        if (item == null) return;
+        removeItems(player, count);
     }
 
     // ==============================================
-    // 内部方法
+    // 查询
     // ==============================================
 
-    private static Item resolveItem(CompoundTag params) {
-        String itemId = params.getStringOr("item", "");
-        if (itemId.isEmpty()) return null;
-        try {
-            return BuiltInRegistries.ITEM.get(Identifier.parse(itemId)).orElse(null).value();
-        } catch (Exception e) {
-            MapleBankTrade.LOGGER.warn("SubmitItemTaskType: invalid item id '{}'", itemId, e);
-            return null;
-        }
+    public Item getItem() {
+        return item;
     }
 
-    private static int countItems(ServerPlayer player, Item item) {
+    public int getCount() {
+        return count;
+    }
+
+    private int countItems(ServerPlayer player) {
         int total = 0;
         for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
-            if (stack.is(item)) {
-                total += stack.getCount();
-            }
+            if (stack.is(item)) total += stack.getCount();
         }
         return total;
     }
 
-    private static void removeItems(ServerPlayer player, Item item, int count) {
-        int remaining = count;
+    private void removeItems(ServerPlayer player, int toRemove) {
+        int remaining = toRemove;
         for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
             if (stack.is(item)) {
-                int toRemove = Math.min(remaining, stack.getCount());
-                stack.shrink(toRemove);
-                remaining -= toRemove;
+                int take = Math.min(remaining, stack.getCount());
+                stack.shrink(take);
+                remaining -= take;
                 if (remaining <= 0) break;
             }
         }
@@ -98,6 +97,6 @@ public class SubmitItemTaskType implements ITaskType {
 
     @Override
     public String toString() {
-        return "SubmitItemTaskType";
+        return "SubmitItemTaskType{" + item + " x" + count + "}";
     }
 }

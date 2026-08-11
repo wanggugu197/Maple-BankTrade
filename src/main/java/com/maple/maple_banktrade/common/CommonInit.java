@@ -16,11 +16,8 @@ import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.WalletApiRegistration;
 import com.maple.maple_banktrade.api.bank.item.BankDataComponent;
+import com.maple.maple_banktrade.api.quests.QuestApiRegistration;
 import com.maple.maple_banktrade.api.quests.QuestDefinitionRegistry;
-import com.maple.maple_banktrade.api.quests.reward.RewardRegistry;
-import com.maple.maple_banktrade.api.quests.scheduler.QuestTriggerHandler;
-import com.maple.maple_banktrade.api.quests.storage.QuestDataManager;
-import com.maple.maple_banktrade.api.quests.tasktype.TaskTypeRegistry;
 import com.maple.maple_banktrade.api.trade.base.registry.*;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeHookRegistry;
 import com.maple.maple_banktrade.common.bank.BankRegistration;
@@ -54,13 +51,10 @@ public class CommonInit {
         // 交易数据包注册
         TradeRpcHandlers.init();
         MachineTradeHookRegistry.init();
-        QuestDataManager.init();
-        QuestTriggerHandler.init();
-        TaskTypeRegistry.init();
-        RewardRegistry.init();
 
-        // 任务系统：服务器启动时注入蓝图（始终启用，不受 enableModContent 影响）
-        NeoForge.EVENT_BUS.addListener(CommonInit::onServerStarted);
+        // API：任务书物品、任务 UI、任务系统各子模块
+        QuestApiRegistration.init();
+        QuestDefinitionRegistry.init(QuestBlueprints::getAllBlueprints);
 
         // 内置内容：银行/卡/货币/交易站/价目（可整体关闭，仅保留 API）
         if (MBTModConfig.enableModContent()) {
@@ -100,12 +94,11 @@ public class CommonInit {
     }
 
     /**
-     * 服务器启动完成后初始化全局静态任务定义注册表。
-     * 所有玩家通过 {@link com.maple.maple_banktrade.api.quests.QuestDefinitionRegistry} 共享同一份任务蓝图。
+     * 服务器启动完成后初始化交易数据。
+     * 任务定义已改为双端初始化，不再需要此处的单独处理。
      */
     public static void onServerStarted(ServerStartedEvent event) {
-        QuestDefinitionRegistry.init(QuestBlueprints::getAllBlueprints);
-        MapleBankTrade.LOGGER.info("[CommonInit] Quest definition registry initialized");
+        // 任务定义已改为双端初始化（在 init() 中），此方法保留用于未来扩展
     }
 
     public static void onServerStopping(ServerStoppingEvent event) {

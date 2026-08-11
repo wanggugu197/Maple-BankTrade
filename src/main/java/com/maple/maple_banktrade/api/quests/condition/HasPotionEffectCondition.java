@@ -12,20 +12,23 @@ import net.minecraft.world.entity.player.Player;
  */
 public class HasPotionEffectCondition extends BaseQuestCondition {
 
-    /** 实际药水效果 Holder 实例，不是字符串。 */
     private final Holder<MobEffect> effect;
 
     public HasPotionEffectCondition(Holder<MobEffect> effect) {
         this.effect = effect;
     }
 
-    /** 从 CompoundTag 构造：读取 "effect" (string id)，构建时查找实际实例。 */
-    public static HasPotionEffectCondition fromTag(CompoundTag tag) {
-        String rawId = tag.getStringOr("effect", "");
-        // 自动补全 minecraft 命名空间
-        Identifier id = rawId.contains(":") ? Identifier.parse(rawId) : Identifier.parse("minecraft:" + rawId);
+    /** 静态工厂：通过效果 ID 字符串创建条件。 */
+    public static HasPotionEffectCondition of(String effectId) {
+        Identifier id = effectId.contains(":") ? Identifier.parse(effectId) : Identifier.parse("minecraft:" + effectId);
         Holder<MobEffect> effect = BuiltInRegistries.MOB_EFFECT.get(id).orElse(null);
         return new HasPotionEffectCondition(effect);
+    }
+
+    /** 从 CompoundTag 构造（保留注册表兼容）。 */
+    public static HasPotionEffectCondition fromTag(CompoundTag tag) {
+        String rawId = tag.getStringOr("effect", "");
+        return of(rawId);
     }
 
     @Override
