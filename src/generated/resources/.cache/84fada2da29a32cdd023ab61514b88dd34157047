@@ -1,4 +1,4 @@
-// 26.1.2	2026-08-12T00:14:00.9276925	RegistryCore Provider for maple_banktrade [, Loot Tables, Advancements, Datapack Registries, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), Model Definitions - maple_banktrade, Lang (Languages: en_us for mod: maple_banktrade), maple_banktrade, Lang (Languages: en_ud for mod: maple_banktrade), Lang (Languages: zh_cn for mod: maple_banktrade), Lang (Languages: zh_tw for mod: maple_banktrade), Lang (Languages: ja_jp for mod: maple_banktrade), Lang (Languages: ru_ru for mod: maple_banktrade), Lang (Languages: fr_fr for mod: maple_banktrade), Lang (Languages: de_de for mod: maple_banktrade), Lang (Languages: es_es for mod: maple_banktrade), Lang (Languages: pt_pt for mod: maple_banktrade), Lang (Languages: it_it for mod: maple_banktrade), Lang (Languages: ko_kr for mod: maple_banktrade)]
+// 26.1.2	2026-08-12T11:08:48.4914944	RegistryCore Provider for maple_banktrade [, Loot Tables, Advancements, Datapack Registries, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), Model Definitions - maple_banktrade, Lang (Languages: en_us for mod: maple_banktrade), maple_banktrade, Lang (Languages: en_ud for mod: maple_banktrade), Lang (Languages: zh_cn for mod: maple_banktrade), Lang (Languages: zh_tw for mod: maple_banktrade), Lang (Languages: ja_jp for mod: maple_banktrade), Lang (Languages: ru_ru for mod: maple_banktrade), Lang (Languages: fr_fr for mod: maple_banktrade), Lang (Languages: de_de for mod: maple_banktrade), Lang (Languages: es_es for mod: maple_banktrade), Lang (Languages: pt_pt for mod: maple_banktrade), Lang (Languages: it_it for mod: maple_banktrade), Lang (Languages: ko_kr for mod: maple_banktrade)]
 409cc75af1d77bde9c345b59b7b8a8ad1b82a438 assets/maple_banktrade/blockstates/auto_trading_station.json
 b54d35d3fd1cef1d034471197e971f1b7318f8ef assets/maple_banktrade/blockstates/item_card_trading_station.json
 1e4740bde7ba1ac56815dda9f1cc9e91400ca190 assets/maple_banktrade/blockstates/trading_station.json
@@ -11,8 +11,8 @@ fefe86a2c5ec197b4a728269c94915a6d14ceb96 assets/maple_banktrade/items/quest_book
 056b3a775ef403afad6e05e1d992c05bfe76c7fb assets/maple_banktrade/items/trading_station.json
 9d5c7572cd3a4036dee39ffa31b46fa783ae4c66 assets/maple_banktrade/items/transaction_talisman_maple_banktrade_trade_type/machine_item_desk.json
 f0ec4cd2401fc097a4397880d1260a1bb005c4a3 assets/maple_banktrade/items/wallet.json
-ae77b068d318e68c267908d9f3f3a42cd88d4e24 assets/maple_banktrade/lang/en_us.json
-23157f8d7c19a20075cd420de192f6e16326d7b0 assets/maple_banktrade/lang/zh_cn.json
+678780f5a94e67b1ea5907730e08e3085584fe6c assets/maple_banktrade/lang/en_us.json
+d08f3c353dee977862355f83e74b78b607d0380d assets/maple_banktrade/lang/zh_cn.json
 52d41ead1635d9057f183f94a0d8f123b303e2e9 assets/maple_banktrade/models/block/trading_station/wallet.json
 0c137aaa261d55c1b21ab7cec0087522d65e5c22 assets/maple_banktrade/models/item/bank_card_authentication_key.json
 460ba1a06b95571a7ab3e161be8a77bd0f9e92a4 assets/maple_banktrade/models/item/bank_permissions_card.json

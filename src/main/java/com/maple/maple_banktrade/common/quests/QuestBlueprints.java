@@ -2,11 +2,9 @@ package com.maple.maple_banktrade.common.quests;
 
 import net.minecraft.world.item.Items;
 
-import com.maple.maple_banktrade.api.quests.condition.HasItemCondition;
 import com.maple.maple_banktrade.api.quests.condition.HasPotionEffectCondition;
 import com.maple.maple_banktrade.api.quests.condition.HealthCondition;
 import com.maple.maple_banktrade.api.quests.condition.IsRainingCondition;
-import com.maple.maple_banktrade.api.quests.condition.LevelCondition;
 import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 import com.maple.maple_banktrade.api.quests.enums.DependencyRequirement;
 import com.maple.maple_banktrade.api.quests.enums.TaskBehavior;
@@ -26,7 +24,8 @@ import java.util.List;
  * 不再通过 {@code Identifier} + {@code CompoundTag} 间接存储。
  *
  * <p>
- * 当前包含 26 个示例任务，覆盖全部 6 种行为模式。
+ * 当前包含 28 个示例任务，覆盖全部 6 种行为模式。
+ * 主线任务采用简单链式结构（nextTaskInChain），点击 UI 按钮完成。
  */
 public final class QuestBlueprints {
 
@@ -34,11 +33,13 @@ public final class QuestBlueprints {
 
     public static List<ITaskDefinition> getAllBlueprints() {
         return Arrays.asList(
-                // ==================== 主线任务链 ====================
+                // ==================== 主线任务链（默认解锁 → 链式点击完成） ====================
                 buildMainRoot(),
                 buildMainForest(),
                 buildMainCave(),
                 buildMainCastle(),
+                buildMainTower(),
+                buildMainDragon(),
 
                 // ==================== 支线任务 ====================
                 buildSideVillage(),
@@ -74,7 +75,7 @@ public final class QuestBlueprints {
     }
 
     // ==============================================
-    // 1. 主线任务链
+    // 1. 主线任务链（简单链式：点击完成 → 解锁下一个）
     // ==============================================
 
     private static ITaskDefinition buildMainRoot() {
@@ -82,40 +83,57 @@ public final class QuestBlueprints {
                 .id("main_root")
                 .type(TaskType.MAIN)
                 .isGroup(true)
-                .childrenIds(Arrays.asList("main_forest", "main_cave"))
+                .childrenIds(Arrays.asList("main_forest"))
                 .forceParentVisible(true)
                 .build();
     }
 
-    /** 第一个主线任务：需玩家等级 ≥ 1 才能解锁。 */
+    /** 第一个主线任务：默认解锁，无任何前置条件，点击 UI 按钮完成。 */
     private static ITaskDefinition buildMainForest() {
         return new BaseTaskDefinition.Builder()
                 .id("main_forest")
                 .type(TaskType.MAIN)
                 .parentId("main_root")
-                .unlockCondition(new LevelCondition(1, true))
+                .nextTaskInChain("main_cave")
                 .build();
     }
 
-    /** 第二个主线任务：兄弟链排在 main_forest 之后，完成后跨链跳转到 main_castle。 */
+    /** 第二个主线任务：完成 main_forest 后解锁，点击完成。 */
     private static ITaskDefinition buildMainCave() {
         return new BaseTaskDefinition.Builder()
                 .id("main_cave")
                 .type(TaskType.MAIN)
                 .parentId("main_root")
-                .prevSiblingId("main_forest")
                 .nextTaskInChain("main_castle")
                 .build();
     }
 
-    /** 第三个主线任务：需持有绿宝石才能解锁。 */
+    /** 第三个主线任务：完成 main_cave 后解锁，点击完成。 */
     private static ITaskDefinition buildMainCastle() {
         return new BaseTaskDefinition.Builder()
                 .id("main_castle")
                 .type(TaskType.MAIN)
                 .parentId("main_root")
-                .prevSiblingId("main_cave")
-                .unlockCondition(new HasItemCondition(Items.EMERALD))
+                .nextTaskInChain("main_tower")
+                .build();
+    }
+
+    /** 第四个主线任务：完成 main_castle 后解锁，点击完成。 */
+    private static ITaskDefinition buildMainTower() {
+        return new BaseTaskDefinition.Builder()
+                .id("main_tower")
+                .type(TaskType.MAIN)
+                .parentId("main_root")
+                .nextTaskInChain("main_dragon")
+                .build();
+    }
+
+    /** 第五个主线任务：完成 main_tower 后解锁，点击完成。 */
+    private static ITaskDefinition buildMainDragon() {
+        return new BaseTaskDefinition.Builder()
+                .id("main_dragon")
+                .type(TaskType.MAIN)
+                .parentId("main_root")
                 .build();
     }
 

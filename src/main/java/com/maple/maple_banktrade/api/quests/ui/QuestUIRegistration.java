@@ -122,13 +122,8 @@ public class QuestUIRegistration extends PlayerUIMenuType {
     private static UIElement buildMainQuestContent(Player player) {
         var split = createSplitView();
 
-        var listCtx = QuestTaskListPanel.create(player);
         var detailCtx = QuestTaskDetailPanel.create(player, true);
-
-        listCtx.scroller().onMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload -> {
-            String taskId = payload.getString(QuestTaskListPanel.KEY_TASK_ID).get();
-            detailCtx.selectTask(taskId);
-        });
+        var listCtx = QuestTaskListPanel.create(player, detailCtx::selectTask);
 
         listCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
         listCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
@@ -144,13 +139,8 @@ public class QuestUIRegistration extends PlayerUIMenuType {
     private static UIElement buildCompletedContent(Player player) {
         var split = createSplitView();
 
-        var completedCtx = QuestCompletedPanel.create(player);
         var detailCtx = QuestTaskDetailPanel.create(player, true);
-
-        completedCtx.scroller().onMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload -> {
-            String taskId = payload.getString(QuestTaskListPanel.KEY_TASK_ID).get();
-            detailCtx.selectTask(taskId);
-        });
+        var completedCtx = QuestCompletedPanel.create(player, detailCtx::selectTask);
 
         completedCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
         completedCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
@@ -166,13 +156,8 @@ public class QuestUIRegistration extends PlayerUIMenuType {
     private static UIElement buildTreeContent(Player player) {
         var split = createSplitView();
 
-        var treeCtx = QuestTreePanel.create();
         var detailCtx = QuestTaskDetailPanel.create(player, false);
-
-        treeCtx.scroller().onMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload -> {
-            String taskId = payload.getString(QuestTaskListPanel.KEY_TASK_ID).get();
-            detailCtx.selectTask(taskId);
-        });
+        var treeCtx = QuestTreePanel.create(detailCtx::selectTask);
 
         treeCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
         treeCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));

@@ -1,6 +1,5 @@
 package com.maple.maple_banktrade.api.quests.ui;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
@@ -11,19 +10,23 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
 import dev.vfyjxf.taffy.style.FlexDirection;
 
+import java.util.function.Consumer;
+
 import static com.maple.maple_banktrade.api.quests.ui.QuestUIRegistration.TREE_MARGIN_LEFT;
 
 /**
  * 创造模式树状结构标签页 —— 左侧完整任务树 + 右侧详情（ScrollerView + SplitView）。
+ * <p>
+ * 任务选择通过客户端直接回调，不走 sendMessage/onMessage 服务端往返。
  */
 public final class QuestTreePanel {
 
     private QuestTreePanel() {}
 
     /**
-     * @return 包含 ScrollerView 的上下文，用于外部注册 onMessage 连线。
+     * @param onSelect 客户端回调：当用户点击任务节点时调用，传入任务 ID
      */
-    public static TreeContext create() {
+    public static TreeContext create(Consumer<String> onSelect) {
         UIElement panel = new UIElement();
         panel.layout(l -> l.widthPercent(100).heightPercent(100)
                 .flexDirection(FlexDirection.COLUMN).gapAll(QuestUIRegistration.GAP_SMALL));
@@ -55,14 +58,12 @@ public final class QuestTreePanel {
         tree.setFlattenRoot(true);
         tree.setNodeUISupplier(node -> buildTreeNodeUI(node));
 
-        // 点击节点 → 发送消息
+        // 点击节点 → 客户端直接回调
         tree.setOnSelectedChanged(selected -> {
             if (!selected.isEmpty()) {
                 QuestTreeNode node = selected.iterator().next();
                 if (!node.isGroup()) {
-                    CompoundTag payload = new CompoundTag();
-                    payload.putString(QuestTaskListPanel.KEY_TASK_ID, node.getId());
-                    scroller.sendMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload);
+                    onSelect.accept(node.getId());
                 }
             }
         });

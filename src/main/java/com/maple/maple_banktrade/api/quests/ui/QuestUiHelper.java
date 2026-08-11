@@ -225,7 +225,11 @@ public final class QuestUiHelper {
     // ==============================================
 
     /**
-     * 构建任务树列表（主标签页）：按类型分组，含动态状态。
+     * 构建任务树列表（主标签页）：按类型分组，仅包含进行中和可见但锁定的任务。
+     * <p>
+     * 过滤规则：跳过 COMPLETED（已完成）和 HIDDEN（隐藏）状态。
+     * 排序规则：ACTIVE（进行中）在前，VISIBLE_LOCKED（可见但锁定）在后。
+     * 分组：主线 → 支线 → 随机。
      */
     public static QuestSyncData.TreeListSnapshot buildQuestTreeList(ServerPlayer player) {
         PlayerQuestData data = QuestDataManager.getOrCreate(player);
@@ -236,21 +240,35 @@ public final class QuestUiHelper {
         List<QuestTreeNode> roots = snapshot.getRoots();
         int total = 0;
 
-        // 按类型分组
+        // 按类型分组：MAIN, SIDE, TEMPORARY
         Map<TaskType, List<ITaskDefinition>> grouped = new LinkedHashMap<>();
         for (TaskType type : TaskType.values()) grouped.put(type, new ArrayList<>());
+
         for (ITaskDefinition def : QuestDefinitionRegistry.getAllDefinitions()) {
+            TaskStatus status = VisibilityCalculator.resolveStatus(def.getId(), ctx);
+            // 过滤：只保留 ACTIVE 和 VISIBLE_LOCKED
+            if (status != TaskStatus.ACTIVE && status != TaskStatus.VISIBLE_LOCKED) continue;
             grouped.get(def.getType()).add(def);
         }
 
         for (Map.Entry<TaskType, List<ITaskDefinition>> entry : grouped.entrySet()) {
             if (entry.getValue().isEmpty()) continue;
+
+            // 排序：ACTIVE 在前，VISIBLE_LOCKED 在后
+            List<ITaskDefinition> sorted = entry.getValue().stream()
+                    .sorted((a, b) -> {
+                        TaskStatus sa = VisibilityCalculator.resolveStatus(a.getId(), ctx);
+                        TaskStatus sb = VisibilityCalculator.resolveStatus(b.getId(), ctx);
+                        return Integer.compare(statusOrder(sa), statusOrder(sb));
+                    })
+                    .toList();
+
             // 类型分组节点
             QuestTreeNode groupNode = QuestTreeNode.group("__group__" + entry.getKey().name(),
                     entry.getKey().name());
             roots.add(groupNode);
 
-            for (ITaskDefinition def : entry.getValue()) {
+            for (ITaskDefinition def : sorted) {
                 QuestTreeNode node = buildTreeListNode(def, ctx, data, 1);
                 groupNode.addChildNode(node);
                 total++;
@@ -259,6 +277,15 @@ public final class QuestUiHelper {
 
         snapshot.setTotal(total);
         return snapshot;
+    }
+
+    /** 排序权重：ACTIVE=0, VISIBLE_LOCKED=1, 其他=99。 */
+    private static int statusOrder(TaskStatus status) {
+        return switch (status) {
+            case ACTIVE -> 0;
+            case VISIBLE_LOCKED -> 1;
+            default -> 99;
+        };
     }
 
     /**
@@ -330,6 +357,10 @@ public final class QuestUiHelper {
                 .setHasUnclaimedReward(hasUnclaimed);
 
         for (ITaskDefinition child : QuestDefinitionRegistry.getChildren(def.getId())) {
+            TaskStatus childStatus = VisibilityCalculator.resolveStatus(child.getId(), ctx);
+            // 只保留 ACTIVE/VISIBLE_LOCKED，且仅添加同类型子节点，防止支线混入主线
+            if (childStatus != TaskStatus.ACTIVE && childStatus != TaskStatus.VISIBLE_LOCKED) continue;
+            if (child.getType() != def.getType()) continue;
             node.addChildNode(buildTreeListNode(child, ctx, data, depth + 1));
         }
         return node;
@@ -416,5 +447,47 @@ public final class QuestUiHelper {
             case ACTIVE -> "▶";
             case COMPLETED -> "✅";
         };
+    }
+
+    // ==============================================
+    // 轻量状态快照（v4.1：服务端仅发送完成情况，客户端基于本地蓝图重建 UI）
+    // ==============================================
+
+    /** 单调递增版本号，用于客户端缓存失效判断。 */
+    private static int revisionCounter = 0;
+
+    /**
+     * 构建轻量任务状态快照 —— 服务端计算所有任务的动态状态后发送给客户端。
+     * <p>
+     * 客户端收到后基于本地 {@link QuestDefinitionRegistry} 蓝图重建 UI 树和详情，
+     * 不再传输完整的 {@link QuestTreeNode} 树或 {@link QuestSyncData.TaskDetail}。
+     *
+     * @param player 目标玩家
+     * @return 所有任务的运行时状态快照
+     */
+    public static QuestSyncData.QuestStatusSnapshot buildStatusSnapshot(ServerPlayer player) {
+        PlayerQuestData data = QuestDataManager.getOrCreate(player);
+        ResolutionContext ctx = new ResolutionContext(data,
+                QuestDataManager.getEvaluator(player), data.getAllStates());
+
+        QuestSyncData.QuestStatusSnapshot snapshot = new QuestSyncData.QuestStatusSnapshot();
+        snapshot.setRevision(++revisionCounter);
+
+        List<QuestSyncData.TaskStatusEntry> entries = snapshot.getEntries();
+        for (ITaskDefinition def : QuestDefinitionRegistry.getAllDefinitions()) {
+            TaskStatus status = VisibilityCalculator.resolveStatus(def.getId(), ctx);
+            boolean hasUnclaimed = false;
+            if (status == TaskStatus.COMPLETED) {
+                List<ICompletionRecord> records = data.getCompletionRecords(def.getId());
+                hasUnclaimed = records.stream().anyMatch(r -> !r.isRewardClaimed());
+            }
+
+            entries.add(new QuestSyncData.TaskStatusEntry()
+                    .setTaskId(def.getId())
+                    .setStatus(status.name())
+                    .setCompletions(ctx.getCompletionCount(def.getId()))
+                    .setHasUnclaimedReward(hasUnclaimed));
+        }
+        return snapshot;
     }
 }

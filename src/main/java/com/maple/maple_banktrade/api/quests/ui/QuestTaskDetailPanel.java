@@ -16,10 +16,12 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
+import com.maple.maple_banktrade.api.quests.QuestDefinitionRegistry;
 import com.maple.maple_banktrade.api.quests.calculator.StateTransitionOrchestrator;
 import com.maple.maple_banktrade.api.quests.condition.EvaluationContext;
 import com.maple.maple_banktrade.api.quests.condition.ResolutionContext;
 import com.maple.maple_banktrade.api.quests.core.ICompletionRecord;
+import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 import com.maple.maple_banktrade.api.quests.enums.TaskStatus;
 import com.maple.maple_banktrade.api.quests.repository.PlayerQuestData;
 import com.maple.maple_banktrade.api.quests.storage.QuestDataManager;
@@ -29,10 +31,8 @@ import dev.vfyjxf.taffy.style.FlexDirection;
 
 import java.util.List;
 
-import static com.maple.maple_banktrade.api.quests.ui.QuestUIRegistration.UI_CONTENT_HEIGHT;
-
 /**
- * 右栏任务详情面板 —— 显示选中任务的完整信息。
+ * 右栏任务详情面板 —— 服务端仅发送状态快照，客户端基于本地蓝图构建详情。
  */
 public final class QuestTaskDetailPanel {
 
@@ -42,10 +42,6 @@ public final class QuestTaskDetailPanel {
     // 构建
     // ==============================================
 
-    /**
-     * @param player      玩家实例
-     * @param showActions 是否显示操作按钮（激活/完成/领取）。创造模式树状视图可传 false。
-     */
     public static DetailContext create(Player player, boolean showActions) {
         UIElement panel = new UIElement();
         panel.layout(l -> l.widthPercent(100).heightPercent(100)
@@ -66,7 +62,7 @@ public final class QuestTaskDetailPanel {
         scroller.viewContainer(container -> container.layout(l -> l.flexDirection(FlexDirection.COLUMN).gapAll(QuestUIRegistration.GAP_SMALL + 1)
                 .paddingAll(QuestUIRegistration.PADDING_TINY)));
 
-        QuestSyncData.TaskDetail data = QuestSyncData.TaskDetail.empty();
+        QuestSyncData.QuestStatusSnapshot data = player instanceof ServerPlayer sp ? QuestUiHelper.buildStatusSnapshot(sp) : QuestSyncData.QuestStatusSnapshot.empty();
         DetailContext ctx = new DetailContext(panel, scroller, player);
 
         Button activateBtn = null, completeBtn = null, claimBtn = null;
@@ -106,131 +102,149 @@ public final class QuestTaskDetailPanel {
 
         panel.addChild(scroller);
 
-        BindableValue<QuestSyncData.TaskDetail> sync;
-        if (showActions) {
-            final Button fActivateBtn = activateBtn;
-            final Button fCompleteBtn = completeBtn;
-            final Button fClaimBtn = claimBtn;
-            sync = createDetailSync(player, ctx, scroller, data, fActivateBtn, fCompleteBtn, fClaimBtn);
-        } else {
-            sync = createDetailSync(player, ctx, scroller, data, null, null, null);
-        }
-
+        BindableValue<QuestSyncData.QuestStatusSnapshot> sync = createStatusSync(player, ctx, scroller, data, activateBtn, completeBtn, claimBtn);
         panel.addChild(sync);
-        ctx.setSync(sync);
         return ctx;
     }
 
-    private static BindableValue<QuestSyncData.TaskDetail> createDetailSync(
-                                                                            Player player, DetailContext ctx, ScrollerView scroller,
-                                                                            QuestSyncData.TaskDetail data,
-                                                                            Button activateBtn, Button completeBtn, Button claimBtn) {
-        BindableValue<QuestSyncData.TaskDetail> sync = new BindableValue<>(data);
+    private static BindableValue<QuestSyncData.QuestStatusSnapshot> createStatusSync(
+                                                                                     Player player, DetailContext ctx, ScrollerView scroller,
+                                                                                     QuestSyncData.QuestStatusSnapshot data,
+                                                                                     Button activateBtn, Button completeBtn, Button claimBtn) {
+        BindableValue<QuestSyncData.QuestStatusSnapshot> sync = new BindableValue<>(data);
         sync.layout(l -> l.width(0).height(0));
         sync.setDisplay(false);
         sync.bind(DataBindingBuilder.create(
-                () -> {
-                    String id = ctx.selectedTaskId();
-                    if (id == null || id.isEmpty()) {
-                        data.copyFrom(QuestSyncData.TaskDetail.empty());
-                    } else {
-                        data.copyFrom(QuestUiHelper.buildTaskDetail((ServerPlayer) player, id));
-                    }
-                    return data;
-                },
+                () -> QuestUiHelper.buildStatusSnapshot((ServerPlayer) player),
                 v -> { /* c2s no-op */ })
-                .syncType(QuestSyncData.TaskDetail.class)
+                .syncType(QuestSyncData.QuestStatusSnapshot.class)
                 .initialValue(data)
                 .c2sStrategy(SyncStrategy.NONE)
                 .remoteSetter(clientData -> {
-                    rebuildDetail(scroller, clientData);
-                    if (activateBtn != null) updateButtons(activateBtn, completeBtn, claimBtn, clientData);
+                    ctx.setCachedStatus(clientData);
+                    rebuildDetailFromStatus(scroller, ctx);
+                    if (activateBtn != null) updateButtonsFromStatus(activateBtn, completeBtn, claimBtn, ctx);
                 })
                 .build());
         return sync;
     }
 
     // ==============================================
-    // 客户端重建
+    // 客户端：基于状态快照 + 本地蓝图重建详情
     // ==============================================
 
-    private static void rebuildDetail(ScrollerView scroller, QuestSyncData.TaskDetail d) {
+    private static void rebuildDetailFromStatus(ScrollerView scroller, DetailContext ctx) {
         scroller.clearAllScrollViewChildren();
-        if (d.getId().isEmpty()) {
+        String taskId = ctx.selectedTaskId();
+        if (taskId == null || taskId.isEmpty()) {
             scroller.addScrollViewChild(buildEmptyHint());
             return;
         }
 
-        scroller.addScrollViewChild(buildTitle(d.getId()));
-        scroller.addScrollViewChild(buildSection("基本信息"));
-        scroller.addScrollViewChild(buildRow("类型", QuestUiHelper.formatTaskType(safeEnum(d.getType(), com.maple.maple_banktrade.api.quests.enums.TaskType.class))));
-        scroller.addScrollViewChild(buildRow("行为", QuestUiHelper.formatBehavior(safeEnum(d.getBehavior(), com.maple.maple_banktrade.api.quests.enums.TaskBehavior.class))));
-        scroller.addScrollViewChild(buildRow("状态", QuestUiHelper.formatStatus(safeEnum(d.getStatus(), TaskStatus.class))));
-        scroller.addScrollViewChild(buildRow("进度", d.getCompletions() + " / " + d.getRequiredCompletions()));
-
-        scroller.addScrollViewChild(buildSection("任务链"));
-        if (!d.getParentId().isEmpty()) scroller.addScrollViewChild(buildRow("父节点", d.getParentId()));
-        if (!d.getPrevSiblingId().isEmpty()) scroller.addScrollViewChild(buildRow("前置", d.getPrevSiblingId()));
-        if (!d.getNextTaskInChain().isEmpty()) scroller.addScrollViewChild(buildRow("后继", d.getNextTaskInChain()));
-        if (d.isRepeatable()) {
-            scroller.addScrollViewChild(buildRow("循环", d.getMaxRepeatTimes() < 0 ? "无限" : "最多 " + d.getMaxRepeatTimes() + " 次"));
+        ITaskDefinition def = QuestDefinitionRegistry.getDefinition(taskId);
+        if (def == null) {
+            scroller.addScrollViewChild(buildEmptyHint());
+            return;
         }
 
-        if (!d.getDependents().isEmpty()) {
-            scroller.addScrollViewChild(buildSection("依赖 (" + QuestUiHelper.formatDependencyRequirement(d.getDependencyRequirement()) + ")"));
-            for (QuestSyncData.DependentInfo dep : d.getDependents()) {
+        QuestSyncData.QuestStatusSnapshot snapshot = ctx.getCachedStatus();
+        QuestSyncData.TaskStatusEntry entry = snapshot != null ? snapshot.getEntry(taskId) : null;
+        String statusStr = entry != null ? entry.getStatus() : "HIDDEN";
+        int completions = entry != null ? entry.getCompletions() : 0;
+        boolean hasUnclaimed = entry != null && entry.isHasUnclaimedReward();
+
+        TaskStatus status;
+        try {
+            status = TaskStatus.valueOf(statusStr);
+        } catch (IllegalArgumentException e) {
+            status = TaskStatus.HIDDEN;
+        }
+
+        // 标题
+        scroller.addScrollViewChild(buildTitle(taskId));
+
+        // 基本信息
+        scroller.addScrollViewChild(buildSection("基本信息"));
+        scroller.addScrollViewChild(buildRow("类型", QuestUiHelper.formatTaskType(def.getType())));
+        scroller.addScrollViewChild(buildRow("行为", QuestUiHelper.formatBehavior(def.getBehavior())));
+        scroller.addScrollViewChild(buildRow("状态", QuestUiHelper.formatStatus(status)));
+        scroller.addScrollViewChild(buildRow("进度", completions + " / " + def.getRequiredCompletions()));
+
+        // 任务链
+        scroller.addScrollViewChild(buildSection("任务链"));
+        if (def.getParentId() != null) scroller.addScrollViewChild(buildRow("父节点", def.getParentId()));
+        if (def.getPrevSiblingId() != null) scroller.addScrollViewChild(buildRow("前置", def.getPrevSiblingId()));
+        if (def.getNextTaskInChain() != null) scroller.addScrollViewChild(buildRow("后继", def.getNextTaskInChain()));
+        if (def.isRepeatable()) {
+            scroller.addScrollViewChild(buildRow("循环", def.getMaxRepeatTimes() < 0 ? "无限" : "最多 " + def.getMaxRepeatTimes() + " 次"));
+        }
+
+        // 依赖
+        if (!def.getDependentNodes().isEmpty()) {
+            scroller.addScrollViewChild(buildSection("依赖 (" + QuestUiHelper.formatDependencyRequirement(def.getDependencyRequirement().name()) + ")"));
+            for (String depId : def.getDependentNodes()) {
+                QuestSyncData.TaskStatusEntry depEntry = snapshot != null ? snapshot.getEntry(depId) : null;
+                String depStatus = depEntry != null ? depEntry.getStatus() : "HIDDEN";
                 String depIcon = "";
                 try {
-                    depIcon = QuestUiHelper.statusIcon(TaskStatus.valueOf(dep.getStatus()));
+                    depIcon = QuestUiHelper.statusIcon(TaskStatus.valueOf(depStatus));
                 } catch (IllegalArgumentException ignored) {}
-                scroller.addScrollViewChild(buildRow(dep.getId(), depIcon + " " + dep.getStatus()));
+                scroller.addScrollViewChild(buildRow(depId, depIcon + " " + depStatus));
             }
         }
 
-        if (!d.getUnlockCond().isEmpty() || !d.getVisCond().isEmpty()) {
+        // 条件
+        if (def.getUnlockCondition() != null || def.getVisibilityCondition() != null) {
             scroller.addScrollViewChild(buildSection("条件"));
-            if (!d.getUnlockCond().isEmpty()) scroller.addScrollViewChild(buildRow("解锁条件", d.getUnlockCond()));
-            if (!d.getVisCond().isEmpty()) scroller.addScrollViewChild(buildRow("可见条件", d.getVisCond()));
+            if (def.getUnlockCondition() != null) scroller.addScrollViewChild(buildRow("解锁条件", def.getUnlockCondition().toString()));
+            if (def.getVisibilityCondition() != null) scroller.addScrollViewChild(buildRow("可见条件", def.getVisibilityCondition().toString()));
         }
 
-        if (!d.getTaskTypeInfos().isEmpty()) {
+        // 完成方式
+        if (!def.getTaskTypes().isEmpty()) {
             scroller.addScrollViewChild(buildSection("完成方式"));
-            scroller.addScrollViewChild(buildRow("类型", String.join(", ", d.getTaskTypeInfos())));
+            List<String> names = def.getTaskTypes().stream().map(t -> t.getClass().getSimpleName()).toList();
+            scroller.addScrollViewChild(buildRow("类型", String.join(", ", names)));
         }
 
-        if (!d.getRewards().isEmpty()) {
+        // 奖励
+        if (!def.getRewards().isEmpty()) {
             scroller.addScrollViewChild(buildSection("奖励"));
-            for (QuestSyncData.RewardInfo r : d.getRewards()) {
-                scroller.addScrollViewChild(buildRow("物品", r.getItem() + " ×" + r.getCount()));
+            for (var reward : def.getRewards()) {
+                scroller.addScrollViewChild(buildRow("物品", reward.toString()));
             }
         }
     }
 
-    private static void updateButtons(Button activateBtn, Button completeBtn, Button claimBtn, QuestSyncData.TaskDetail d) {
-        TaskStatus status;
-        try {
-            status = TaskStatus.valueOf(d.getStatus());
-        } catch (IllegalArgumentException e) {
+    /** 根据状态快照更新按钮显示。 */
+    private static void updateButtonsFromStatus(Button activateBtn, Button completeBtn, Button claimBtn, DetailContext ctx) {
+        String taskId = ctx.selectedTaskId();
+        if (taskId == null || taskId.isEmpty()) {
             activateBtn.setDisplay(false);
             completeBtn.setDisplay(false);
             claimBtn.setDisplay(false);
             return;
         }
-        switch (status) {
-            case VISIBLE_LOCKED -> {
+        QuestSyncData.QuestStatusSnapshot snapshot = ctx.getCachedStatus();
+        QuestSyncData.TaskStatusEntry entry = snapshot != null ? snapshot.getEntry(taskId) : null;
+        String statusStr = entry != null ? entry.getStatus() : "HIDDEN";
+        boolean hasUnclaimed = entry != null && entry.isHasUnclaimedReward();
+
+        switch (statusStr) {
+            case "VISIBLE_LOCKED" -> {
                 activateBtn.setDisplay(true);
                 completeBtn.setDisplay(false);
                 claimBtn.setDisplay(false);
             }
-            case ACTIVE -> {
+            case "ACTIVE" -> {
                 activateBtn.setDisplay(false);
                 completeBtn.setDisplay(true);
                 claimBtn.setDisplay(false);
             }
-            case COMPLETED -> {
+            case "COMPLETED" -> {
                 activateBtn.setDisplay(false);
                 completeBtn.setDisplay(false);
-                claimBtn.setDisplay(d.isHasUnclaimedReward());
+                claimBtn.setDisplay(hasUnclaimed);
             }
             default -> {
                 activateBtn.setDisplay(false);
@@ -279,7 +293,7 @@ public final class QuestTaskDetailPanel {
     }
 
     // ==============================================
-    // UI 构建子组件（全部使用 style() / layout() / textStyle() 内联样式）
+    // UI 构建子组件
     // ==============================================
 
     private static UIElement buildTitle(String taskId) {
@@ -355,7 +369,6 @@ public final class QuestTaskDetailPanel {
         return row;
     }
 
-    /** 详情行文字通用样式。 */
     private static void applyDetailTextStyle(TextElement text) {
         text.textStyle(s -> s
                 .fontSize(QuestUIRegistration.FONT_DETAIL)
@@ -379,15 +392,6 @@ public final class QuestTaskDetailPanel {
         return sb.toString().trim();
     }
 
-    @SuppressWarnings("unchecked")
-    private static <E extends Enum<E>> E safeEnum(String value, Class<E> clazz) {
-        try {
-            return Enum.valueOf(clazz, value);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
     // ==============================================
     // 内部类型
     // ==============================================
@@ -398,7 +402,7 @@ public final class QuestTaskDetailPanel {
         private final ScrollerView scroller;
         private final Player player;
         private String selectedTaskId;
-        private BindableValue<QuestSyncData.TaskDetail> sync;
+        private QuestSyncData.QuestStatusSnapshot cachedStatus;
         private Button activateBtn;
         private Button completeBtn;
         private Button claimBtn;
@@ -434,8 +438,13 @@ public final class QuestTaskDetailPanel {
             return claimBtn;
         }
 
-        void setSync(BindableValue<QuestSyncData.TaskDetail> sync) {
-            this.sync = sync;
+        /** 客户端缓存的最近一次状态快照。 */
+        public QuestSyncData.QuestStatusSnapshot getCachedStatus() {
+            return cachedStatus;
+        }
+
+        void setCachedStatus(QuestSyncData.QuestStatusSnapshot status) {
+            this.cachedStatus = status;
         }
 
         void setButtons(Button activate, Button complete, Button claim) {
@@ -446,6 +455,11 @@ public final class QuestTaskDetailPanel {
 
         public void selectTask(String taskId) {
             this.selectedTaskId = taskId;
+            // 选择后立即用缓存的状态重建详情
+            if (cachedStatus != null) {
+                rebuildDetailFromStatus(scroller, this);
+                if (activateBtn != null) updateButtonsFromStatus(activateBtn, completeBtn, claimBtn, this);
+            }
         }
     }
 }

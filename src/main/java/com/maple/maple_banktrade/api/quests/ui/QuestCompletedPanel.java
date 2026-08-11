@@ -1,6 +1,5 @@
 package com.maple.maple_banktrade.api.quests.ui;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -14,31 +13,37 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
+import com.maple.maple_banktrade.api.quests.QuestDefinitionRegistry;
+import com.maple.maple_banktrade.api.quests.core.ITaskDefinition;
 import dev.vfyjxf.taffy.style.FlexDirection;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.maple.maple_banktrade.api.quests.ui.QuestUIRegistration.TREE_MARGIN_LEFT;
 
 /**
- * 已完成任务标签页 —— 左侧树状结构 + 右侧详情（通过 ScrollerView + SplitView）。
+ * 已完成任务标签页 —— 服务端仅发送状态快照，客户端基于本地蓝图构建已完成列表。
+ * <p>
+ * 任务选择通过客户端直接回调，不走 sendMessage/onMessage 服务端往返。
  */
 public final class QuestCompletedPanel {
 
     private QuestCompletedPanel() {}
 
-    /**
-     * @return 包含 ScrollerView 的上下文，用于外部注册 onMessage 连线。
-     */
-    public static CompletedContext create(Player player) {
+    public static CompletedContext create(Player player, Consumer<String> onSelect) {
         UIElement panel = new UIElement();
         panel.layout(l -> l.widthPercent(100).heightPercent(100)
                 .flexDirection(FlexDirection.COLUMN).gapAll(QuestUIRegistration.GAP_SMALL));
         panel.style(s -> s.background(IGuiTexture.EMPTY));
 
-        QuestSyncData.TreeListSnapshot data = player instanceof ServerPlayer sp ? QuestUiHelper.buildCompletedTreeList(sp) : QuestSyncData.TreeListSnapshot.empty();
+        QuestSyncData.QuestStatusSnapshot data = player instanceof ServerPlayer sp ? QuestUiHelper.buildStatusSnapshot(sp) : QuestSyncData.QuestStatusSnapshot.empty();
 
         // 标题
         TextElement title = new TextElement()
-                .setText(Component.translatable("ui.maple_banktrade.quest.completed_title", data.getTotal()))
+                .setText(Component.translatable("ui.maple_banktrade.quest.completed_title", countCompleted(data)))
                 .textStyle(s -> s.adaptiveHeight(true).adaptiveWidth(true));
 
         // ScrollerView 包裹树
@@ -60,16 +65,13 @@ public final class QuestCompletedPanel {
         tree.layout(l -> l.widthPercent(100).heightPercent(100).marginLeft(TREE_MARGIN_LEFT));
         tree.style(s -> s.background(IGuiTexture.EMPTY));
         tree.setFlattenRoot(true);
-        tree.setNodeUISupplier(node -> buildCompletedNodeUI(node));
+        tree.setNodeUISupplier(QuestCompletedPanel::buildCompletedNodeUI);
 
-        // 点击已完成任务节点 → 发送消息
         tree.setOnSelectedChanged(selected -> {
             if (!selected.isEmpty()) {
                 QuestTreeNode node = selected.iterator().next();
                 if (!node.isGroup()) {
-                    CompoundTag payload = new CompoundTag();
-                    payload.putString(QuestTaskListPanel.KEY_TASK_ID, node.getId());
-                    scroller.sendMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload);
+                    onSelect.accept(node.getId());
                 }
             }
         });
@@ -77,23 +79,20 @@ public final class QuestCompletedPanel {
         scroller.addScrollViewChild(title);
         scroller.addScrollViewChild(tree);
 
-        // 同步
-        BindableValue<QuestSyncData.TreeListSnapshot> sync = new BindableValue<>(data);
+        // 同步状态快照
+        BindableValue<QuestSyncData.QuestStatusSnapshot> sync = new BindableValue<>(data);
         sync.layout(l -> l.width(0).height(0));
         sync.setDisplay(false);
         sync.bind(DataBindingBuilder.create(
-                () -> {
-                    data.copyFrom(QuestUiHelper.buildCompletedTreeList((ServerPlayer) player));
-                    return data;
-                },
+                () -> QuestUiHelper.buildStatusSnapshot((ServerPlayer) player),
                 v -> { /* c2s no-op */ })
-                .syncType(QuestSyncData.TreeListSnapshot.class)
+                .syncType(QuestSyncData.QuestStatusSnapshot.class)
                 .initialValue(data)
                 .c2sStrategy(SyncStrategy.NONE)
                 .remoteSetter(clientData -> {
-                    rebuildCompletedTree(tree, clientData);
+                    rebuildCompletedFromStatus(tree, clientData);
                     title.setText(Component.translatable(
-                            "ui.maple_banktrade.quest.completed_title", clientData.getTotal()));
+                            "ui.maple_banktrade.quest.completed_title", countCompleted(clientData)));
                 })
                 .build());
 
@@ -102,16 +101,41 @@ public final class QuestCompletedPanel {
         return new CompletedContext(panel, scroller);
     }
 
-    private static void rebuildCompletedTree(QuestTreeList tree, QuestSyncData.TreeListSnapshot snapshot) {
-        for (QuestTreeNode root : snapshot.getRoots()) {
-            root.reattachParents();
+    // ==============================================
+    // 客户端：基于状态快照 + 本地蓝图重建已完成列表
+    // ==============================================
+
+    private static void rebuildCompletedFromStatus(QuestTreeList tree, QuestSyncData.QuestStatusSnapshot snapshot) {
+        Map<String, QuestSyncData.TaskStatusEntry> statusMap = snapshot.toMap();
+
+        List<QuestTreeNode> nodes = new ArrayList<>();
+        for (ITaskDefinition def : QuestDefinitionRegistry.getAllDefinitions()) {
+            QuestSyncData.TaskStatusEntry entry = statusMap.get(def.getId());
+            if (entry == null) continue;
+            // 已完成：状态为 COMPLETED 或有完成次数
+            if (!"COMPLETED".equals(entry.getStatus()) && entry.getCompletions() == 0) continue;
+
+            QuestTreeNode node = new QuestTreeNode()
+                    .setId(def.getId())
+                    .setType(def.getType().name())
+                    .setDepth(0)
+                    .setRequiredCompletions(def.getRequiredCompletions())
+                    .setStatus(entry.getStatus())
+                    .setCompletions(entry.getCompletions())
+                    .setHasUnclaimedReward(entry.isHasUnclaimedReward());
+            nodes.add(node);
         }
+
         QuestTreeNode dummyRoot = new QuestTreeNode().setId("__root__");
-        for (QuestTreeNode node : snapshot.getRoots()) {
-            dummyRoot.addChildNode(node);
-        }
+        for (QuestTreeNode n : nodes) dummyRoot.addChildNode(n);
         tree.setRoot(dummyRoot);
         tree.setFlattenRoot(true);
+    }
+
+    private static int countCompleted(QuestSyncData.QuestStatusSnapshot snapshot) {
+        return (int) snapshot.getEntries().stream()
+                .filter(e -> "COMPLETED".equals(e.getStatus()) || e.getCompletions() > 0)
+                .count();
     }
 
     private static UIElement buildCompletedNodeUI(QuestTreeNode node) {
@@ -132,10 +156,6 @@ public final class QuestCompletedPanel {
         }
         return sb.toString().trim();
     }
-
-    // ==============================================
-    // 内部类型
-    // ==============================================
 
     public record CompletedContext(UIElement panel, ScrollerView scroller) {}
 }

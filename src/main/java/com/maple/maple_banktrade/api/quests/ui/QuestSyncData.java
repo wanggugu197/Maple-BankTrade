@@ -2,12 +2,15 @@ package com.maple.maple_banktrade.api.quests.ui;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * UI 同步数据类族 —— 实现 {@link IPersistedSerializable}，
@@ -29,6 +32,7 @@ public final class QuestSyncData {
     @Getter
     @Setter
     @Accessors(chain = true)
+    @EqualsAndHashCode
     public static class TaskListItem implements IPersistedSerializable {
 
         @Persisted
@@ -69,6 +73,7 @@ public final class QuestSyncData {
 
     @Getter
     @Setter
+    @EqualsAndHashCode
     public static class TaskListSnapshot implements IPersistedSerializable {
 
         @Persisted
@@ -98,6 +103,7 @@ public final class QuestSyncData {
     @Getter
     @Setter
     @Accessors(chain = true)
+    @EqualsAndHashCode
     public static class DependentInfo implements IPersistedSerializable {
 
         @Persisted
@@ -120,6 +126,7 @@ public final class QuestSyncData {
     @Getter
     @Setter
     @Accessors(chain = true)
+    @EqualsAndHashCode
     public static class RewardInfo implements IPersistedSerializable {
 
         @Persisted
@@ -144,6 +151,7 @@ public final class QuestSyncData {
 
     @Getter
     @Setter
+    @EqualsAndHashCode
     public static class TaskDetail implements IPersistedSerializable {
 
         @Persisted
@@ -242,6 +250,7 @@ public final class QuestSyncData {
     @Getter
     @Setter
     @Accessors(chain = true)
+    @EqualsAndHashCode
     public static class CompletedItem implements IPersistedSerializable {
 
         @Persisted
@@ -275,6 +284,7 @@ public final class QuestSyncData {
 
     @Getter
     @Setter
+    @EqualsAndHashCode
     public static class CompletedListSnapshot implements IPersistedSerializable {
 
         @Persisted
@@ -363,6 +373,7 @@ public final class QuestSyncData {
      */
     @Getter
     @Setter
+    @EqualsAndHashCode
     public static class TreeListSnapshot implements IPersistedSerializable {
 
         /** 树根节点列表（服务端构建完整树）。 */
@@ -383,6 +394,82 @@ public final class QuestSyncData {
             this.roots.clear();
             this.roots.addAll(other.roots);
             this.total = other.total;
+        }
+    }
+
+    // ==============================================
+    // TaskStatusEntry —— 单任务运行时状态（轻量）
+    // ==============================================
+
+    /**
+     * 仅包含动态变化的运行时状态，不含蓝图定义。
+     * <p>
+     * 蓝图定义在双端均存在（{@code QuestDefinitionRegistry}），
+     * 服务端仅同步此状态条目，客户端基于本地蓝图重建 UI。
+     */
+    @Getter
+    @Setter
+    @Accessors(chain = true)
+    @EqualsAndHashCode
+    public static class TaskStatusEntry implements IPersistedSerializable {
+
+        @Persisted
+        private String taskId = "";
+        @Persisted
+        private String status = "HIDDEN";
+        @Persisted
+        private int completions;
+        @Persisted
+        private boolean hasUnclaimedReward;
+    }
+
+    // ==============================================
+    // QuestStatusSnapshot —— 任务状态快照（增量同步）
+    // ==============================================
+
+    /**
+     * 轻量状态快照，服务端计算后通过 {@code DataBindingBuilder} 同步到客户端。
+     * <p>
+     * 客户端收到后基于本地 {@code QuestDefinitionRegistry} 重建任务树和详情，
+     * 不再传输完整的树结构或详情数据。
+     * <p>
+     * {@code revision} 是单调递增计数器，客户端可用它判断缓存是否失效。
+     */
+    @Getter
+    @Setter
+    @EqualsAndHashCode
+    public static class QuestStatusSnapshot implements IPersistedSerializable {
+
+        @Persisted
+        private List<TaskStatusEntry> entries = new ArrayList<>();
+        /** 单调递增版本号，排除出 equals 避免每帧触发同步。 */
+        @Persisted
+        @EqualsAndHashCode.Exclude
+        private int revision;
+
+        public static QuestStatusSnapshot empty() {
+            return new QuestStatusSnapshot();
+        }
+
+        /** 是否包含指定任务的状态。 */
+        public boolean containsTask(String taskId) {
+            return entries.stream().anyMatch(e -> e.taskId.equals(taskId));
+        }
+
+        /** 查找指定任务的状态条目，未找到返回 null。 */
+        @javax.annotation.Nullable
+        public TaskStatusEntry getEntry(String taskId) {
+            for (TaskStatusEntry e : entries) {
+                if (e.taskId.equals(taskId)) return e;
+            }
+            return null;
+        }
+
+        /** 构建索引映射（taskId → entry），用于频繁查找。 */
+        public Map<String, TaskStatusEntry> toMap() {
+            Map<String, TaskStatusEntry> map = new HashMap<>(entries.size());
+            for (TaskStatusEntry e : entries) map.put(e.taskId, e);
+            return map;
         }
     }
 }

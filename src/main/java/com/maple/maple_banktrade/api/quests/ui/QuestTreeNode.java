@@ -3,6 +3,7 @@ package com.maple.maple_banktrade.api.quests.ui;
 import com.lowdragmc.lowdraglib2.gui.util.ITreeNode;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -24,6 +25,7 @@ import javax.annotation.Nullable;
 @Getter
 @Setter
 @Accessors(chain = true)
+@EqualsAndHashCode
 public class QuestTreeNode implements ITreeNode<String, QuestTreeNode>, IPersistedSerializable {
 
     // ==============================================

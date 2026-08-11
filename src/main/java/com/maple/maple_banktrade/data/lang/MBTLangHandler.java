@@ -200,5 +200,10 @@ public class MBTLangHandler {
         addLang("ui.maple_banktrade.quest.claim_reward", "领取奖励", "Claim Reward");
         addLang("ui.maple_banktrade.quest.select_hint", "请在左侧选择一个任务查看详情", "Select a task on the left to view details");
         addLang("ui.maple_banktrade.quest.tree_title", "全部任务 (%s)", "All Quests (%s)");
+
+        // 任务类型分组标签
+        addLang("ui.maple_banktrade.quest.type.main", "主线任务", "Main Quests");
+        addLang("ui.maple_banktrade.quest.type.side", "支线任务", "Side Quests");
+        addLang("ui.maple_banktrade.quest.type.temporary", "随机任务", "Random Quests");
     }
 }
