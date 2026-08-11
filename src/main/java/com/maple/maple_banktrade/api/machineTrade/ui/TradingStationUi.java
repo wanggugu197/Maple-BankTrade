@@ -110,7 +110,7 @@ public final class TradingStationUi {
         ScrollerView scroller = new ScrollerView()
                 .scrollerStyle(s -> s
                         .horizontalScrollDisplay(ScrollDisplay.NEVER)
-                        .verticalScrollDisplay(ScrollDisplay.AUTO)
+                        .verticalScrollDisplay(ScrollDisplay.NEVER)
                         .scrollerViewStyle(0)
                         .mode(ScrollerMode.VERTICAL));
         scroller.layout(l -> l.width(92).height(81));

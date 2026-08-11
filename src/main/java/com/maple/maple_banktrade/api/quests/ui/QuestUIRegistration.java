@@ -1,47 +1,76 @@
 package com.maple.maple_banktrade.api.quests.ui;
 
-import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
-import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Tab;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.SplitView;
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib2.gui.ui.style.*;
-import com.maple.maple_banktrade.MapleBankTrade;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
+import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
-
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.SplitView;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Tab;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.TabView;
+import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
+import com.maple.maple_banktrade.MapleBankTrade;
 import dev.vfyjxf.taffy.style.FlexDirection;
 
 /**
  * 任务 UI 注册入口 —— 绑定到 {@link PlayerUIMenuType}，提供三标签页任务书界面。
+ * <p>
+ * 所有布局参数集中为静态常量，避免魔法数字散落。
  */
 public class QuestUIRegistration extends PlayerUIMenuType {
 
-    public static final ResourceLocation QUEST_UI = MapleBankTrade.id("quest_book");
+    public static final Identifier QUEST_UI = MapleBankTrade.id("quest_book");
+
+    // ==============================================
+    // 布局常量
+    // ==============================================
+    public static final int UI_WIDTH = 360;
+    public static final int UI_HEIGHT = 200;
+    public static final int UI_CONTENT_HEIGHT = 188;
+    public static final int TAB_HEADER_HEIGHT = 14;
+    public static final int CONTENT_PADDING = 4;
+    public static final float SPLIT_PERCENTAGE = 30f;
+    public static final float SPLIT_MIN_PERCENTAGE = 20f;
+    public static final float SPLIT_MAX_PERCENTAGE = 80f;
+    public static final float SPLIT_BORDER_SIZE = 2f;
+    public static final float FONT_DETAIL = 7f;
+    public static final float FONT_TITLE = 10f;
+    public static final int COLOR_DIM = 0xFFAAAAAA;
+    public static final int ROW_HEIGHT = 10;
+    public static final int TITLE_ROW_HEIGHT = 14;
+    public static final int ACTION_BAR_HEIGHT = 16;
+    public static final int GAP_SMALL = 2;
+    public static final int GAP_MEDIUM = 4;
+    public static final int PADDING_TINY = 2;
+    public static final int PADDING_SMALL = 2;
+    public static final int TREE_MARGIN_LEFT = 6;
+
+    // ==============================================
+    // 注册
+    // ==============================================
 
     public static void init() {
         PlayerUIMenuType.register(QUEST_UI, player -> {
             var root = new UIElement();
-            root.layout(l -> l.width(320).height(200)
-                    .flexDirection(FlexDirection.COLUMN).gapAll(0));
-            root.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+            root.layout(l -> l.flexDirection(FlexDirection.COLUMN).gapAll(0));
+            root.style(s -> s.background(IGuiTexture.EMPTY));
 
             var tabView = new TabView();
-            tabView.tabHeaderContainer.layout(l -> l.width(320).height(14));
-            tabView.tabContentContainer.layout(l -> l.width(320).height(186)
-                    .paddingAll(0));
-            tabView.tabContentContainer.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+            tabView.tabHeaderContainer.layout(l -> l.width(UI_WIDTH).height(TAB_HEADER_HEIGHT));
+            tabView.tabContentContainer.layout(l -> l.width(UI_WIDTH).height(UI_HEIGHT)
+                    .paddingAll(CONTENT_PADDING));
 
-            tabView.addTab(buildMainQuestTab(player));
-            tabView.addTab(buildCompletedTab(player));
-            tabView.addTab(buildTreeTab());
+            tabView.addTab(buildMainQuestTab(), buildMainQuestContent(player));
+            tabView.addTab(buildCompletedTab(), buildCompletedContent(player));
+            tabView.addTab(buildTreeTab(), buildTreeContent(player));
 
             root.addChild(tabView);
-            return p -> ModularUI.of(root, p);
+            return p -> ModularUI.of(UI.of(root, StylesheetManager.GDP_MERGED), p);
         });
     }
 
@@ -51,42 +80,108 @@ public class QuestUIRegistration extends PlayerUIMenuType {
     }
 
     // ==============================================
-    // 标签页构建
+    // 分栏构建工具
     // ==============================================
 
-    private static Tab buildMainQuestTab(Player player) {
+    /** 创建统一的分栏容器（左 30% / 右 70%）。 */
+    private static SplitView.Horizontal createSplitView() {
         var split = new SplitView.Horizontal();
-        split.setPercentage(30f);
-        split.setBorderSize(2);
-        split.setMinPercentage(20f);
-        split.setMaxPercentage(50f);
-
-        var detailCtx = QuestTaskDetailPanel.create(player);
-        var listCtx = QuestTaskListPanel.create(player);
-
-        listCtx.scroller().onMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload -> {
-            String taskId = payload.getStringOr(QuestTaskListPanel.KEY_TASK_ID, "");
-            detailCtx.selectTask(taskId);
-        });
-
-        // 左栏内联样式：background:empty, padding-all:2
-        listCtx.panel().set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
-        listCtx.panel().layout(l -> l.paddingAll(2));
-
-        // 右栏内联样式：background:empty, padding-all:4
-        detailCtx.panel().set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
-        detailCtx.panel().layout(l -> l.paddingAll(4));
-
-        split.left(listCtx.panel());
-        split.right(detailCtx.panel());
-        return new Tab(split, "tab_quests");
+        split.setPercentage(SPLIT_PERCENTAGE);
+        split.setBorderSize(SPLIT_BORDER_SIZE);
+        split.setMinPercentage(SPLIT_MIN_PERCENTAGE);
+        split.setMaxPercentage(SPLIT_MAX_PERCENTAGE);
+        return split;
     }
 
-    private static Tab buildCompletedTab(Player player) {
-        return new Tab(QuestCompletedPanel.create(player), "tab_completed");
+    // ==============================================
+    // 标签页构建 —— Tab 头部
+    // ==============================================
+
+    private static Tab buildMainQuestTab() {
+        var tab = new Tab();
+        tab.setText(Component.translatable("ui.maple_banktrade.quest.tab_quests"));
+        return tab;
+    }
+
+    private static Tab buildCompletedTab() {
+        var tab = new Tab();
+        tab.setText(Component.translatable("ui.maple_banktrade.quest.tab_completed"));
+        return tab;
     }
 
     private static Tab buildTreeTab() {
-        return new Tab(QuestTreePanel.create(), "tab_tree");
+        var tab = new Tab();
+        tab.setText(Component.translatable("ui.maple_banktrade.quest.tab_tree"));
+        return tab;
+    }
+
+    // ==============================================
+    // 标签页构建 —— 内容
+    // ==============================================
+
+    private static UIElement buildMainQuestContent(Player player) {
+        var split = createSplitView();
+
+        var listCtx = QuestTaskListPanel.create(player);
+        var detailCtx = QuestTaskDetailPanel.create(player, true);
+
+        listCtx.scroller().onMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload -> {
+            String taskId = payload.getString(QuestTaskListPanel.KEY_TASK_ID).get();
+            detailCtx.selectTask(taskId);
+        });
+
+        listCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
+        listCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
+
+        detailCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
+        detailCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
+
+        split.left(listCtx.panel());
+        split.right(detailCtx.panel());
+        return split;
+    }
+
+    private static UIElement buildCompletedContent(Player player) {
+        var split = createSplitView();
+
+        var completedCtx = QuestCompletedPanel.create(player);
+        var detailCtx = QuestTaskDetailPanel.create(player, true);
+
+        completedCtx.scroller().onMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload -> {
+            String taskId = payload.getString(QuestTaskListPanel.KEY_TASK_ID).get();
+            detailCtx.selectTask(taskId);
+        });
+
+        completedCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
+        completedCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
+
+        detailCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
+        detailCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
+
+        split.left(completedCtx.panel());
+        split.right(detailCtx.panel());
+        return split;
+    }
+
+    private static UIElement buildTreeContent(Player player) {
+        var split = createSplitView();
+
+        var treeCtx = QuestTreePanel.create();
+        var detailCtx = QuestTaskDetailPanel.create(player, false);
+
+        treeCtx.scroller().onMessage(QuestTaskListPanel.MSG_SELECT_TASK, payload -> {
+            String taskId = payload.getString(QuestTaskListPanel.KEY_TASK_ID).get();
+            detailCtx.selectTask(taskId);
+        });
+
+        treeCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
+        treeCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
+
+        detailCtx.panel().style(s -> s.background(IGuiTexture.EMPTY));
+        detailCtx.panel().layout(l -> l.paddingAll(PADDING_SMALL));
+
+        split.left(treeCtx.panel());
+        split.right(detailCtx.panel());
+        return split;
     }
 }

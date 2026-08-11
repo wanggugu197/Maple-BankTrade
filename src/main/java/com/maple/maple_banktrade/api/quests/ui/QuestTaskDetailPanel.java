@@ -1,14 +1,17 @@
 package com.maple.maple_banktrade.api.quests.ui;
 
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib2.gui.ui.style.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.SyncStrategy;
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
+import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.BindableValue;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
@@ -20,12 +23,13 @@ import com.maple.maple_banktrade.api.quests.core.ICompletionRecord;
 import com.maple.maple_banktrade.api.quests.enums.TaskStatus;
 import com.maple.maple_banktrade.api.quests.repository.PlayerQuestData;
 import com.maple.maple_banktrade.api.quests.storage.QuestDataManager;
-
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 
 import java.util.List;
+
+import static com.maple.maple_banktrade.api.quests.ui.QuestUIRegistration.UI_CONTENT_HEIGHT;
 
 /**
  * 右栏任务详情面板 —— 显示选中任务的完整信息。
@@ -38,63 +42,89 @@ public final class QuestTaskDetailPanel {
     // 构建
     // ==============================================
 
-    public static DetailContext create(Player player) {
+    /**
+     * @param player      玩家实例
+     * @param showActions 是否显示操作按钮（激活/完成/领取）。创造模式树状视图可传 false。
+     */
+    public static DetailContext create(Player player, boolean showActions) {
         UIElement panel = new UIElement();
         panel.layout(l -> l.widthPercent(100).heightPercent(100)
-                .flexDirection(FlexDirection.COLUMN).gapAll(4));
-        panel.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+                .flexDirection(FlexDirection.COLUMN).gapAll(QuestUIRegistration.GAP_MEDIUM));
+        panel.style(s -> s.background(IGuiTexture.EMPTY));
 
         ScrollerView scroller = new ScrollerView();
         scroller.layout(l -> l.widthPercent(100).heightPercent(100).paddingAll(0));
-        scroller.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
-        scroller.set(PropertyRegistry.SCROLLER_VIEW_MODE, ScrollerMode.VERTICAL);
-        scroller.set(PropertyRegistry.SCROLLER_VERTICAL_DISPLAY, ScrollDisplay.AUTO);
-        scroller.set(PropertyRegistry.SCROLLER_HORIZONTAL_DISPLAY, ScrollDisplay.NEVER);
-        scroller.set(PropertyRegistry.SCROLLER_VIEW_MARGIN, 0f);
+        scroller.style(s -> s.background(IGuiTexture.EMPTY));
+        scroller.scrollerStyle(s -> s
+                .mode(ScrollerMode.VERTICAL)
+                .verticalScrollDisplay(ScrollDisplay.NEVER)
+                .horizontalScrollDisplay(ScrollDisplay.NEVER));
         scroller.viewPort(port -> {
-            port.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+            port.style(s -> s.background(IGuiTexture.EMPTY));
             port.layout(l -> l.paddingAll(0));
         });
-        scroller.viewContainer(container ->
-                container.layout(l -> l.flexDirection(FlexDirection.COLUMN).gapAll(3).paddingAll(2)));
+        scroller.viewContainer(container -> container.layout(l -> l.flexDirection(FlexDirection.COLUMN).gapAll(QuestUIRegistration.GAP_SMALL + 1)
+                .paddingAll(QuestUIRegistration.PADDING_TINY)));
 
         QuestSyncData.TaskDetail data = QuestSyncData.TaskDetail.empty();
         DetailContext ctx = new DetailContext(panel, scroller, player);
 
-        UIElement actions = new UIElement();
-        actions.layout(l -> l.widthPercent(100).height(16)
-                .flexDirection(FlexDirection.ROW)
-                .alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER)
-                .gapAll(4).paddingAll(2));
-        actions.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+        Button activateBtn = null, completeBtn = null, claimBtn = null;
+        if (showActions) {
+            UIElement actions = new UIElement();
+            actions.layout(l -> l.widthPercent(100).height(QuestUIRegistration.ACTION_BAR_HEIGHT)
+                    .flexDirection(FlexDirection.ROW)
+                    .alignItems(AlignItems.CENTER).justifyContent(AlignContent.CENTER)
+                    .gapAll(QuestUIRegistration.GAP_MEDIUM).paddingAll(QuestUIRegistration.PADDING_TINY));
+            actions.style(s -> s.background(IGuiTexture.EMPTY));
 
-        Button activateBtn = new Button()
-                .setText(Component.translatable("ui.maple_banktrade.quest.activate"));
-        activateBtn.setOnServerClick(_ -> {
-            if (player instanceof ServerPlayer sp) activateTask(sp, ctx);
-        });
-        activateBtn.setDisplay(false);
+            activateBtn = new Button()
+                    .setText(Component.translatable("ui.maple_banktrade.quest.activate"));
+            activateBtn.setOnServerClick(_ -> {
+                if (player instanceof ServerPlayer sp) activateTask(sp, ctx);
+            });
+            activateBtn.setDisplay(false);
 
-        Button completeBtn = new Button()
-                .setText(Component.translatable("ui.maple_banktrade.quest.complete"));
-        completeBtn.setOnServerClick(_ -> {
-            if (player instanceof ServerPlayer sp) completeTask(sp, ctx);
-        });
-        completeBtn.setDisplay(false);
+            completeBtn = new Button()
+                    .setText(Component.translatable("ui.maple_banktrade.quest.complete"));
+            completeBtn.setOnServerClick(_ -> {
+                if (player instanceof ServerPlayer sp) completeTask(sp, ctx);
+            });
+            completeBtn.setDisplay(false);
 
-        Button claimBtn = new Button()
-                .setText(Component.translatable("ui.maple_banktrade.quest.claim_reward"));
-        claimBtn.setOnServerClick(_ -> {
-            if (player instanceof ServerPlayer sp) claimReward(sp, ctx);
-        });
-        claimBtn.setDisplay(false);
+            claimBtn = new Button()
+                    .setText(Component.translatable("ui.maple_banktrade.quest.claim_reward"));
+            claimBtn.setOnServerClick(_ -> {
+                if (player instanceof ServerPlayer sp) claimReward(sp, ctx);
+            });
+            claimBtn.setDisplay(false);
 
-        actions.addChildren(activateBtn, completeBtn, claimBtn);
-        ctx.setButtons(activateBtn, completeBtn, claimBtn);
+            actions.addChildren(activateBtn, completeBtn, claimBtn);
+            ctx.setButtons(activateBtn, completeBtn, claimBtn);
+            panel.addChild(actions);
+        }
 
         panel.addChild(scroller);
-        panel.addChild(actions);
 
+        BindableValue<QuestSyncData.TaskDetail> sync;
+        if (showActions) {
+            final Button fActivateBtn = activateBtn;
+            final Button fCompleteBtn = completeBtn;
+            final Button fClaimBtn = claimBtn;
+            sync = createDetailSync(player, ctx, scroller, data, fActivateBtn, fCompleteBtn, fClaimBtn);
+        } else {
+            sync = createDetailSync(player, ctx, scroller, data, null, null, null);
+        }
+
+        panel.addChild(sync);
+        ctx.setSync(sync);
+        return ctx;
+    }
+
+    private static BindableValue<QuestSyncData.TaskDetail> createDetailSync(
+                                                                            Player player, DetailContext ctx, ScrollerView scroller,
+                                                                            QuestSyncData.TaskDetail data,
+                                                                            Button activateBtn, Button completeBtn, Button claimBtn) {
         BindableValue<QuestSyncData.TaskDetail> sync = new BindableValue<>(data);
         sync.layout(l -> l.width(0).height(0));
         sync.setDisplay(false);
@@ -114,13 +144,10 @@ public final class QuestTaskDetailPanel {
                 .c2sStrategy(SyncStrategy.NONE)
                 .remoteSetter(clientData -> {
                     rebuildDetail(scroller, clientData);
-                    updateButtons(activateBtn, completeBtn, claimBtn, clientData);
+                    if (activateBtn != null) updateButtons(activateBtn, completeBtn, claimBtn, clientData);
                 })
                 .build());
-
-        panel.addChild(sync);
-        ctx.setSync(sync);
-        return ctx;
+        return sync;
     }
 
     // ==============================================
@@ -134,7 +161,7 @@ public final class QuestTaskDetailPanel {
             return;
         }
 
-        scroller.addScrollViewChild(buildTitle(d.getId(), d.getStatus()));
+        scroller.addScrollViewChild(buildTitle(d.getId()));
         scroller.addScrollViewChild(buildSection("基本信息"));
         scroller.addScrollViewChild(buildRow("类型", QuestUiHelper.formatTaskType(safeEnum(d.getType(), com.maple.maple_banktrade.api.quests.enums.TaskType.class))));
         scroller.addScrollViewChild(buildRow("行为", QuestUiHelper.formatBehavior(safeEnum(d.getBehavior(), com.maple.maple_banktrade.api.quests.enums.TaskBehavior.class))));
@@ -153,8 +180,9 @@ public final class QuestTaskDetailPanel {
             scroller.addScrollViewChild(buildSection("依赖 (" + QuestUiHelper.formatDependencyRequirement(d.getDependencyRequirement()) + ")"));
             for (QuestSyncData.DependentInfo dep : d.getDependents()) {
                 String depIcon = "";
-                try { depIcon = QuestUiHelper.statusIcon(TaskStatus.valueOf(dep.getStatus())); }
-                catch (IllegalArgumentException ignored) {}
+                try {
+                    depIcon = QuestUiHelper.statusIcon(TaskStatus.valueOf(dep.getStatus()));
+                } catch (IllegalArgumentException ignored) {}
                 scroller.addScrollViewChild(buildRow(dep.getId(), depIcon + " " + dep.getStatus()));
             }
         }
@@ -180,16 +208,35 @@ public final class QuestTaskDetailPanel {
 
     private static void updateButtons(Button activateBtn, Button completeBtn, Button claimBtn, QuestSyncData.TaskDetail d) {
         TaskStatus status;
-        try { status = TaskStatus.valueOf(d.getStatus()); }
-        catch (IllegalArgumentException e) {
-            activateBtn.setDisplay(false); completeBtn.setDisplay(false); claimBtn.setDisplay(false);
+        try {
+            status = TaskStatus.valueOf(d.getStatus());
+        } catch (IllegalArgumentException e) {
+            activateBtn.setDisplay(false);
+            completeBtn.setDisplay(false);
+            claimBtn.setDisplay(false);
             return;
         }
         switch (status) {
-            case VISIBLE_LOCKED -> { activateBtn.setDisplay(true);  completeBtn.setDisplay(false); claimBtn.setDisplay(false); }
-            case ACTIVE         -> { activateBtn.setDisplay(false); completeBtn.setDisplay(true);  claimBtn.setDisplay(false); }
-            case COMPLETED      -> { activateBtn.setDisplay(false); completeBtn.setDisplay(false); claimBtn.setDisplay(d.isHasUnclaimedReward()); }
-            default             -> { activateBtn.setDisplay(false); completeBtn.setDisplay(false); claimBtn.setDisplay(false); }
+            case VISIBLE_LOCKED -> {
+                activateBtn.setDisplay(true);
+                completeBtn.setDisplay(false);
+                claimBtn.setDisplay(false);
+            }
+            case ACTIVE -> {
+                activateBtn.setDisplay(false);
+                completeBtn.setDisplay(true);
+                claimBtn.setDisplay(false);
+            }
+            case COMPLETED -> {
+                activateBtn.setDisplay(false);
+                completeBtn.setDisplay(false);
+                claimBtn.setDisplay(d.isHasUnclaimedReward());
+            }
+            default -> {
+                activateBtn.setDisplay(false);
+                completeBtn.setDisplay(false);
+                claimBtn.setDisplay(false);
+            }
         }
     }
 
@@ -232,87 +279,91 @@ public final class QuestTaskDetailPanel {
     }
 
     // ==============================================
-    // UI 构建子组件（全部内联样式）
+    // UI 构建子组件（全部使用 style() / layout() / textStyle() 内联样式）
     // ==============================================
 
-    private static UIElement buildTitle(String taskId, String status) {
+    private static UIElement buildTitle(String taskId) {
         UIElement row = new UIElement();
-        row.layout(l -> l.widthPercent(100).height(14)
+        row.layout(l -> l.widthPercent(100).height(QuestUIRegistration.TITLE_ROW_HEIGHT)
                 .flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER)
-                .paddingHorizontal(2));
-        row.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+                .paddingHorizontal(QuestUIRegistration.PADDING_TINY));
+        row.style(s -> s.background(IGuiTexture.EMPTY));
 
         TextElement title = new TextElement().setText(Component.literal(formatName(taskId)));
-        title.set(PropertyRegistry.FONT_SIZE, 10f);
-        title.set(PropertyRegistry.HORIZONTAL_ALIGN, Horizontal.LEFT);
-        title.set(PropertyRegistry.VERTICAL_ALIGN, Vertical.CENTER);
-        title.set(PropertyRegistry.TEXT_SHADOW, false);
-        title.set(PropertyRegistry.ADAPTIVE_WIDTH, true);
-        title.set(PropertyRegistry.ADAPTIVE_HEIGHT, true);
+        title.textStyle(s -> s
+                .fontSize(QuestUIRegistration.FONT_TITLE)
+                .textAlignHorizontal(Horizontal.LEFT)
+                .textAlignVertical(Vertical.CENTER)
+                .textShadow(false)
+                .adaptiveWidth(true)
+                .adaptiveHeight(true));
         row.addChild(title);
         return row;
     }
 
     private static UIElement buildSection(String label) {
         UIElement row = new UIElement();
-        row.layout(l -> l.widthPercent(100).height(10)
+        row.layout(l -> l.widthPercent(100).height(QuestUIRegistration.ROW_HEIGHT)
                 .flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER));
-        row.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+        row.style(s -> s.background(IGuiTexture.EMPTY));
 
         TextElement text = new TextElement().setText(Component.literal("— " + label + " —"));
-        text.set(PropertyRegistry.FONT_SIZE, 7f);
-        text.set(PropertyRegistry.HORIZONTAL_ALIGN, Horizontal.LEFT);
-        text.set(PropertyRegistry.VERTICAL_ALIGN, Vertical.CENTER);
-        text.set(PropertyRegistry.TEXT_SHADOW, false);
-        text.set(PropertyRegistry.TEXT_COLOR, 0xFFAAAAAA);
-        text.set(PropertyRegistry.ADAPTIVE_WIDTH, true);
-        text.set(PropertyRegistry.ADAPTIVE_HEIGHT, true);
+        text.textStyle(s -> s
+                .fontSize(QuestUIRegistration.FONT_DETAIL)
+                .textAlignHorizontal(Horizontal.LEFT)
+                .textAlignVertical(Vertical.CENTER)
+                .textShadow(false)
+                .textColor(QuestUIRegistration.COLOR_DIM)
+                .adaptiveWidth(true)
+                .adaptiveHeight(true));
         row.addChild(text);
         return row;
     }
 
     private static UIElement buildRow(String label, String value) {
         UIElement row = new UIElement();
-        row.layout(l -> l.widthPercent(100).height(10)
+        row.layout(l -> l.widthPercent(100).height(QuestUIRegistration.ROW_HEIGHT)
                 .flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER)
-                .gapAll(4).paddingHorizontal(2));
-        row.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+                .gapAll(QuestUIRegistration.GAP_MEDIUM).paddingHorizontal(QuestUIRegistration.PADDING_TINY));
+        row.style(s -> s.background(IGuiTexture.EMPTY));
 
         TextElement lt = new TextElement().setText(Component.literal(label + ":"));
-        detailTextStyle(lt);
+        applyDetailTextStyle(lt);
         TextElement vt = new TextElement().setText(Component.literal(value));
-        detailTextStyle(vt);
+        applyDetailTextStyle(vt);
         row.addChildren(lt, vt);
         return row;
     }
 
     private static UIElement buildEmptyHint() {
         UIElement row = new UIElement();
-        row.layout(l -> l.widthPercent(100).height(14)
+        row.layout(l -> l.widthPercent(100).height(QuestUIRegistration.TITLE_ROW_HEIGHT)
                 .flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER)
-                .paddingHorizontal(2));
-        row.set(PropertyRegistry.BACKGROUND, IGuiTexture.EMPTY);
+                .paddingHorizontal(QuestUIRegistration.PADDING_TINY));
+        row.style(s -> s.background(IGuiTexture.EMPTY));
 
         TextElement hint = new TextElement()
                 .setText(Component.translatable("ui.maple_banktrade.quest.select_hint"));
-        hint.set(PropertyRegistry.FONT_SIZE, 10f);
-        hint.set(PropertyRegistry.HORIZONTAL_ALIGN, Horizontal.LEFT);
-        hint.set(PropertyRegistry.VERTICAL_ALIGN, Vertical.CENTER);
-        hint.set(PropertyRegistry.TEXT_SHADOW, false);
-        hint.set(PropertyRegistry.ADAPTIVE_WIDTH, true);
-        hint.set(PropertyRegistry.ADAPTIVE_HEIGHT, true);
+        hint.textStyle(s -> s
+                .fontSize(QuestUIRegistration.FONT_TITLE)
+                .textAlignHorizontal(Horizontal.LEFT)
+                .textAlignVertical(Vertical.CENTER)
+                .textShadow(false)
+                .adaptiveWidth(true)
+                .adaptiveHeight(true));
         row.addChild(hint);
         return row;
     }
 
-    /** 详情行文字通用样式：font-size:7, 左对齐居中, 无阴影, 自适应. */
-    private static void detailTextStyle(TextElement text) {
-        text.set(PropertyRegistry.FONT_SIZE, 7f);
-        text.set(PropertyRegistry.HORIZONTAL_ALIGN, Horizontal.LEFT);
-        text.set(PropertyRegistry.VERTICAL_ALIGN, Vertical.CENTER);
-        text.set(PropertyRegistry.TEXT_SHADOW, false);
-        text.set(PropertyRegistry.ADAPTIVE_WIDTH, true);
-        text.set(PropertyRegistry.ADAPTIVE_HEIGHT, true);
+    /** 详情行文字通用样式。 */
+    private static void applyDetailTextStyle(TextElement text) {
+        text.textStyle(s -> s
+                .fontSize(QuestUIRegistration.FONT_DETAIL)
+                .textAlignHorizontal(Horizontal.LEFT)
+                .textAlignVertical(Vertical.CENTER)
+                .textShadow(false)
+                .adaptiveWidth(true)
+                .adaptiveHeight(true));
     }
 
     private static String formatName(String taskId) {
@@ -330,8 +381,11 @@ public final class QuestTaskDetailPanel {
 
     @SuppressWarnings("unchecked")
     private static <E extends Enum<E>> E safeEnum(String value, Class<E> clazz) {
-        try { return Enum.valueOf(clazz, value); }
-        catch (IllegalArgumentException e) { return null; }
+        try {
+            return Enum.valueOf(clazz, value);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     // ==============================================
@@ -339,6 +393,7 @@ public final class QuestTaskDetailPanel {
     // ==============================================
 
     public static final class DetailContext {
+
         private final UIElement panel;
         private final ScrollerView scroller;
         private final Player player;
@@ -349,21 +404,48 @@ public final class QuestTaskDetailPanel {
         private Button claimBtn;
 
         private DetailContext(UIElement panel, ScrollerView scroller, Player player) {
-            this.panel = panel; this.scroller = scroller; this.player = player;
+            this.panel = panel;
+            this.scroller = scroller;
+            this.player = player;
             this.selectedTaskId = null;
         }
 
-        public UIElement panel() { return panel; }
-        public ScrollerView scroller() { return scroller; }
-        public String selectedTaskId() { return selectedTaskId; }
-        public Button activateBtn() { return activateBtn; }
-        public Button completeBtn() { return completeBtn; }
-        public Button claimBtn() { return claimBtn; }
-        void setSync(BindableValue<QuestSyncData.TaskDetail> sync) { this.sync = sync; }
-        void setButtons(Button activate, Button complete, Button claim) {
-            this.activateBtn = activate; this.completeBtn = complete; this.claimBtn = claim;
+        public UIElement panel() {
+            return panel;
         }
 
-        public void selectTask(String taskId) { this.selectedTaskId = taskId; }
+        public ScrollerView scroller() {
+            return scroller;
+        }
+
+        public String selectedTaskId() {
+            return selectedTaskId;
+        }
+
+        public Button activateBtn() {
+            return activateBtn;
+        }
+
+        public Button completeBtn() {
+            return completeBtn;
+        }
+
+        public Button claimBtn() {
+            return claimBtn;
+        }
+
+        void setSync(BindableValue<QuestSyncData.TaskDetail> sync) {
+            this.sync = sync;
+        }
+
+        void setButtons(Button activate, Button complete, Button claim) {
+            this.activateBtn = activate;
+            this.completeBtn = complete;
+            this.claimBtn = claim;
+        }
+
+        public void selectTask(String taskId) {
+            this.selectedTaskId = taskId;
+        }
     }
 }
