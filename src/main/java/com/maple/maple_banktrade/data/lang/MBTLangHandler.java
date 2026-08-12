@@ -189,21 +189,5 @@ public class MBTLangHandler {
 
         // 交易符令 Tooltip
         addLang("tooltip.maple_banktrade.transaction_talisman", "可打开商店 - %s", "Openable store - %s");
-
-        // 任务书 UI
-        addLang("ui.maple_banktrade.quest.tab_quests", "任务", "Quests");
-        addLang("ui.maple_banktrade.quest.tab_completed", "已完成", "Completed");
-        addLang("ui.maple_banktrade.quest.tab_tree", "任务树", "Quest Tree");
-        addLang("ui.maple_banktrade.quest.completed_title", "已完成任务 (%s)", "Completed Quests (%s)");
-        addLang("ui.maple_banktrade.quest.activate", "激活", "Activate");
-        addLang("ui.maple_banktrade.quest.complete", "完成", "Complete");
-        addLang("ui.maple_banktrade.quest.claim_reward", "领取奖励", "Claim Reward");
-        addLang("ui.maple_banktrade.quest.select_hint", "请在左侧选择一个任务查看详情", "Select a task on the left to view details");
-        addLang("ui.maple_banktrade.quest.tree_title", "全部任务 (%s)", "All Quests (%s)");
-
-        // 任务类型分组标签
-        addLang("ui.maple_banktrade.quest.type.main", "主线任务", "Main Quests");
-        addLang("ui.maple_banktrade.quest.type.side", "支线任务", "Side Quests");
-        addLang("ui.maple_banktrade.quest.type.temporary", "随机任务", "Random Quests");
     }
 }

@@ -16,15 +16,12 @@ import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.WalletApiRegistration;
 import com.maple.maple_banktrade.api.bank.item.BankDataComponent;
-import com.maple.maple_banktrade.api.quests.QuestApiRegistration;
-import com.maple.maple_banktrade.api.quests.QuestDefinitionRegistry;
 import com.maple.maple_banktrade.api.trade.base.registry.*;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeHookRegistry;
 import com.maple.maple_banktrade.common.bank.BankRegistration;
 import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 import com.maple.maple_banktrade.common.bank.TradableTypeRegistration;
-import com.maple.maple_banktrade.common.quests.QuestBlueprints;
 import com.maple.maple_banktrade.common.trade.CheckHasRegister;
 import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
 import com.maple.maple_banktrade.common.trade.MachineTradeRegistration;
@@ -52,10 +49,6 @@ public class CommonInit {
         TradeRpcHandlers.init();
         MachineTradeHookRegistry.init();
 
-        // API：任务书物品、任务 UI、任务系统各子模块
-        QuestApiRegistration.init();
-        QuestDefinitionRegistry.init(QuestBlueprints::getAllBlueprints);
-
         // 内置内容：银行/卡/货币/交易站/价目（可整体关闭，仅保留 API）
         if (MBTModConfig.enableModContent()) {
             contentInit(modBus);
@@ -67,6 +60,8 @@ public class CommonInit {
     }
 
     public static void contentInit(IEventBus modBus) {
+        // 触发交易站等 DeferredRegister 静态登记
+        MBTRegistration.init();
         // 初始化内置货币、交易类型显示、银行与银行卡
         CurrencyRegistration.init();
         TradableTypeRegistration.init();
@@ -74,8 +69,6 @@ public class CommonInit {
         CardRegistration.init();
         // 钩子注册
         CheckHasRegister.registerVisibilityFilterByName();
-        // 触发交易站等 DeferredRegister 静态登记
-        MBTRegistration.init();
         // 各贸易站：物品 / 流体 / 能量能力（基类统一注册）
         modBus.addListener(MBTRegistration::registerTradingStationCapabilities);
 

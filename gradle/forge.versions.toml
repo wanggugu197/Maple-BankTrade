@@ -3,13 +3,13 @@ registryLib = "[8.0.14,)"
 mapleutillib = "[0.0.3,)"
 configuration = "4.1.2+26.1.2"
 
-jei = "29.6.2.31"
+jei = "29.16.0.48"
 jade = "26.1.8+neoforge"
 ftbChunks = "2101.1.11"
 ftbLibrary = "2101.1.21"
 
 ae2 = "26.1.10-beta"
-ldlib2 = "26.1.2.27.a"
+ldlib2 = "26.1.2.35"
 
 [libraries]
 registrylib = { group = "com.gto", name = "registrylib-neoforge-26.1.2", version.ref = "registryLib" }
