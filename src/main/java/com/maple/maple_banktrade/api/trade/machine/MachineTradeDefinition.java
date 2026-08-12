@@ -64,10 +64,11 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
             return TradeCheckResult.of(MachineTradePlan.denied(desired));
         }
 
-        MachineTradeHooks.MachineTradeCheckHook checkHook = trade.getCheckHook();
-        List<Component> extraMessages = checkHook.check(context, request, trade);
-        if (extraMessages != null && !extraMessages.isEmpty()) {
-            return TradeCheckResult.of(MachineTradePlan.denied(desired), List.copyOf(extraMessages));
+        MachineTradeHooks.CheckHook checkHook = trade.checkHook();
+        if (!checkHook.check(context, request, trade)) {
+            return TradeCheckResult.of(
+                    MachineTradePlan.denied(desired),
+                    List.of(Component.translatable("trade.maple_banktrade.fail.machine_check_failed")));
         }
 
         int actual = maxFeasibleCount(context, trade, desired);
@@ -127,7 +128,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
             return;
         }
         try {
-            MachineTradeHooks.MachineTradeSuccessHook successHook = plan.trade().getSuccessHook();
+            MachineTradeHooks.SuccessHook successHook = plan.trade().successHook();
             successHook.afterSuccess(input.context(), input.request(), plan, input.executionResult());
         } catch (Exception e) {
             MapleBankTrade.LOGGER.error("MachineTrade afterSuccess hook failed for {}", input.request().tradeId(), e);

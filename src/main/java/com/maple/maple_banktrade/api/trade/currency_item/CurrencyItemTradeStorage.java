@@ -4,7 +4,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 
-import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.base.registry.AbstractTradeEntryStorage;
 
 /**
@@ -21,11 +20,6 @@ public final class CurrencyItemTradeStorage extends AbstractTradeEntryStorage<Cu
     @Override
     protected boolean isValidEntry(CurrencyItemTrade entry) {
         return entry != null && entry.isValid();
-    }
-
-    /** 在本类型路径下注册条目：typePath/entryPath。 */
-    public CurrencyItemTrade register(String entryPath, CurrencyItemTrade trade) {
-        return register(MapleBankTrade.id(tradeTypeId().getPath() + "/" + entryPath), trade);
     }
 
     /** 查找允许卖出且物品匹配的条目。 */

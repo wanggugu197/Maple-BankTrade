@@ -56,14 +56,9 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         return !entry.autoTrade() || allowAutoTrade;
     }
 
-    /** 在本类型路径下注册条目：typePath/entryPath。 */
-    public MachineTrade register(String entryPath, MachineTrade trade) {
-        return register(MapleBankTrade.id(tradeTypeId().getPath() + "/" + entryPath), trade);
-    }
-
     @Override
-    public MachineTrade register(Identifier tradeId, MachineTrade entry) {
-        MachineTrade result = super.register(tradeId, entry);
+    public MachineTrade register(MachineTrade entry) {
+        MachineTrade result = super.register(entry);
         // 新 auto 条目或重复注册均标记索引失效（惰性重建）
         if (entry != null && entry.autoTrade()) {
             autoIndexDirty = true;
@@ -79,8 +74,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         List<Map.Entry<Identifier, MachineTrade>> visible = new ArrayList<>();
         for (Map.Entry<Identifier, MachineTrade> entry : entries().entrySet()) {
             MachineTrade trade = entry.getValue();
-            MachineTradeHooks.MachineTradeVisibilityCheck visibility = trade.getVisibilityHook();
-            if (visibility.isVisible(context, trade)) {
+            if (trade.visibilityHook().isVisible(context, trade)) {
                 visible.add(entry);
             }
         }
@@ -103,8 +97,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
             return null;
         }
         if (context != null) {
-            MachineTradeHooks.MachineTradeVisibilityCheck visibility = match.getValue().getVisibilityHook();
-            if (!visibility.isVisible(context, match.getValue())) {
+            if (!match.getValue().visibilityHook().isVisible(context, match.getValue())) {
                 return null;
             }
         }
@@ -127,9 +120,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
             return null;
         }
         if (context != null) {
-            MachineTrade trade = match.getValue();
-            MachineTradeHooks.MachineTradeVisibilityCheck visibility = match.getValue().getVisibilityHook();
-            if (!visibility.isVisible(context, trade)) {
+            if (!match.getValue().visibilityHook().isVisible(context, match.getValue())) {
                 return null;
             }
         }

@@ -130,7 +130,7 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
         PlayerInventoryItemStacksResourceHandler itemHandler = new PlayerInventoryItemStacksResourceHandler(player);
         FluidStacksResourceHandler fluidHandler = new FluidStacksResourceHandler(0, 0);
         return new MachineTradeContext(
-                null, level, server,
+                null, player, level, server,
                 itemHandler, itemHandler, fluidHandler, fluidHandler,
                 new SimpleEnergyHandler(0),
                 new HashSet<>(MBTBankStates.getBankCards(player.level().getServer()).getUsableCardsForPlayer(BankHelper.getUuid(player))),

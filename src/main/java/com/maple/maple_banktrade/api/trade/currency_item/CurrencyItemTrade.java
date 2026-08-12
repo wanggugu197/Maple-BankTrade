@@ -27,17 +27,16 @@ public final class CurrencyItemTrade implements TradeInfo {
     // ==============================================
 
     @Persisted
-    private ItemStack item;
+    private Identifier id;
 
+    @Persisted
+    private ItemStack item;
     @Persisted
     private int itemAmountPerTrade;
-
     @Persisted
     private CurrencyResource currency;
-
     @Persisted
     private BigInteger pricePerTrade;
-
     @Persisted
     private Mode mode;
 
@@ -47,6 +46,7 @@ public final class CurrencyItemTrade implements TradeInfo {
 
     /** 无参构造器 */
     public CurrencyItemTrade() {
+        this.id = null;
         this.item = ItemStack.EMPTY;
         this.itemAmountPerTrade = 0;
         this.currency = CurrencyResource.EMPTY;
@@ -55,9 +55,10 @@ public final class CurrencyItemTrade implements TradeInfo {
     }
 
     /** 全参构造器 */
-    public CurrencyItemTrade(ItemStack item, int itemAmountPerTrade,
+    public CurrencyItemTrade(Identifier id, ItemStack item, int itemAmountPerTrade,
                              CurrencyResource currency, BigInteger pricePerTrade,
                              Mode mode) {
+        this.id = id;
         this.item = item.copyWithCount(1);
         this.itemAmountPerTrade = itemAmountPerTrade;
         this.currency = Objects.requireNonNullElse(currency, CurrencyResource.EMPTY);
@@ -69,14 +70,15 @@ public final class CurrencyItemTrade implements TradeInfo {
     // 静态工厂
     // ==============================================
 
-    public static CurrencyItemTrade of(Item item, Identifier currencyTypeId, long price, Mode mode) {
-        return of(item, 1, currencyTypeId, BigInteger.valueOf(price), mode);
+    public static CurrencyItemTrade of(Identifier id, Item item, Identifier currencyTypeId, long price, Mode mode) {
+        return of(id, item, 1, currencyTypeId, BigInteger.valueOf(price), mode);
     }
 
-    public static CurrencyItemTrade of(Item item, int itemAmountPerTrade,
+    public static CurrencyItemTrade of(Identifier id, Item item, int itemAmountPerTrade,
                                        Identifier currencyTypeId, BigInteger pricePerTrade,
                                        Mode mode) {
         return new CurrencyItemTrade(
+                id,
                 new ItemStack(item),
                 itemAmountPerTrade,
                 CurrencyResource.of(currencyTypeId),

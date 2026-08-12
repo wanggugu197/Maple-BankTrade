@@ -70,6 +70,7 @@ public class MBTLangHandler {
         addLang("trade.maple_banktrade.fail.not_enough_items", "物品数量不足。", "Not enough items.");
         addLang("trade.maple_banktrade.fail.currency_insert", "无法存入货币。", "Failed to deposit currency.");
         addLang("trade.maple_banktrade.fail.item_extract", "无法取出物品。", "Failed to extract items.");
+        addLang("trade.maple_banktrade.fail.machine_check_failed", "交易前检查返回失败，不满足交易条件", "The pre-trade check returned a failure because the trading conditions were not met.");
         addLang("trade.maple_banktrade.fail.machine_insufficient", "资源不足，无法执行交易。", "Insufficient resources to run this trade.");
         addLang("trade.maple_banktrade.fail.machine_transfer", "交易资源转移失败。", "Failed to transfer trade resources.");
         addLang("ui.bank.card.detail.tag_count", "已存储标签 - %s", "Stored tags - %s");

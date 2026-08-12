@@ -408,7 +408,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         MachineTradeStorage storage = tradeStorage(tradeTypeId);
         if (server == null || storage == null) return null;
         return new MachineTradeContext(
-                this, level, server,
+                this, null, level, server,
                 itemInput, itemOutput, fluidInput, fluidOutput, energy,
                 resolveCards(cardUuids),
                 storage);

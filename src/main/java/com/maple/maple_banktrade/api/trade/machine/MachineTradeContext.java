@@ -1,6 +1,7 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
@@ -22,6 +23,7 @@ import javax.annotation.Nullable;
  */
 public record MachineTradeContext(
                                   @Nullable BlockEntity blockEntity,
+                                  @Nullable Entity entity,
                                   Level level,
                                   MinecraftServer server,
                                   ItemStacksResourceHandler itemInput,

@@ -1,75 +1,84 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
-import lombok.experimental.UtilityClass;
-
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * 机器交易自定义钩子接口定义及默认实现。
- * 注意：默认实现仅用于注册表，实际条目应通过 ID 引用。
+ * 机器交易钩子定义：包含可见性、额外检查、成功回调三种钩子的基类及默认实现。
+ * <p>
+ * 所有钩子均实现 {@link IPersistedSerializable}，支持通过 LDLib2 持久化。
+ * 使用时，只需在 {@link MachineTrade} 中持有具体子类实例即可。
+ * </p>
  */
-@UtilityClass
-public class MachineTradeHooks {
+public final class MachineTradeHooks {
 
-    /** 始终可见。 */
-    public static final MachineTradeVisibilityCheck ALWAYS_VISIBLE = (_, _) -> true;
+    // ============================================
+    // 1. 可见性钩子基类
+    // ============================================
+    @Setter
+    @Getter
+    public abstract static class VisibilityHook implements IPersistedSerializable {
 
-    /** 无附加检查，始终通过。 */
-    public static final MachineTradeCheckHook PASS = (_, _, _) -> List.of();
-
-    /** 无成功后处理。 */
-    public static final MachineTradeSuccessHook NOOP = (_, _, _, _) -> {};
-
-    /**
-     * 交易可见性：用于列表/UI 过滤，不进入 TradeRunner。
-     */
-    @FunctionalInterface
-    public interface MachineTradeVisibilityCheck {
-
-        boolean isVisible(MachineTradeContext context, MachineTrade trade);
+        /** 可见性检查 */
+        public abstract boolean isVisible(MachineTradeContext context, MachineTrade trade);
     }
 
-    /**
-     * check 阶段附加检查：失败则整笔 denied，不进入次数降级。
-     */
-    @FunctionalInterface
-    public interface MachineTradeCheckHook {
+    // ============================================
+    // 2. 额外检查钩子基类
+    // ============================================
+    @Setter
+    @Getter
+    public abstract static class CheckHook implements IPersistedSerializable {
 
-        List<Component> check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade);
+        /** 执行额外检查 */
+        public abstract boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade);
     }
 
-    /**
-     * 主交易成功后的副作用处理。
-     */
-    @FunctionalInterface
-    public interface MachineTradeSuccessHook {
+    // ============================================
+    // 3. 成功回调钩子基类
+    // ============================================
+    @Setter
+    @Getter
+    public abstract static class SuccessHook implements IPersistedSerializable {
 
-        void afterSuccess(MachineTradeContext context,
-                          MachineTradeRequest request,
-                          MachineTradePlan plan,
-                          TradeExecuteResult<MachineTradeDetail> result);
+        /** 交易成功后的副作用处理 */
+        public abstract void afterSuccess(MachineTradeContext context,
+                                          MachineTradeRequest request,
+                                          MachineTradePlan plan,
+                                          TradeExecuteResult<MachineTradeDetail> result);
     }
 
-    // ---------- 工厂接口（供注册表使用） ----------
-    @FunctionalInterface
-    public interface VisibilityCheckFactory {
+    // ============================================
+    // 默认实现
+    // ============================================
 
-        MachineTradeVisibilityCheck create(CompoundTag config);
+    /** 始终可见 */
+    public static final class AlwaysVisibleHook extends VisibilityHook {
+
+        @Override
+        public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+            return true;
+        }
     }
 
-    @FunctionalInterface
-    public interface CheckHookFactory {
+    /** 无额外检查，始终通过 */
+    public static final class PassCheckHook extends CheckHook {
 
-        MachineTradeCheckHook create(CompoundTag config);
+        @Override
+        public boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade) {
+            return true;
+        }
     }
 
-    @FunctionalInterface
-    public interface SuccessHookFactory {
+    /** 无操作成功回调 */
+    public static final class NoopSuccessHook extends SuccessHook {
 
-        MachineTradeSuccessHook create(CompoundTag config);
+        @Override
+        public void afterSuccess(MachineTradeContext context, MachineTradeRequest request,
+                                 MachineTradePlan plan, TradeExecuteResult<MachineTradeDetail> result) {}
     }
+
+    private MachineTradeHooks() {}
 }

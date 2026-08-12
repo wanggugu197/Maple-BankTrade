@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.trade.base.registry;
 
 import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -78,31 +78,29 @@ public abstract class AbstractTradeEntryStorage<E extends TradeInfo> implements 
     protected abstract E createEmptyEntry();
 
     @Override
-    public E register(Identifier tradeId, E entry) {
-        Objects.requireNonNull(tradeId, "tradeId");
+    public E register(E entry) {
         Objects.requireNonNull(entry, "entry");
         if (!isValidEntry(entry)) {
-            throw new IllegalArgumentException("Invalid trade entry: " + tradeTypeId + "/" + tradeId);
+            throw new IllegalArgumentException("Invalid trade entry: " + tradeTypeId + "/" + entry.id());
         }
 
-        E existing = entries.get(tradeId);
+        E existing = entries.get(entry.id());
         if (existing != null) {
-            MapleBankTrade.LOGGER.error("Trade entry already exists: {}/{}", tradeTypeId, tradeId);
+            MapleBankTrade.LOGGER.error("Trade entry already exists: {}/{}", tradeTypeId, entry.id());
             return existing;
         }
-        entries.put(tradeId, entry);
+        entries.put(entry.id(), entry);
         return entry;
     }
 
-    private void broadcastEntryChange(Identifier entryId, E entry) {
+    private void broadcastEntryChange(E entry) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) return;
         HolderLookup.Provider provider = server.registryAccess();
-        CompoundTag tag = PersistedParser.serializeNBT(entry, provider);
-        TradeRpcHandlers.TradeEntryData data = new TradeRpcHandlers.TradeEntryData(entryId, tag);
-        CompoundTag payload = TradeRpcHandlers.serializeEntryDataList(List.of(data));
+        ListTag listTag = new ListTag();
+        listTag.add(PersistedParser.serializeNBT(entry, provider));
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            RPCPacketDistributor.rpcToPlayer(player, "trade_sync_entries", this.tradeTypeId, payload);
+            RPCPacketDistributor.rpcToPlayer(player, "trade_sync_entries", this.tradeTypeId, listTag);
         }
     }
 

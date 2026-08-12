@@ -17,68 +17,34 @@ import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
+import com.maple.maple_banktrade.MapleBankTrade;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class TradeRpcHandlers {
 
     public static void init() {}
 
-    // ---------- 数据结构 ----------
-    public record TradeEntryData(Identifier entryId, CompoundTag nbt) {}
-
-    // ---------- 序列化/反序列化辅助 ----------
-    public static CompoundTag serializeEntryDataList(List<TradeEntryData> entries) {
-        CompoundTag root = new CompoundTag();
-        ListTag list = new ListTag();
-        for (TradeEntryData data : entries) {
-            CompoundTag entry = new CompoundTag();
-            entry.putString("id", data.entryId().toString());
-            entry.put("nbt", data.nbt());
-            list.add(entry);
-        }
-        root.put("entries", list);
-        return root;
-    }
-
-    private static List<TradeEntryData> deserializeEntryDataList(CompoundTag root) {
-        List<TradeEntryData> entries = new ArrayList<>();
-        ListTag list = root.getListOrEmpty("entries");
-        for (Tag tag : list) {
-            if (tag instanceof CompoundTag entry) {
-                Identifier id = Identifier.tryParse(entry.getStringOr("id", ""));
-                CompoundTag nbt = entry.getCompoundOrEmpty("nbt");
-                if (id != null) {
-                    entries.add(new TradeEntryData(id, nbt));
-                }
-            }
-        }
-        return entries;
-    }
-
     // ==========================================================
     // 1. 全量同步 RPC：服务端 -> 客户端
     // 客户端收到后替换整个 clientEntries
     // ==========================================================
     @RPCPacket("trade_full_sync")
-    public static void handleFullSync(RPCSender sender, Identifier tradeTypeId, CompoundTag data) {
+    public static void handleFullSync(RPCSender sender, Identifier tradeTypeId, ListTag listTag) {
         AbstractTradeEntryStorage<?> storage = findStorage(tradeTypeId);
         if (storage == null) return;
-
         HolderLookup.Provider provider = getProvider(sender);
-        List<TradeEntryData> entries = deserializeEntryDataList(data);
-
         Map<Identifier, TradeInfo> newMap = new LinkedHashMap<>();
-        for (TradeEntryData entryData : entries) {
-            TradeInfo entry = storage.createEmptyEntry();
-            PersistedParser.deserializeNBT(entryData.nbt(), entry, provider);
-            newMap.put(entryData.entryId(), entry);
+        for (Tag tag : listTag) {
+            if (tag instanceof CompoundTag entryTag) {
+                TradeInfo entry = storage.createEmptyEntry();
+                PersistedParser.deserializeNBT(entryTag, entry, provider);
+                newMap.put(entry.id(), entry);
+            }
         }
         storage.replaceClientCache(newMap);
-
+        MapleBankTrade.LOGGER.info("Trade full entries received {}, entry: {}", tradeTypeId, newMap.size());
         NeoForge.EVENT_BUS.post(new TradeSyncEvent(tradeTypeId));
     }
 
@@ -87,17 +53,15 @@ public final class TradeRpcHandlers {
     // 用于添加或更新单个/多个条目（客户端合并到 clientEntries）
     // ==========================================================
     @RPCPacket("trade_sync_entries")
-    public static void handleSyncEntries(RPCSender sender, Identifier tradeTypeId, CompoundTag data) {
+    public static void handleSyncEntries(RPCSender sender, Identifier tradeTypeId, ListTag listTag) {
         AbstractTradeEntryStorage<?> storage = findStorage(tradeTypeId);
         if (storage == null) return;
-
         HolderLookup.Provider provider = getProvider(sender);
-        List<TradeEntryData> entries = deserializeEntryDataList(data);
-
-        for (TradeEntryData entryData : entries) {
-            deserializeAndUpdate(storage, entryData.entryId(), entryData.nbt(), provider);
+        for (Tag tag : listTag) {
+            if (tag instanceof CompoundTag entryTag)
+                deserializeAndUpdate(storage, entryTag, provider);
         }
-
+        MapleBankTrade.LOGGER.info("Trade sync entries received {}, entry: {}", tradeTypeId, listTag.size());
         NeoForge.EVENT_BUS.post(new TradeSyncEvent(tradeTypeId));
     }
 
@@ -107,19 +71,17 @@ public final class TradeRpcHandlers {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void deserializeAndUpdate(
                                              AbstractTradeEntryStorage storage,
-                                             Identifier entryId,
                                              CompoundTag nbt,
                                              HolderLookup.Provider provider) {
         TradeInfo entry = storage.createEmptyEntry();
         PersistedParser.deserializeNBT(nbt, entry, provider);
-        storage.updateClientEntry(entryId, entry);
+        storage.updateClientEntry(entry.id(), entry);
     }
 
     private static AbstractTradeEntryStorage<?> findStorage(Identifier tradeTypeId) {
-        return TradeRegistry.findStorage(tradeTypeId)
-                .filter(AbstractTradeEntryStorage.class::isInstance)
-                .map(AbstractTradeEntryStorage.class::cast)
-                .orElse(null);
+        if (TradeRegistry.findStorage(tradeTypeId).orElse(null) instanceof AbstractTradeEntryStorage<?> storage)
+            return storage;
+        return null;
     }
 
     private static HolderLookup.Provider getProvider(RPCSender sender) {

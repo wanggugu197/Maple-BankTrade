@@ -4,6 +4,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
+import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTrade;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTrade.Mode;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeStorage;
@@ -171,19 +172,19 @@ public final class CurrencyItemTradeRegistration {
     private static void fill(CurrencyItemTradeStorage storage, CoinEntry... entries) {
         Identifier coins = CurrencyRegistration.COINS.id();
         for (CoinEntry entry : entries) {
-            storage.register(entry.path(), CurrencyItemTrade.of(entry.item(), coins, entry.price(), Mode.BUY_AND_SELL));
+            storage.register(CurrencyItemTrade.of(entry.id, entry.item(), coins, entry.price(), Mode.BUY_AND_SELL));
         }
     }
 
     /** 构造价目临时条目。 */
     private static CoinEntry e(String path, Item item, long price) {
-        return new CoinEntry(path, item, price);
+        return new CoinEntry(MapleBankTrade.id(path), item, price);
     }
 
     /**
      * 内置价目临时数据。
      */
-    private record CoinEntry(String path, Item item, long price) {}
+    private record CoinEntry(Identifier id, Item item, long price) {}
 
     private CurrencyItemTradeRegistration() {}
 }

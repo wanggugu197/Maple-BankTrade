@@ -2,26 +2,21 @@ package com.maple.maple_banktrade.bank.cards;
 
 import net.minecraft.resources.Identifier;
 
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.capability.CurrencyStorageBankCard;
 import com.maple.maple_banktrade.api.bank.data.CurrencyType;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigInteger;
 import java.util.*;
 
 public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStorageBankCard {
-
-    // ==============================================
-    // 常量
-    // ==============================================
 
     public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("large_multi_currency");
 
@@ -29,58 +24,25 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
     // Codec
     // ==============================================
 
-    private static final Codec<BigInteger> BIG_INTEGER_CODEC = Codec.STRING.comapFlatMap(value -> {
-        try {
-            return DataResult.success(new BigInteger(value));
-        } catch (NumberFormatException e) {
-            return DataResult.error(() -> "Invalid BigInteger: " + value);
-        }
-    }, BigInteger::toString);
-
-    public static final Codec<Map<Identifier, BigInteger>> BALANCES_CODEC = new Codec<>() {
-
-        @Override
-        public <T> DataResult<T> encode(Map<Identifier, BigInteger> input, DynamicOps<T> ops, T prefix) {
-            return Codec.unboundedMap(CurrencyType.ID_CODEC, BIG_INTEGER_CODEC).encode(input, ops, prefix);
-        }
-
-        @Override
-        public <T> DataResult<Pair<Map<Identifier, BigInteger>, T>> decode(DynamicOps<T> ops, T input) {
-            Map<Identifier, BigInteger> result = new HashMap<>();
-            ops.getMapValues(input)
-                    .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Failed to read large multi-currency bank card balance table, skipping all balances: {}", message))
-                    .ifPresent(entries -> entries.forEach(entry -> {
-                        Identifier currencyId = Identifier.CODEC.parse(ops, entry.getFirst())
-                                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping large multi-currency bank card balance entry, currency ID failed to deserialize: {}", message))
-                                .orElse(null);
-                        if (currencyId == null) return;
-                        if (CurrencyType.requireById(currencyId) == null) {
-                            MapleBankTrade.LOGGER.error("Skipping large multi-currency bank card balance entry, currency not registered: {}", currencyId);
-                            return;
-                        }
-                        BIG_INTEGER_CODEC.parse(ops, entry.getSecond())
-                                .resultOrPartial(message -> MapleBankTrade.LOGGER.error("Skipping balance entry for large multi-currency bank card {}, amount failed to deserialize: {}", currencyId, message))
-                                .ifPresent(amount -> result.put(currencyId, amount));
-                    }));
-            return DataResult.success(Pair.of(result, ops.empty()));
-        }
-    };
-
-    public static final MapCodec<LargeMultiCurrencyBankCard> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            BankCard.IDENTITY_FIELDS_CODEC.forGetter(BankCardIdentity::of),
-            BALANCES_CODEC.fieldOf("balances").forGetter(LargeMultiCurrencyBankCard::getBalances))
-            .apply(instance, LargeMultiCurrencyBankCard::new));
+    public static final Codec<LargeMultiCurrencyBankCard> CODEC = PersistedParser.createCodec(LargeMultiCurrencyBankCard::new);
+    public static final MapCodec<LargeMultiCurrencyBankCard> MAP_CODEC = PersistedParser.createMapCodec(LargeMultiCurrencyBankCard::new);
 
     // ==============================================
     // 字段
     // ==============================================
 
+    @Persisted
     @Getter
-    private final Map<Identifier, BigInteger> balances;
+    @Setter
+    private Map<Identifier, BigInteger> balances;
 
     // ==============================================
-    // 构造方法
+    // 构造
     // ==============================================
+
+    public LargeMultiCurrencyBankCard() {
+        this.balances = new LinkedHashMap<>();
+    }
 
     public LargeMultiCurrencyBankCard(BankCardIdentity identity, CurrencyType... currencyTypes) {
         this(identity, CurrencyStorageBankCard.createInitialBalances(BigInteger.ZERO, currencyTypes));
@@ -94,7 +56,8 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
         this(identity, CARD_TYPE_ID, balances);
     }
 
-    protected LargeMultiCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId, Map<Identifier, BigInteger> balances) {
+    protected LargeMultiCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId,
+                                         Map<Identifier, BigInteger> balances) {
         super(identity, cardTypeId);
         this.balances = new LinkedHashMap<>();
         balances.forEach((type, amount) -> {
@@ -127,11 +90,10 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
 
     @Override
     public boolean increaseCurrency(Identifier currencyTypeId, BigInteger amount) {
-        Objects.requireNonNull(amount, "amount");
         if (amount.signum() <= 0) return false;
         Identifier currencyId = normalizeCurrencyId(currencyTypeId);
         if (currencyId == null || !balances.containsKey(currencyId)) return false;
-        balances.computeIfPresent(currencyId, (_, current) -> current.add(amount));
+        balances.computeIfPresent(currencyId, (_, cur) -> cur.add(amount));
         return true;
     }
 
@@ -142,7 +104,6 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
 
     @Override
     public boolean decreaseCurrency(Identifier currencyTypeId, BigInteger amount) {
-        Objects.requireNonNull(amount, "amount");
         if (amount.signum() <= 0) return false;
         Identifier currencyId = normalizeCurrencyId(currencyTypeId);
         if (currencyId == null || !balances.containsKey(currencyId)) return false;
@@ -156,6 +117,10 @@ public class LargeMultiCurrencyBankCard extends BankCard implements CurrencyStor
     public boolean decreaseCurrency(Identifier currencyTypeId, long amount) {
         return decreaseCurrency(currencyTypeId, BigInteger.valueOf(amount));
     }
+
+    // ==============================================
+    // 工具
+    // ==============================================
 
     protected static Identifier normalizeCurrencyId(Identifier typeId) {
         CurrencyType type = CurrencyType.requireById(typeId);

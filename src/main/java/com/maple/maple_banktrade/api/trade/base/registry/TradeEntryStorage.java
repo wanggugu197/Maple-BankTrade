@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface TradeEntryStorage<E> extends TradeStorage {
 
     /** 注册条目；ID 已存在时返回已有条目且不覆盖。 */
-    E register(Identifier tradeId, E entry);
+    E register(E entry);
 
     /** 按 ID 查找条目。 */
     Optional<E> find(Identifier tradeId);

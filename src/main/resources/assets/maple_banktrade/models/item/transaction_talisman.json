@@ -2,7 +2,7 @@
 	"parent": "minecraft:item/generated",
 	"textures": {
 		"layer0": "maple_banktrade:item/talisman",
-		"layer1": "maple_banktrade:item/void"
+		"layer1": "maple_banktrade:item/icon"
 	},
 	"elements": [
 		{
@@ -19,8 +19,9 @@
 			}
 		},
 		{
-			"from": [4, 4, 8.51],
-			"to": [12, 12, 8.52],
+			"from": [4, 4, 7.49],
+			"to": [12, 12, 8.51],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 0, -1]},
 			"faces": {
 				"north": {"uv": [0, 0, 16, 16], "texture": "#layer1"},
 				"south": {"uv": [0, 0, 16, 16], "texture": "#layer1"}

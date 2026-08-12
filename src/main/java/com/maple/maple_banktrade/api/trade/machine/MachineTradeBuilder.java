@@ -1,14 +1,10 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.util.ArrayList;
@@ -20,8 +16,10 @@ import javax.annotation.Nullable;
 @Setter
 @Getter
 @Accessors(fluent = true, chain = true)
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public final class MachineTradeBuilder {
+
+    final Identifier id;
 
     private final List<MachineTradeIO.ItemIO> itemInputs = new ArrayList<>();
     private final List<MachineTradeIO.ItemIO> itemOutputs = new ArrayList<>();
@@ -36,20 +34,9 @@ public final class MachineTradeBuilder {
     @Nullable
     private List<Component> description;
     private boolean autoTrade;
-
-    // 钩子 ID 与配置（CompoundTag）
-    @Nullable
-    private Identifier visibilityHookId;
-    @Nullable
-    private CompoundTag visibilityConfig;
-    @Nullable
-    private Identifier checkHookId = MachineTradeHookRegistry.DEFAULT_CHECK;
-    @Nullable
-    private CompoundTag checkConfig;
-    @Nullable
-    private Identifier successHookId = MachineTradeHookRegistry.DEFAULT_SUCCESS;
-    @Nullable
-    private CompoundTag successConfig;
+    private MachineTradeHooks.VisibilityHook visibilityHook;
+    private MachineTradeHooks.CheckHook checkHook;
+    private MachineTradeHooks.SuccessHook successHook;
 
     public MachineTradeBuilder addItemInput(MachineTradeIO.ItemIO io) {
         itemInputs.add(Objects.requireNonNull(io, "io"));
@@ -104,57 +91,17 @@ public final class MachineTradeBuilder {
         return this;
     }
 
-    // ----- 钩子设置方法（使用 CompoundTag） -----
-    public MachineTradeBuilder visibility(Identifier hookId, CompoundTag config) {
-        this.visibilityHookId = Objects.requireNonNull(hookId, "hookId");
-        this.visibilityConfig = config;
-        return this;
-    }
-
-    public MachineTradeBuilder extraCheck(Identifier hookId, CompoundTag config) {
-        this.checkHookId = Objects.requireNonNull(hookId, "hookId");
-        this.checkConfig = config;
-        return this;
-    }
-
-    public MachineTradeBuilder afterSuccess(Identifier hookId, CompoundTag config) {
-        this.successHookId = Objects.requireNonNull(hookId, "hookId");
-        this.successConfig = config;
-        return this;
-    }
-
-    // 便捷方法：使用默认配置（空 CompoundTag）
-    public MachineTradeBuilder visibility(Identifier hookId) {
-        return visibility(hookId, null);
-    }
-
-    public MachineTradeBuilder extraCheck(Identifier hookId) {
-        return extraCheck(hookId, null);
-    }
-
-    public MachineTradeBuilder afterSuccess(Identifier hookId) {
-        return afterSuccess(hookId, null);
-    }
-
     public MachineTrade build() {
-        MachineTrade trade = new MachineTrade();
-        trade.itemInputs(new ArrayList<>(itemInputs));
-        trade.itemOutputs(new ArrayList<>(itemOutputs));
-        trade.fluidInputs(new ArrayList<>(fluidInputs));
-        trade.fluidOutputs(new ArrayList<>(fluidOutputs));
-        trade.energyExtract(energyExtract);
-        trade.energyInsert(energyInsert);
-        trade.currencyExtract(new ArrayList<>(currencyExtract));
-        trade.currencyInsert(new ArrayList<>(currencyInsert));
-        trade.autoTrade(autoTrade);
-        trade.machineTradeIcon(machineTradeIcon == null ? IGuiTexture.EMPTY : machineTradeIcon);
-        trade.description(description == null ? new ArrayList<>() : new ArrayList<>(description));
-        trade.visibilityHookId(visibilityHookId == null ? MachineTradeHookRegistry.DEFAULT_VISIBILITY : visibilityHookId);
-        trade.visibilityConfig(visibilityConfig == null ? new CompoundTag() : visibilityConfig);
-        trade.checkHookId(checkHookId == null ? MachineTradeHookRegistry.DEFAULT_CHECK : checkHookId);
-        trade.checkConfig(checkConfig == null ? new CompoundTag() : checkConfig);
-        trade.successHookId(successHookId == null ? MachineTradeHookRegistry.DEFAULT_SUCCESS : successHookId);
-        trade.successConfig(successConfig == null ? new CompoundTag() : successConfig);
+        MachineTrade trade = new MachineTrade(
+                id,
+                itemInputs, itemOutputs, fluidInputs, fluidOutputs,
+                energyExtract, energyInsert, currencyExtract, currencyInsert,
+                autoTrade,
+                machineTradeIcon == null ? IGuiTexture.EMPTY : machineTradeIcon,
+                description == null ? new ArrayList<>() : new ArrayList<>(description),
+                visibilityHook == null ? new MachineTradeHooks.AlwaysVisibleHook() : visibilityHook,
+                checkHook == null ? new MachineTradeHooks.PassCheckHook() : checkHook,
+                successHook == null ? new MachineTradeHooks.NoopSuccessHook() : successHook);
 
         if (trade.autoTrade() && !trade.hasValidAutoTradeInputs()) {
             throw new IllegalStateException(
