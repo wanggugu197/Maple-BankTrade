@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.common.trade.hooks;
+package com.maple.maple_banktrade.trade.hooks.checkHook;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;

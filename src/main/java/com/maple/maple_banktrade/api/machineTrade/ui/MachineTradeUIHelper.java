@@ -1,9 +1,9 @@
 package com.maple.maple_banktrade.api.machineTrade.ui;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
+import com.lowdragmc.lowdraglib2.gui.sync.bindings.SyncStrategy;
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
@@ -16,15 +16,15 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.data.TradableType;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
+import com.mapleutillib.utils.RLUtils;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.FlexWrap;
-import org.apache.commons.lang3.StringUtils;
-import org.jspecify.annotations.NonNull;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MachineTradeUIHelper {
 
@@ -38,35 +38,43 @@ public class MachineTradeUIHelper {
         if (type != null) scroller.addScrollViewChild(buildTradeTypeHeader(type));
 
         var grid = new UIElement().layout(l -> l.width(260).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
-        addTrades(host, tradeTypeId, grid);
 
-        String[] strings = host.listTradesForUi(tradeTypeId).stream()
-                .map(entry -> StringUtils.substringAfterLast(entry.getKey().getPath(), "/"))
-                .toArray(String[]::new);
-        var value = new BindableValue<String[]>().setValue(strings, true);
-        value.bind(DataBindingBuilder.create(value::getValue, _ -> {}).build());
+        List<Map.Entry<Identifier, MachineTrade>> tradesForUi = host.listTradesForUi(tradeTypeId);
+        AtomicInteger i = new AtomicInteger();
+        var value = new BindableValue<String[]>()
+                .setValue(tradesForUi.stream()
+                        .map(entry -> entry.getKey().toString())
+                        .toArray(String[]::new), true);
+        value.bind(DataBindingBuilder.create(
+                () -> {
+                    if (i.incrementAndGet() % 20 == 0) {
+                        MapleBankTrade.LOGGER.info("check");
+                        tradesForUi.clear();
+                        tradesForUi.addAll(host.listTradesForUi(tradeTypeId));
+                    }
+                    return tradesForUi.stream()
+                            .map(entry -> entry.getKey().toString())
+                            .toArray(String[]::new);
+                }, _ -> {})
+                .c2sStrategy(SyncStrategy.NONE)
+                .build());
+
+        Map<Identifier, MachineTrade> trades = host.listAllTrades(tradeTypeId);
+        addTrades(host, trades, tradeTypeId, grid);
+
         value.registerValueListener(ids -> {
             Set<String> idSet = new HashSet<>(Arrays.asList(ids));
-            grid.getChildren().stream()
-                    .filter(child -> !idSet.contains(child.getId()))
-                    .forEach(child -> {
-                        child.style(s -> s.overlay(Sprites.RECT_RD));
-                        child.getChildren().getFirst().style(s -> s.tooltips(Component.translatable("trade.maple_banktrade.machine.tooltip.unlocked")
-                                .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD)));
-                    });
+            grid.getChildren().forEach(child -> {
+                if (idSet.contains(child.getId())) {
+                    MachineTrade.setMachineTradeVisible(trades.get(RLUtils.parse(child.getId())), child);
+                } else {
+                    MachineTrade.setMachineTradeInvisible(trades.get(RLUtils.parse(child.getId())), child);
+                }
+            });
         });
 
         scroller.addScrollViewChildren(grid, value);
         return scroller;
-    }
-
-    public static void addTrades(MachineTradeUiHost host, Identifier tradeTypeId, UIElement grid) {
-        List<Map.Entry<Identifier, MachineTrade>> trades = host.listAllTrades(tradeTypeId);
-        if (trades.isEmpty()) {
-            grid.addChild(new Label().setText(Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
-        } else {
-            trades.forEach(entry -> grid.addChild(buildTradeButton(host, tradeTypeId, entry)));
-        }
     }
 
     public static UIElement buildTradeTypeHeader(TradableType type) {
@@ -93,23 +101,22 @@ public class MachineTradeUIHelper {
         return header;
     }
 
-    /**
-     * 配方点击：客户端把批量次数写入 {@code modifiers}，服务端 RPC 执行。
-     */
-    public static @NonNull UIElement buildTradeButton(
-                                                      MachineTradeUiHost host,
-                                                      Identifier tradeTypeId,
-                                                      Map.Entry<Identifier, MachineTrade> entry) {
-        Identifier tradeId = entry.getKey();
-        UIElement tradeUI = MachineTrade.getMachineTradeIcon(entry.getValue())
-                .setId(StringUtils.substringAfterLast(entry.getKey().getPath(), "/"));
-        tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
-            if (e.button == 0) e.modifiers = tradeCountFromKeyboard(e);
-        });
-        tradeUI.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
-            if (e.button == 0) host.runTradeFromUi(tradeTypeId, tradeId, Math.max(1, e.modifiers));
-        });
-        return tradeUI;
+    /** 添加配方按钮：客户端把批量次数写入 {@code modifiers}，服务端执行 */
+    public static void addTrades(MachineTradeUiHost host, Map<Identifier, MachineTrade> trades, Identifier tradeTypeId, UIElement grid) {
+        if (trades.isEmpty()) {
+            grid.addChild(new Label().setText(Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
+        } else {
+            trades.forEach((_, entry) -> {
+                UIElement tradeUI = MachineTrade.getMachineTradeIcon(entry);
+                tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
+                    if (e.button == 0) e.modifiers = tradeCountFromKeyboard(e);
+                });
+                tradeUI.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
+                    if (e.button == 0) host.runTradeFromUi(tradeTypeId, entry.id(), Math.max(1, e.modifiers));
+                });
+                grid.addChild(tradeUI);
+            });
+        }
     }
 
     /** 客户端：Alt=64 / Ctrl=8 / Shift=4 / 默认 1。直接写入 {@link UIEvent#modifiers} 传给服务端。 */

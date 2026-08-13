@@ -2,14 +2,18 @@ package com.maple.maple_banktrade.api.trade.machine;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
 
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.maple.maple_banktrade.api.bank.resource.CurrencyResource;
 import lombok.*;
 import lombok.experimental.Accessors;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -30,31 +34,51 @@ public final class MachineTradeBuilder {
     private final List<MachineTradeIO.CurrencyIO> currencyExtract = new ArrayList<>();
     private final List<MachineTradeIO.CurrencyIO> currencyInsert = new ArrayList<>();
     @Nullable
-    private IGuiTexture machineTradeIcon;
-    @Nullable
-    private List<Component> description;
+    private Identifier machineTradeIcon;
+    private List<Component> descriptionVisible = new ArrayList<>();
+    private List<Component> descriptionInvisible = new ArrayList<>();
     private boolean autoTrade;
-    private MachineTradeHooks.VisibilityHook visibilityHook;
-    private MachineTradeHooks.CheckHook checkHook;
-    private MachineTradeHooks.SuccessHook successHook;
+    private MachineTradeHooks.VisibilityHook visibilityHook = new MachineTradeHooks.AlwaysVisibleHook();
+    private MachineTradeHooks.CheckHook checkHook = new MachineTradeHooks.PassCheckHook();
+    private MachineTradeHooks.SuccessHook successHook = new MachineTradeHooks.NoopSuccessHook();
 
-    public MachineTradeBuilder addItemInput(MachineTradeIO.ItemIO io) {
-        itemInputs.add(Objects.requireNonNull(io, "io"));
+    public MachineTradeBuilder addItemInput(ItemStack stack) {
+        itemInputs.add(MachineTradeIO.ItemIO.of(stack));
         return this;
     }
 
-    public MachineTradeBuilder addItemOutput(MachineTradeIO.ItemIO io) {
-        itemOutputs.add(Objects.requireNonNull(io, "io"));
+    public MachineTradeBuilder addItemInput(ItemLike item, int amount) {
+        itemInputs.add(MachineTradeIO.ItemIO.of(item, amount));
         return this;
     }
 
-    public MachineTradeBuilder addFluidInput(MachineTradeIO.FluidIO io) {
-        fluidInputs.add(Objects.requireNonNull(io, "io"));
+    public MachineTradeBuilder addItemOutput(ItemStack stack) {
+        itemOutputs.add(MachineTradeIO.ItemIO.of(stack));
         return this;
     }
 
-    public MachineTradeBuilder addFluidOutput(MachineTradeIO.FluidIO io) {
-        fluidOutputs.add(Objects.requireNonNull(io, "io"));
+    public MachineTradeBuilder addItemOutput(ItemLike item, int amount) {
+        itemOutputs.add(MachineTradeIO.ItemIO.of(item, amount));
+        return this;
+    }
+
+    public MachineTradeBuilder addFluidInput(FluidStack stack) {
+        fluidInputs.add(MachineTradeIO.FluidIO.of(stack));
+        return this;
+    }
+
+    public MachineTradeBuilder addFluidInput(Fluid fluid, int amount) {
+        fluidInputs.add(MachineTradeIO.FluidIO.of(fluid, amount));
+        return this;
+    }
+
+    public MachineTradeBuilder addFluidOutput(FluidStack stack) {
+        fluidOutputs.add(MachineTradeIO.FluidIO.of(stack));
+        return this;
+    }
+
+    public MachineTradeBuilder addFluidOutput(Fluid fluid, int amount) {
+        fluidOutputs.add(MachineTradeIO.FluidIO.of(fluid, amount));
         return this;
     }
 
@@ -70,38 +94,54 @@ public final class MachineTradeBuilder {
         return this;
     }
 
-    public MachineTradeBuilder addCurrencyExtract(MachineTradeIO.CurrencyIO io) {
-        currencyExtract.add(Objects.requireNonNull(io, "io"));
+    public MachineTradeBuilder addCurrencyExtract(CurrencyResource resource, BigInteger amount) {
+        currencyExtract.add(MachineTradeIO.CurrencyIO.of(resource, amount));
         return this;
     }
 
-    public MachineTradeBuilder addCurrencyInsert(MachineTradeIO.CurrencyIO io) {
-        currencyInsert.add(Objects.requireNonNull(io, "io"));
+    public MachineTradeBuilder addCurrencyExtract(CurrencyResource resource, long amount) {
+        currencyExtract.add(MachineTradeIO.CurrencyIO.of(resource, amount));
         return this;
     }
 
-    public MachineTradeBuilder addDescription(Component line) {
-        Objects.requireNonNull(line, "line");
-        if (this.description == null) {
-            this.description = new ArrayList<>();
-        } else if (!(this.description instanceof ArrayList)) {
-            this.description = new ArrayList<>(this.description);
-        }
-        this.description.add(line);
+    public MachineTradeBuilder addCurrencyInsert(CurrencyResource resource, BigInteger amount) {
+        currencyInsert.add(MachineTradeIO.CurrencyIO.of(resource, amount));
+        return this;
+    }
+
+    public MachineTradeBuilder addCurrencyInsert(CurrencyResource resource, long amount) {
+        currencyInsert.add(MachineTradeIO.CurrencyIO.of(resource, amount));
+        return this;
+    }
+
+    public MachineTradeBuilder addDescriptionVisible(Component line) {
+        this.descriptionVisible.add(line);
+        return this;
+    }
+
+    public MachineTradeBuilder addDescriptionInvisible(Component line) {
+        this.descriptionInvisible.add(line);
         return this;
     }
 
     public MachineTrade build() {
         MachineTrade trade = new MachineTrade(
                 id,
-                itemInputs, itemOutputs, fluidInputs, fluidOutputs,
-                energyExtract, energyInsert, currencyExtract, currencyInsert,
+                new ArrayList<>(itemInputs),
+                new ArrayList<>(itemOutputs),
+                new ArrayList<>(fluidInputs),
+                new ArrayList<>(fluidOutputs),
+                energyExtract,
+                energyInsert,
+                new ArrayList<>(currencyExtract),
+                new ArrayList<>(currencyInsert),
                 autoTrade,
-                machineTradeIcon == null ? IGuiTexture.EMPTY : machineTradeIcon,
-                description == null ? new ArrayList<>() : new ArrayList<>(description),
-                visibilityHook == null ? new MachineTradeHooks.AlwaysVisibleHook() : visibilityHook,
-                checkHook == null ? new MachineTradeHooks.PassCheckHook() : checkHook,
-                successHook == null ? new MachineTradeHooks.NoopSuccessHook() : successHook);
+                machineTradeIcon,
+                new ArrayList<>(descriptionVisible),
+                new ArrayList<>(descriptionInvisible),
+                visibilityHook,
+                checkHook,
+                successHook);
 
         if (trade.autoTrade() && !trade.hasValidAutoTradeInputs()) {
             throw new IllegalStateException(

@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.common.trade.hooks;
+package com.maple.maple_banktrade.trade.hooks.successHook;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;

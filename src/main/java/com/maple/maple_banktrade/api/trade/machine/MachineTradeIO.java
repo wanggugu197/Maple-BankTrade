@@ -1,11 +1,8 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.fluids.FluidStack;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
@@ -49,7 +46,7 @@ public class MachineTradeIO {
             this(ItemStack.EMPTY, 0);
         }
 
-        public ItemIO(@NonNull ItemStack itemStack, int amount) {
+        private ItemIO(@NonNull ItemStack itemStack, int amount) {
             if (amount < 0) {
                 throw new IllegalArgumentException("amount must be non-negative");
             }
@@ -94,21 +91,6 @@ public class MachineTradeIO {
         }
 
         public static final Codec<ItemIO> CODEC = PersistedParser.createCodec(ItemIO::new);
-
-        @Override
-        public void serialize(@NonNull ValueOutput output) {
-            PersistedParser.serialize(this, output);
-        }
-
-        @Override
-        public void deserialize(@NonNull ValueInput input) {
-            PersistedParser.deserialize(this, input);
-        }
-
-        @Override
-        public String toString() {
-            return "ItemIO{itemStack=" + itemStack + ", amount=" + amount + "}";
-        }
     }
 
     // ==============================================
@@ -130,7 +112,7 @@ public class MachineTradeIO {
             this(FluidStack.EMPTY, 0);
         }
 
-        public FluidIO(@NonNull FluidStack fluidStack, int amount) {
+        private FluidIO(@NonNull FluidStack fluidStack, int amount) {
             if (amount < 0) {
                 throw new IllegalArgumentException("amount must be non-negative");
             }
@@ -175,21 +157,6 @@ public class MachineTradeIO {
         }
 
         public static final Codec<FluidIO> CODEC = PersistedParser.createCodec(FluidIO::new);
-
-        @Override
-        public void serialize(@NonNull ValueOutput output) {
-            PersistedParser.serialize(this, output);
-        }
-
-        @Override
-        public void deserialize(@NonNull ValueInput input) {
-            PersistedParser.deserialize(this, input);
-        }
-
-        @Override
-        public String toString() {
-            return "FluidIO{fluidStack=" + fluidStack + ", amount=" + amount + "}";
-        }
     }
 
     // ==============================================
@@ -211,7 +178,7 @@ public class MachineTradeIO {
             this(CurrencyResource.EMPTY, BigInteger.ZERO);
         }
 
-        public CurrencyIO(@NonNull CurrencyResource resource, @NonNull BigInteger amount) {
+        private CurrencyIO(@NonNull CurrencyResource resource, @NonNull BigInteger amount) {
             this.resource = resource;
             this.amount = amount;
             if (this.amount.signum() < 0) {
@@ -227,10 +194,6 @@ public class MachineTradeIO {
             return new CurrencyIO(resource, BigInteger.valueOf(amount));
         }
 
-        public static CurrencyIO of(Identifier currencyTypeId, long amount) {
-            return of(CurrencyResource.of(currencyTypeId), amount);
-        }
-
         public boolean isValid() {
             return !resource.isEmpty() && amount.signum() > 0;
         }
@@ -243,21 +206,6 @@ public class MachineTradeIO {
         }
 
         public static final Codec<CurrencyIO> CODEC = PersistedParser.createCodec(CurrencyIO::new);
-
-        @Override
-        public void serialize(@NonNull ValueOutput output) {
-            PersistedParser.serialize(this, output);
-        }
-
-        @Override
-        public void deserialize(@NonNull ValueInput input) {
-            PersistedParser.deserialize(this, input);
-        }
-
-        @Override
-        public String toString() {
-            return "CurrencyIO{resource=" + resource + ", amount=" + amount + "}";
-        }
     }
 
     // ==============================================
@@ -297,10 +245,10 @@ public class MachineTradeIO {
             this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), 0, 0, new ArrayList<>(), new ArrayList<>());
         }
 
-        public ScaledIO(List<ItemIO> itemInputs, List<ItemIO> itemOutputs,
-                        List<FluidIO> fluidInputs, List<FluidIO> fluidOutputs,
-                        int energyExtract, int energyInsert,
-                        List<CurrencyIO> currencyExtract, List<CurrencyIO> currencyInsert) {
+        private ScaledIO(List<ItemIO> itemInputs, List<ItemIO> itemOutputs,
+                         List<FluidIO> fluidInputs, List<FluidIO> fluidOutputs,
+                         int energyExtract, int energyInsert,
+                         List<CurrencyIO> currencyExtract, List<CurrencyIO> currencyInsert) {
             this.itemInputs = new ArrayList<>(Objects.requireNonNullElse(itemInputs, new ArrayList<>()));
             this.itemOutputs = new ArrayList<>(Objects.requireNonNullElse(itemOutputs, new ArrayList<>()));
             this.fluidInputs = new ArrayList<>(Objects.requireNonNullElse(fluidInputs, new ArrayList<>()));
@@ -382,23 +330,5 @@ public class MachineTradeIO {
         }
 
         public static final Codec<ScaledIO> CODEC = PersistedParser.createCodec(ScaledIO::new);
-
-        @Override
-        public void serialize(@NonNull ValueOutput output) {
-            PersistedParser.serialize(this, output);
-        }
-
-        @Override
-        public void deserialize(@NonNull ValueInput input) {
-            PersistedParser.deserialize(this, input);
-        }
-
-        @Override
-        public String toString() {
-            return "ScaledIO{itemInputs=" + itemInputs.size() + ", itemOutputs=" + itemOutputs.size() +
-                    ", fluidInputs=" + fluidInputs.size() + ", fluidOutputs=" + fluidOutputs.size() +
-                    ", energyExtract=" + energyExtract + ", energyInsert=" + energyInsert +
-                    ", currencyExtract=" + currencyExtract.size() + ", currencyInsert=" + currencyInsert.size() + "}";
-        }
     }
 }

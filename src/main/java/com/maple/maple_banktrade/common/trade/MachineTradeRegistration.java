@@ -9,16 +9,14 @@ import net.minecraft.world.level.material.Fluids;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.resource.CurrencyResource;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.CurrencyIO;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.FluidIO;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.ItemIO;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeStorage;
 import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
-import com.maple.maple_banktrade.common.trade.hooks.CardExistenceVisibleHook;
-import com.maple.maple_banktrade.common.trade.hooks.DimensionVisibleHook;
-import com.maple.maple_banktrade.common.trade.hooks.LogSuccessHook;
-import com.maple.maple_banktrade.common.trade.hooks.TimeWindowCheckHook;
+import com.maple.maple_banktrade.trade.hooks.checkHook.TimeWindowCheckHook;
+import com.maple.maple_banktrade.trade.hooks.successHook.LogSuccessHook;
+import com.maple.maple_banktrade.trade.hooks.visibleHook.CardExistenceVisibleHook;
+import com.maple.maple_banktrade.trade.hooks.visibleHook.DimensionVisibleHook;
+import com.maple.maple_banktrade.trade.hooks.visibleHook.TimeWindowVisibleHook;
 
 import static com.maple.maple_banktrade.common.trade.TradeTypeRegistration.*;
 
@@ -46,125 +44,125 @@ public final class MachineTradeRegistration {
 
     private static void registerBench() {
         MachineBench.register(MachineTrade.builder(MapleBankTrade.id("smelt_raw_iron"))
-                .addItemInput(ItemIO.of(Items.RAW_IRON, 1))
-                .addItemOutput(ItemIO.of(Items.IRON_INGOT, 1))
+                .addItemInput(Items.RAW_IRON, 1)
+                .addItemOutput(Items.IRON_INGOT, 1)
                 .energyExtract(200)
                 .build());
 
         MachineBench.register(MachineTrade.builder(MapleBankTrade.id("smelt_raw_gold"))
-                .addItemInput(ItemIO.of(Items.RAW_GOLD, 1))
-                .addItemOutput(ItemIO.of(Items.GOLD_INGOT, 1))
+                .addItemInput(Items.RAW_GOLD, 1)
+                .addItemOutput(Items.GOLD_INGOT, 1)
                 .energyExtract(250)
                 .build());
 
         MachineBench.register(MachineTrade.builder(MapleBankTrade.id("smelt_raw_copper"))
-                .addItemInput(ItemIO.of(Items.RAW_COPPER, 1))
-                .addItemOutput(ItemIO.of(Items.COPPER_INGOT, 1))
+                .addItemInput(Items.RAW_COPPER, 1)
+                .addItemOutput(Items.COPPER_INGOT, 1)
                 .energyExtract(150)
                 .build());
 
         MachineBench.register(MachineTrade.builder(MapleBankTrade.id("smelt_raw_iron_bulk"))
-                .addItemInput(ItemIO.of(Items.RAW_IRON, 8))
-                .addItemOutput(ItemIO.of(Items.IRON_INGOT, 8))
+                .addItemInput(Items.RAW_IRON, 8)
+                .addItemOutput(Items.IRON_INGOT, 8)
                 .energyExtract(1400)
                 .build());
     }
 
     private static void registerWasher() {
         MachineWasher.register(MachineTrade.builder(MapleBankTrade.id("wash_gravel"))
-                .addItemInput(ItemIO.of(Items.GRAVEL, 1))
-                .addFluidInput(FluidIO.of(Fluids.WATER, 250))
-                .addItemOutput(ItemIO.of(Items.FLINT, 1))
-                .addItemOutput(ItemIO.of(Items.SAND, 1))
+                .addItemInput(Items.GRAVEL, 1)
+                .addFluidInput(Fluids.WATER, 250)
+                .addItemOutput(Items.FLINT, 1)
+                .addItemOutput(Items.SAND, 1)
                 .energyExtract(80)
                 .build());
 
         MachineWasher.register(MachineTrade.builder(MapleBankTrade.id("wash_sand"))
-                .addItemInput(ItemIO.of(Items.SAND, 4))
-                .addFluidInput(FluidIO.of(Fluids.WATER, 500))
-                .addItemOutput(ItemIO.of(Items.CLAY_BALL, 2))
+                .addItemInput(Items.SAND, 4)
+                .addFluidInput(Fluids.WATER, 500)
+                .addItemOutput(Items.CLAY_BALL, 2)
                 .energyExtract(100)
                 .build());
 
         MachineWasher.register(MachineTrade.builder(MapleBankTrade.id("cool_magma"))
-                .addItemInput(ItemIO.of(Items.MAGMA_BLOCK, 1))
-                .addFluidInput(FluidIO.of(Fluids.WATER, 1000))
-                .addItemOutput(ItemIO.of(Items.OBSIDIAN, 1))
+                .addItemInput(Items.MAGMA_BLOCK, 1)
+                .addFluidInput(Fluids.WATER, 1000)
+                .addItemOutput(Items.OBSIDIAN, 1)
                 .energyExtract(200)
                 .build());
     }
 
     private static void registerForge() {
         MachineForge.register(MachineTrade.builder(MapleBankTrade.id("compact_cobblestone"))
-                .addItemInput(ItemIO.of(Items.COBBLESTONE, 9))
-                .addItemOutput(ItemIO.of(Items.STONE, 1))
+                .addItemInput(Items.COBBLESTONE, 9)
+                .addItemOutput(Items.STONE, 1)
                 .energyExtract(50)
                 .build());
 
         MachineForge.register(MachineTrade.builder(MapleBankTrade.id("form_quartz_block"))
-                .addItemInput(ItemIO.of(Items.QUARTZ, 4))
-                .addItemOutput(ItemIO.of(Items.QUARTZ_BLOCK, 1))
+                .addItemInput(Items.QUARTZ, 4)
+                .addItemOutput(Items.QUARTZ_BLOCK, 1)
                 .energyExtract(120)
                 .build());
 
         MachineForge.register(MachineTrade.builder(MapleBankTrade.id("stone_to_sandstone"))
-                .addItemInput(ItemIO.of(Items.STONE, 4))
-                .addItemOutput(ItemIO.of(Items.SANDSTONE, 1))
+                .addItemInput(Items.STONE, 4)
+                .addItemOutput(Items.SANDSTONE, 1)
                 .build());
 
         MachineForge.register(MachineTrade.builder(MapleBankTrade.id("refine_iron_block"))
-                .addItemInput(ItemIO.of(Items.IRON_INGOT, 9))
-                .addItemInput(ItemIO.of(Items.REDSTONE, 4))
-                .addFluidInput(FluidIO.of(Fluids.WATER, 500))
+                .addItemInput(Items.IRON_INGOT, 9)
+                .addItemInput(Items.REDSTONE, 4)
+                .addFluidInput(Fluids.WATER, 500)
                 .energyExtract(400)
-                .addItemOutput(ItemIO.of(Items.IRON_BLOCK, 1))
+                .addItemOutput(Items.IRON_BLOCK, 1)
                 .build());
     }
 
     private static void registerBank(CurrencyResource coins) {
         MachineBank.register(MachineTrade.builder(MapleBankTrade.id("mint_coins"))
-                .addItemInput(ItemIO.of(Items.GOLD_INGOT, 1))
+                .addItemInput(Items.GOLD_INGOT, 1)
                 .energyExtract(100)
-                .addCurrencyInsert(CurrencyIO.of(coins, 40))
+                .addCurrencyInsert(coins, 40)
                 .build());
 
         MachineBank.register(MachineTrade.builder(MapleBankTrade.id("buy_diamond"))
-                .addCurrencyExtract(CurrencyIO.of(coins, 150))
-                .addItemOutput(ItemIO.of(Items.DIAMOND, 1))
+                .addCurrencyExtract(coins, 150)
+                .addItemOutput(Items.DIAMOND, 1)
                 .energyExtract(50)
                 .build());
 
         MachineBank.register(MachineTrade.builder(MapleBankTrade.id("buy_emerald"))
-                .addCurrencyExtract(CurrencyIO.of(coins, 80))
-                .addItemOutput(ItemIO.of(Items.EMERALD, 1))
+                .addCurrencyExtract(coins, 80)
+                .addItemOutput(Items.EMERALD, 1)
                 .energyExtract(30)
                 .build());
 
         MachineBank.register(MachineTrade.builder(MapleBankTrade.id("sell_diamond"))
-                .addItemInput(ItemIO.of(Items.DIAMOND, 1))
-                .addCurrencyInsert(CurrencyIO.of(coins, 100))
+                .addItemInput(Items.DIAMOND, 1)
+                .addCurrencyInsert(coins, 100)
                 .energyExtract(20)
                 .build());
     }
 
     private static void registerPower() {
         MachinePower.register(MachineTrade.builder(MapleBankTrade.id("lava_to_energy"))
-                .addFluidInput(FluidIO.of(Fluids.LAVA, 100))
+                .addFluidInput(Fluids.LAVA, 100)
                 .energyInsert(500)
                 .build());
 
         MachinePower.register(MachineTrade.builder(MapleBankTrade.id("coal_to_energy"))
-                .addItemInput(ItemIO.of(Items.COAL, 1))
+                .addItemInput(Items.COAL, 1)
                 .energyInsert(1_000)
                 .build());
 
         MachinePower.register(MachineTrade.builder(MapleBankTrade.id("blaze_to_energy"))
-                .addItemInput(ItemIO.of(Items.BLAZE_ROD, 1))
+                .addItemInput(Items.BLAZE_ROD, 1)
                 .energyInsert(4_000)
                 .build());
 
         MachinePower.register(MachineTrade.builder(MapleBankTrade.id("coal_block_to_energy"))
-                .addItemInput(ItemIO.of(Items.COAL_BLOCK, 1))
+                .addItemInput(Items.COAL_BLOCK, 1)
                 .energyInsert(10_000)
                 .build());
     }
@@ -172,73 +170,83 @@ public final class MachineTradeRegistration {
     /** 物品柜：只依赖物品与货币，无能量/流体；手动买卖。 */
     private static void registerItemDesk(CurrencyResource coins) {
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("sell_iron"))
-                .addItemInput(ItemIO.of(Items.IRON_INGOT, 1))
-                .addCurrencyInsert(CurrencyIO.of(coins, 20))
+                .addItemInput(Items.IRON_INGOT, 1)
+                .addCurrencyInsert(coins, 20)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("sell_gold"))
-                .addItemInput(ItemIO.of(Items.GOLD_INGOT, 1))
-                .addCurrencyInsert(CurrencyIO.of(coins, 30))
+                .addItemInput(Items.GOLD_INGOT, 1)
+                .addCurrencyInsert(coins, 30)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("sell_diamond"))
-                .addItemInput(ItemIO.of(Items.DIAMOND, 1))
-                .addCurrencyInsert(CurrencyIO.of(coins, 100))
+                .addItemInput(Items.DIAMOND, 1)
+                .addCurrencyInsert(coins, 100)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_diamond"))
-                .addCurrencyExtract(CurrencyIO.of(coins, 150))
-                .addItemOutput(ItemIO.of(Items.DIAMOND, 1))
+                .addCurrencyExtract(coins, 150)
+                .addItemOutput(Items.DIAMOND, 1)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_emerald"))
-                .addCurrencyExtract(CurrencyIO.of(coins, 80))
-                .addItemOutput(ItemIO.of(Items.EMERALD, 1))
+                .addCurrencyExtract(coins, 80)
+                .addItemOutput(Items.EMERALD, 1)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_bread"))
-                .addCurrencyExtract(CurrencyIO.of(coins, 6))
-                .addItemOutput(ItemIO.of(Items.BREAD, 1))
+                .addCurrencyExtract(coins, 6)
+                .addItemOutput(Items.BREAD, 1)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_ccccc"))
-                .addItemInput(ItemIO.of(Items.IRON_INGOT, 1))
-                .addItemOutput(ItemIO.of(Items.GOLD_INGOT, 1))
+                .addItemInput(Items.IRON_INGOT, 1)
+                .addItemOutput(Items.GOLD_INGOT, 1)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_aaa"))
-                .addCurrencyExtract(CurrencyIO.of(coins, 6))
-                .addItemOutput(ItemIO.of(Items.DIAMOND_BLOCK, 1))
+                .addCurrencyExtract(coins, 6)
+                .addItemOutput(Items.DIAMOND_BLOCK, 1)
                 .visibilityHook(new CardExistenceVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_bbb"))
-                .addItemInput(ItemIO.of(Items.EMERALD, 1))
-                .addItemOutput(ItemIO.of(Items.DIAMOND_BLOCK, 1))
+                .addItemInput(Items.EMERALD, 1)
+                .addItemOutput(Items.DIAMOND_BLOCK, 1)
                 .visibilityHook(new CardExistenceVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_dddd"))
-                .addItemInput(ItemIO.of(Items.CLAY, 1))
-                .addItemOutput(ItemIO.of(Items.EMERALD, 1))
+                .addItemInput(Items.CLAY, 1)
+                .addItemOutput(Items.EMERALD, 1)
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_eee"))
-                .addItemInput(ItemIO.of(Items.CLAY, 1))
-                .addItemOutput(ItemIO.of(Items.EMERALD, 1))
+                .addItemInput(Items.CLAY, 1)
+                .addItemOutput(Items.EMERALD, 1)
+                .addDescriptionInvisible(Component.literal("可在地狱中解锁此交易"))
+                .addDescriptionVisible(Component.literal("已在地狱中解锁此交易"))
                 .visibilityHook(new DimensionVisibleHook(Level.NETHER.identifier()))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_fff"))
-                .addItemInput(ItemIO.of(Items.CLAY, 1))
-                .addItemOutput(ItemIO.of(Items.EMERALD, 1))
+                .addItemInput(Items.CLAY, 1)
+                .addItemOutput(Items.EMERALD, 1)
                 .checkHook(new TimeWindowCheckHook(0, 12000))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_ggg"))
-                .addItemInput(ItemIO.of(Items.CLAY, 1))
-                .addItemOutput(ItemIO.of(Items.EMERALD, 1))
+                .addItemInput(Items.CLAY, 1)
+                .addItemOutput(Items.EMERALD, 1)
+                .machineTradeIcon(MapleBankTrade.id("textures/item/leaf.png"))
+                .addDescriptionVisible(Component.literal("说成功了"))
                 .successHook(new LogSuccessHook(Component.literal("成功了")))
+                .build());
+
+        MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_hhh"))
+                .addItemInput(Items.CLAY, 1)
+                .addItemOutput(Items.EMERALD, 1)
+                .visibilityHook(new TimeWindowVisibleHook(0, 12000))
                 .build());
     }
 
@@ -274,8 +282,8 @@ public final class MachineTradeRegistration {
 
         // 岩浆：单流体输入 autoTrade
         AutoSellOresLava.register(MachineTrade.builder(MapleBankTrade.id("sell_lava"))
-                .addFluidInput(FluidIO.of(Fluids.LAVA, 1000))
-                .addCurrencyInsert(CurrencyIO.of(coins, 25))
+                .addFluidInput(Fluids.LAVA, 1000)
+                .addCurrencyInsert(coins, 25)
                 .autoTrade(true)
                 .build());
     }
@@ -314,8 +322,8 @@ public final class MachineTradeRegistration {
                                      Item item,
                                      long price) {
         storage.register(MachineTrade.builder(MapleBankTrade.id(path))
-                .addItemInput(ItemIO.of(item, 1))
-                .addCurrencyInsert(CurrencyIO.of(coins, price))
+                .addItemInput(item, 1)
+                .addCurrencyInsert(coins, price)
                 .autoTrade(true)
                 .build());
     }

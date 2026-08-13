@@ -102,6 +102,7 @@
   "trade.maple_banktrade.fail.item_extract": "无法取出物品。",
   "trade.maple_banktrade.fail.machine_check_failed": "交易前检查返回失败，不满足交易条件",
   "trade.maple_banktrade.fail.machine_insufficient": "资源不足，无法执行交易。",
+  "trade.maple_banktrade.fail.machine_not_visible": "交易不可见，已阻断交易",
   "trade.maple_banktrade.fail.machine_transfer": "交易资源转移失败。",
   "trade.maple_banktrade.fail.no_card": "无法访问银行卡。",
   "trade.maple_banktrade.fail.no_player": "需要玩家才能购买。",

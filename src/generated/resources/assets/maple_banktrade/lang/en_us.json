@@ -102,6 +102,7 @@
   "trade.maple_banktrade.fail.item_extract": "Failed to extract items.",
   "trade.maple_banktrade.fail.machine_check_failed": "The pre-trade check returned a failure because the trading conditions were not met.",
   "trade.maple_banktrade.fail.machine_insufficient": "Insufficient resources to run this trade.",
+  "trade.maple_banktrade.fail.machine_not_visible": "The transaction is not visible, the transaction has been blocked.",
   "trade.maple_banktrade.fail.machine_transfer": "Failed to transfer trade resources.",
   "trade.maple_banktrade.fail.no_card": "Cannot access bank card.",
   "trade.maple_banktrade.fail.no_player": "A player is required to buy.",

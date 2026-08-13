@@ -1,15 +1,14 @@
-package com.maple.maple_banktrade.common.trade.hooks;
+package com.maple.maple_banktrade.trade.hooks.visibleHook;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeContext;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks;
-import com.maple.maple_banktrade.api.trade.machine.MachineTradeRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class TimeWindowCheckHook extends MachineTradeHooks.CheckHook {
+public final class TimeWindowVisibleHook extends MachineTradeHooks.VisibilityHook {
 
     @Persisted
     private long startTick;
@@ -17,7 +16,7 @@ public final class TimeWindowCheckHook extends MachineTradeHooks.CheckHook {
     private long endTick;
 
     @Override
-    public boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade) {
+    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
         long dayTime = context.level().getDefaultClockTime() % 24000L;
         return dayTime >= startTick && dayTime <= endTick;
     }

@@ -65,9 +65,13 @@ public final class MachineTrade implements TradeInfo {
 
     @Persisted
     private boolean autoTrade;
-    private IGuiTexture machineTradeIcon;
+
     @Persisted
-    private List<Component> description;
+    private Identifier machineTradeIcon;
+    @Persisted
+    private List<Component> descriptionVisible;
+    @Persisted
+    private List<Component> descriptionInvisible;
 
     @Persisted
     private MachineTradeHooks.VisibilityHook visibilityHook;
@@ -91,8 +95,9 @@ public final class MachineTrade implements TradeInfo {
         this.currencyExtract = new ArrayList<>();
         this.currencyInsert = new ArrayList<>();
         this.autoTrade = false;
-        this.machineTradeIcon = IGuiTexture.EMPTY;
-        this.description = new ArrayList<>();
+        this.machineTradeIcon = null;
+        this.descriptionVisible = new ArrayList<>();
+        this.descriptionInvisible = new ArrayList<>();
         this.visibilityHook = new MachineTradeHooks.AlwaysVisibleHook();
         this.checkHook = new MachineTradeHooks.PassCheckHook();
         this.successHook = new MachineTradeHooks.NoopSuccessHook();
@@ -101,15 +106,6 @@ public final class MachineTrade implements TradeInfo {
     // ==============================================
     // 业务方法
     // ==============================================
-
-    public boolean hasIcon() {
-        return machineTradeIcon != null && machineTradeIcon != IGuiTexture.EMPTY;
-    }
-
-    public boolean hasDescription() {
-        return !description.isEmpty();
-    }
-
     public boolean hasValidAutoTradeInputs() {
         return itemInputs.size() + fluidInputs.size() == 1;
     }
@@ -144,6 +140,7 @@ public final class MachineTrade implements TradeInfo {
 
     public static UIElement getMachineTradeIcon(MachineTrade trade) {
         var base = new UIElement()
+                .setId(trade.id().toString())
                 .layout(l -> l
                         .width(26).height(26)
                         .alignItems(AlignItems.CENTER)
@@ -152,12 +149,29 @@ public final class MachineTrade implements TradeInfo {
                         .background(Sprites.PROGRESS_CONTAINER));
 
         var icon = new UIElement()
-                .layout(l -> l.width(18).height(18));
+                .layout(l -> l.width(18).height(18))
+                .style(s -> s.background(determineIconTexture(trade)));
 
+        base.addChild(icon);
+        return base;
+    }
+
+    public static void setMachineTradeInvisible(MachineTrade trade, UIElement uiElement) {
+        uiElement.style(s -> s.overlay(Sprites.RECT_RD));
+        uiElement.getChildren().getFirst().style(s -> s.tooltips(buildTooltipLinesInvisible(trade).toArray(new Component[0])));
+    }
+
+    public static void setMachineTradeVisible(MachineTrade trade, UIElement uiElement) {
+        uiElement.style(s -> s.overlay(IGuiTexture.EMPTY));
+        uiElement.getChildren().getFirst().style(s -> s.tooltips(buildTooltipLinesVisible(trade).toArray(new Component[0])));
+    }
+
+    /** 根据交易信息生成可见时文本列表 */
+    private static List<Component> buildTooltipLinesVisible(MachineTrade trade) {
         List<Component> tooltipLines = new ArrayList<>();
 
-        if (trade.description != null) {
-            tooltipLines.addAll(trade.description);
+        if (trade.descriptionVisible != null) {
+            tooltipLines.addAll(trade.descriptionVisible);
         }
 
         boolean hasInputs = !trade.itemInputs.isEmpty() || !trade.fluidInputs.isEmpty() || trade.energyExtract > 0 || !trade.currencyExtract.isEmpty();
@@ -236,42 +250,54 @@ public final class MachineTrade implements TradeInfo {
             }
         }
 
-        icon.style(s -> s.tooltips(tooltipLines.toArray(new Component[0])));
+        return tooltipLines;
+    }
 
-        if (trade.machineTradeIcon != IGuiTexture.EMPTY) {
-            icon.style(s -> s.background(trade.machineTradeIcon));
-        } else {
-            if (!trade.itemOutputs.isEmpty()) {
-                ItemStack[] itemOuts = trade.itemOutputs.stream()
-                        .map(ItemIO::toStack)
-                        .filter(stack -> !stack.isEmpty())
-                        .toArray(ItemStack[]::new);
-                icon.style(s -> s.background(new ItemStackTexture(itemOuts)));
-            } else if (!trade.itemInputs.isEmpty()) {
-                ItemStack[] itemIns = trade.itemInputs.stream()
-                        .map(ItemIO::toStack)
-                        .filter(stack -> !stack.isEmpty())
-                        .toArray(ItemStack[]::new);
-                icon.style(s -> s.background(new ItemStackTexture(itemIns)));
-            } else if (!trade.fluidOutputs.isEmpty()) {
-                FluidStack[] fluidOuts = trade.fluidOutputs.stream()
-                        .map(FluidIO::toStack)
-                        .filter(stack -> !stack.isEmpty())
-                        .toArray(FluidStack[]::new);
-                icon.style(s -> s.background(new FluidStackTexture(fluidOuts)));
-            } else if (!trade.fluidInputs.isEmpty()) {
-                FluidStack[] fluidIns = trade.fluidInputs.stream()
-                        .map(FluidIO::toStack)
-                        .filter(stack -> !stack.isEmpty())
-                        .toArray(FluidStack[]::new);
-                icon.style(s -> s.background(new FluidStackTexture(fluidIns)));
-            } else {
-                icon.style(s -> s.background(SpriteTexture.of(MapleBankTrade.id("textures/item/leaf.png"))));
-            }
+    /** 根据交易信息生成不可见时文本列表 */
+    private static List<Component> buildTooltipLinesInvisible(MachineTrade trade) {
+        List<Component> tooltipLines = new ArrayList<>();
+        tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.unlocked").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
+        if (trade.descriptionInvisible != null) {
+            tooltipLines.addAll(trade.descriptionInvisible);
+        }
+        return tooltipLines;
+    }
+
+    /** 根据交易信息决定图标背景纹理 */
+    private static IGuiTexture determineIconTexture(MachineTrade trade) {
+        // 优先使用自定义纹理
+        if (trade.machineTradeIcon != null) {
+            return SpriteTexture.of(trade.machineTradeIcon);
         }
 
-        base.addChild(icon);
-        return base;
+        // 按优先级：输出物品 → 输入物品 → 输出流体 → 输入流体 → 默认叶子图标
+        if (!trade.itemOutputs.isEmpty()) {
+            ItemStack[] itemOuts = trade.itemOutputs.stream()
+                    .map(ItemIO::toStack)
+                    .filter(stack -> !stack.isEmpty())
+                    .toArray(ItemStack[]::new);
+            return new ItemStackTexture(itemOuts);
+        } else if (!trade.itemInputs.isEmpty()) {
+            ItemStack[] itemIns = trade.itemInputs.stream()
+                    .map(ItemIO::toStack)
+                    .filter(stack -> !stack.isEmpty())
+                    .toArray(ItemStack[]::new);
+            return new ItemStackTexture(itemIns);
+        } else if (!trade.fluidOutputs.isEmpty()) {
+            FluidStack[] fluidOuts = trade.fluidOutputs.stream()
+                    .map(FluidIO::toStack)
+                    .filter(stack -> !stack.isEmpty())
+                    .toArray(FluidStack[]::new);
+            return new FluidStackTexture(fluidOuts);
+        } else if (!trade.fluidInputs.isEmpty()) {
+            FluidStack[] fluidIns = trade.fluidInputs.stream()
+                    .map(FluidIO::toStack)
+                    .filter(stack -> !stack.isEmpty())
+                    .toArray(FluidStack[]::new);
+            return new FluidStackTexture(fluidIns);
+        } else {
+            return SpriteTexture.of(MapleBankTrade.id("textures/item/leaf.png"));
+        }
     }
 
     // ==============================================

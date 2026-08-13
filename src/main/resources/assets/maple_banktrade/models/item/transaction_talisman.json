@@ -2,7 +2,7 @@
 	"parent": "minecraft:item/generated",
 	"textures": {
 		"layer0": "maple_banktrade:item/talisman",
-		"layer1": "maple_banktrade:item/icon"
+		"layer1": "maple_banktrade:item/leaf"
 	},
 	"elements": [
 		{

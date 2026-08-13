@@ -77,9 +77,9 @@ public interface MachineTradeUiHost {
     /**
      * UI 配方全部列表。
      */
-    default List<Map.Entry<Identifier, MachineTrade>> listAllTrades(Identifier tradeTypeId) {
+    default Map<Identifier, MachineTrade> listAllTrades(Identifier tradeTypeId) {
         MachineTradeStorage storage = tradeStorage(tradeTypeId);
-        if (storage != null) return List.copyOf(storage.entries().entrySet());
-        return List.of();
+        if (storage != null) return storage.entries();
+        return Map.of();
     }
 }

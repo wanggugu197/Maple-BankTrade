@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.common.trade.hooks;
+package com.maple.maple_banktrade.trade.hooks.visibleHook;
 
 import net.minecraft.resources.Identifier;
 
@@ -10,13 +10,13 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class CardExistenceVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class DimensionVisibleHook extends MachineTradeHooks.VisibilityHook {
 
     @Persisted
-    Identifier cardNameIndex;
+    private Identifier targetDimension;
 
     @Override
     public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
-        return context.bankCards().stream().anyMatch(card -> cardNameIndex.equals(card.getNameIndex()));
+        return context.level().dimension().identifier().equals(targetDimension);
     }
 }

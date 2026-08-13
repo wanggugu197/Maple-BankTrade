@@ -108,7 +108,7 @@ public abstract class BankCard implements IPersistedSerializable {
     // ==============================================
 
     public static final Codec<BankCard> CODEC = Identifier.CODEC.partialDispatch(
-            "card_type",
+            "cardTypeId",
             card -> DataResult.success(card.getCardTypeId()),
             BankCardType::getCodecResult);
 
