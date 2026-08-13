@@ -183,7 +183,7 @@ public class MBTRegistration {
                                                                      Identifier type,
                                                                      Identifier overlay) {
         return registryCore
-                .componentItem("transaction_talisman_" + type.toString().replace(":", "_"), UIComponentItem::new)
+                .componentItem("transaction_talisman_" + type.getPath(), UIComponentItem::new)
                 .lang("Transaction Talisman")
                 .langCn("交易符令")
                 .attach(new MachineTradeItemAttachment(type))
