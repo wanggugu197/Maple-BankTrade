@@ -256,7 +256,7 @@ public final class MachineTrade implements TradeInfo {
     /** 根据交易信息生成不可见时文本列表 */
     private static List<Component> buildTooltipLinesInvisible(MachineTrade trade) {
         List<Component> tooltipLines = new ArrayList<>();
-        tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.unlocked").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
+        tooltipLines.add(Component.translatable("trade.maple_banktrade.machine.tooltip.invisible").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
         if (trade.descriptionInvisible != null) {
             tooltipLines.addAll(trade.descriptionInvisible);
         }

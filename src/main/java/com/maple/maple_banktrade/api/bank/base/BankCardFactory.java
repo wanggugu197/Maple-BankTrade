@@ -49,11 +49,7 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
         }
         BankCardFactory cardFactory = new BankCardFactory(nameIndex, bankType, factory);
         BANK_CARD_FACTORY_MAP.put(nameIndex, cardFactory);
-        REGISTRY.modifyCreativeModeTab(tabResourceKey, tab -> {
-            ItemStack stack = BANK_CARD_AUTHENTICATION_KEY.asStack();
-            BankDataComponent.CARD_NAME_INDEX.set(stack, nameIndex);
-            tab.accept(stack, CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS);
-        });
+        REGISTRY.modifyCreativeModeTab(tabResourceKey, tab -> tab.accept(cardFactory.getAuthenticationKey(), CreativeModeTab.TabVisibility.PARENT_AND_SEARCH_TABS));
         return cardFactory;
     }
 
@@ -74,6 +70,16 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     /** 获取全部已注册银行卡创建定义，顺序与注册顺序一致。 */
     public static Collection<BankCardFactory> values() {
         return Collections.unmodifiableCollection(BANK_CARD_FACTORY_MAP.values());
+    }
+
+    // ==============================================
+    // 获取对应物品
+    // ==============================================
+
+    public ItemStack getAuthenticationKey() {
+        ItemStack stack = BANK_CARD_AUTHENTICATION_KEY.asStack();
+        BankDataComponent.CARD_NAME_INDEX.set(stack, nameIndex);
+        return stack;
     }
 
     // ==============================================

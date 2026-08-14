@@ -180,7 +180,7 @@ public class MBTLangHandler {
                 "When on, matching recipes sell automatically from inputs.");
 
         // 机器交易配方 Tooltip
-        addLang("trade.maple_banktrade.machine.tooltip.unlocked", "未解锁", "Unlocked");
+        addLang("trade.maple_banktrade.machine.tooltip.invisible", "不满足可见条件", "Visibility condition not met");
         addLang("trade.maple_banktrade.machine.tooltip.inputs", "输入:", "Inputs:");
         addLang("trade.maple_banktrade.machine.tooltip.outputs", "输出:", "Outputs:");
         addLang("trade.maple_banktrade.machine.tooltip.item_entry", " - %sx ", " - %sx ");
