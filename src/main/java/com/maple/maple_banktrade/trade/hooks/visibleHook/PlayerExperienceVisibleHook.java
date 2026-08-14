@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.visibleHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Player;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -10,22 +10,26 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 /**
- * 所在维度钩子：当实体上下为的维度为 {@link #targetDimension} 时返回 true
+ * 玩家经验等级钩子：当触发实体为玩家且经验等级 ≥ {@link #level} 时返回 true。
+ * {@link #flip} 用于反转逻辑
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class DimensionVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class PlayerExperienceVisibleHook extends MachineTradeHooks.VisibilityHook {
 
     @Persisted
-    private Identifier targetDimension;
+    private int level;
     @Persisted
     private boolean flip;
 
-    public DimensionVisibleHook(Identifier targetDimension) {
-        this.targetDimension = targetDimension;
+    public PlayerExperienceVisibleHook(int level) {
+        this(level, false);
     }
 
     @Override
     public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
-        return flip != context.level().dimension().identifier().equals(targetDimension);
+        if (!(context.entity() instanceof Player player)) {
+            return flip;
+        }
+        return flip != (player.experienceLevel >= level);
     }
 }

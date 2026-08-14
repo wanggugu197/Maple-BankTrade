@@ -224,9 +224,6 @@ public class TaggedBankCard extends BankCard {
 
     /**
      * 增加某个条目的进度。
-     * <p>
-     * 增加后的次数不会超过所需次数，若已满则不再增加。
-     * </p>
      *
      * @param entryId 条目 ID
      * @param amount  增加的数量（必须 > 0）
@@ -242,13 +239,8 @@ public class TaggedBankCard extends BankCard {
 
         int current = progress.getOrDefault(entryId, 0);
         int required = infoEntry.requiredCount();
-        if (current >= required) {
-            return true; // 已满，视为已完成
-        }
-        int newCount = Math.min(current + amount, required);
-        if (newCount != current) {
-            progress.put(entryId, newCount);
-        }
+        int newCount = current + amount;
+        progress.put(entryId, newCount);
         return newCount >= required;
     }
 
@@ -256,9 +248,8 @@ public class TaggedBankCard extends BankCard {
      * 重置某个条目的进度为 0。
      *
      * @param entryId 条目 ID
-     * @return 是否实际修改（若原本就是 0 则返回 false）
      */
-    public boolean resetProgress(String entryId) {
-        return progress.remove(entryId) != null;
+    public void resetProgress(String entryId) {
+        progress.remove(entryId);
     }
 }

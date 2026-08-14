@@ -32,7 +32,16 @@ public final class MachineTradeHooks {
     @Getter
     public abstract static class CheckHook implements IPersistedSerializable {
 
-        /** 执行额外检查 */
+        /**
+         * 执行额外检查。
+         * <p>
+         * 可通过 {@link MachineTradeRequest#setDesiredCount(int)} 降低本次交易的期望次数
+         * （限购 / 次数降级），{@link MachineTradeDefinition} 会在本方法返回后重新读取该值，
+         * 并以降级后的次数计算可执行量。
+         * </p>
+         *
+         * @return true 表示检查通过
+         */
         public abstract boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade);
     }
 

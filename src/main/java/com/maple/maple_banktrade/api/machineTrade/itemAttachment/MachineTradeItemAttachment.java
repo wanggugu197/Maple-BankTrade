@@ -2,6 +2,7 @@ package com.maple.maple_banktrade.api.machineTrade.itemAttachment;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -124,7 +125,7 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
     @Override
     public MachineTradeContext createTradeContext(Identifier tradeTypeId) {
         if (player == null) return null;
-        Level level = player.level();
+        ServerLevel level = (ServerLevel) player.level();
         MinecraftServer server = level.getServer();
         MachineTradeStorage storage = tradeStorage(tradeTypeId);
         PlayerInventoryItemStacksResourceHandler itemHandler = new PlayerInventoryItemStacksResourceHandler(player);

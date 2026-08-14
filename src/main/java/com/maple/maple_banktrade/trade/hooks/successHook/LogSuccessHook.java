@@ -10,6 +10,9 @@ import com.maple.maple_banktrade.api.trade.machine.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+/**
+ * 日志回调钩子：成功后向玩家发送日志 {@link #logMessage}
+ */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public final class LogSuccessHook extends MachineTradeHooks.SuccessHook {
 

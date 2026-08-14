@@ -54,26 +54,32 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
                                                     TradeCheckInput.Basic<MachineTradeContext, MachineTradeRequest> input) {
         MachineTradeContext context = input.context();
         MachineTradeRequest request = input.request();
-        int desired = request.desiredCount();
-        if (desired <= 0) {
-            return TradeCheckResult.of(MachineTradePlan.denied(desired));
+        int requested = request.desiredCount();
+        if (requested <= 0) {
+            return TradeCheckResult.of(MachineTradePlan.denied(requested));
         }
 
         MachineTrade trade = context.storage().require(request.tradeId());
         if (trade == null || !trade.isValid()) {
-            return TradeCheckResult.of(MachineTradePlan.denied(desired));
+            return TradeCheckResult.of(MachineTradePlan.denied(requested));
         }
 
         if (!trade.visibilityHook().isVisible(context, trade)) {
             return TradeCheckResult.of(
-                    MachineTradePlan.denied(desired),
+                    MachineTradePlan.denied(requested),
                     List.of(Component.translatable("trade.maple_banktrade.fail.machine_not_visible")));
         }
 
         if (!trade.checkHook().check(context, request, trade)) {
             return TradeCheckResult.of(
-                    MachineTradePlan.denied(desired),
+                    MachineTradePlan.denied(requested),
                     List.of(Component.translatable("trade.maple_banktrade.fail.machine_check_failed")));
+        }
+
+        // CheckHook 可能通过 request.setDesiredCount 降级次数（限购），钩子返回后重新读取
+        int desired = request.desiredCount();
+        if (desired <= 0) {
+            return TradeCheckResult.of(MachineTradePlan.denied(requested));
         }
 
         int actual = maxFeasibleCount(context, trade, desired);

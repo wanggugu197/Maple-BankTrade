@@ -1,5 +1,7 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
+import net.minecraft.world.entity.player.Player;
+
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeContext;
@@ -9,19 +11,26 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 /**
- * 时间区间钩子：当前维度的维度默认时钟时间在 {@link #startTick} {@link #endTick} 之间时返回 true
+ * 玩家经验等级钩子：当触发实体为玩家且经验等级 ≥ {@link #level} 时返回 true。
+ * {@link #flip} 用于反转逻辑
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class TimeWindowCheckHook extends MachineTradeHooks.CheckHook {
+public final class PlayerExperienceCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private long startTick;
+    private int level;
     @Persisted
-    private long endTick;
+    private boolean flip;
+
+    public PlayerExperienceCheckHook(int level) {
+        this(level, false);
+    }
 
     @Override
     public boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade) {
-        long dayTime = context.level().getDefaultClockTime() % 24000L;
-        return dayTime >= startTick && dayTime <= endTick;
+        if (!(context.entity() instanceof Player player)) {
+            return flip;
+        }
+        return flip != (player.experienceLevel >= level);
     }
 }

@@ -10,6 +10,9 @@ import com.maple.maple_banktrade.api.trade.machine.MachineTradeRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+/**
+ * 所在维度钩子：当实体上下为的维度为 {@link #targetDimension} 时返回 true
+ */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public final class DimensionCheckHook extends MachineTradeHooks.CheckHook {
 

@@ -52,6 +52,26 @@ public final class MBTBankStates {
     }
 
     // ==============================================
+    // 快捷脏标记
+    // ==============================================
+
+    /**
+     * 标记全服银行数据需要保存。
+     * 用于 {@link com.maple.maple_banktrade.api.bank.resource.BankCurrencyResourceHandler}
+     * 等无需执行修改逻辑、仅需通知持久化的场景。
+     */
+    public static void markDirty(MinecraftServer server) {
+        Objects.requireNonNull(server, "server");
+        getBankCards(server).setDirty();
+    }
+
+    /** 标记全服银行数据需要保存（ServerLevel 重载）。 */
+    public static void markDirty(ServerLevel level) {
+        Objects.requireNonNull(level, "level");
+        markDirty(level.getServer());
+    }
+
+    // ==============================================
     // 初始化
     // ==============================================
 

@@ -8,18 +8,49 @@ import java.util.Objects;
 
 /**
  * 机器交易请求：目标条目与期望次数（实际次数由 check 降级后写入 plan）。
+ * <p>
+ * 期望次数<b>可变</b>：{@link MachineTradeHooks.CheckHook} 可在 check 阶段通过
+ * {@link #setDesiredCount(int)} 将其降低（限购 / 次数降级），
+ * {@link MachineTradeDefinition} 会在钩子返回后重新读取该值。
+ * </p>
  */
-public record MachineTradeRequest(Identifier tradeId, int desiredCount) implements TradeRequest {
+public final class MachineTradeRequest implements TradeRequest {
 
-    public MachineTradeRequest {
-        Objects.requireNonNull(tradeId, "tradeId");
+    private final Identifier tradeId;
+    private int desiredCount;
+
+    public MachineTradeRequest(Identifier tradeId, int desiredCount) {
+        this.tradeId = Objects.requireNonNull(tradeId, "tradeId");
+        setDesiredCount(desiredCount);
+    }
+
+    public Identifier tradeId() {
+        return tradeId;
+    }
+
+    public int desiredCount() {
+        return desiredCount;
+    }
+
+    /**
+     * 修改期望次数（供 CheckHook 限购 / 次数降级使用）。
+     *
+     * @param desiredCount 新的期望次数，必须为正数
+     */
+    public void setDesiredCount(int desiredCount) {
         if (desiredCount <= 0) {
             throw new IllegalArgumentException("desiredCount must be positive");
         }
+        this.desiredCount = desiredCount;
     }
 
     /** 创建请求。 */
     public static MachineTradeRequest of(Identifier tradeId, int desiredCount) {
         return new MachineTradeRequest(tradeId, desiredCount);
+    }
+
+    @Override
+    public String toString() {
+        return "MachineTradeRequest[" + tradeId + ", desired=" + desiredCount + "]";
     }
 }

@@ -30,6 +30,7 @@ public final class CompositeVisibilityHook extends MachineTradeHooks.VisibilityH
 
     @Override
     public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+        if (requiredCount <= 0) return true;
         if (hooks.isEmpty()) return true;
         int satisfied = 0;
         for (MachineTradeHooks.VisibilityHook hook : hooks) {

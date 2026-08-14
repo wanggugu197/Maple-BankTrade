@@ -402,13 +402,12 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
 
     @Override
     public MachineTradeContext createTradeContext(Identifier tradeTypeId) {
-        Level level = getLevel();
-        if (level == null) return null;
-        MinecraftServer server = level.getServer();
+        if (!(getLevel() instanceof ServerLevel serverLevel)) return null;
+        MinecraftServer server = serverLevel.getServer();
         MachineTradeStorage storage = tradeStorage(tradeTypeId);
         if (server == null || storage == null) return null;
         return new MachineTradeContext(
-                this, null, level, server,
+                this, null, serverLevel, server,
                 itemInput, itemOutput, fluidInput, fluidOutput, energy,
                 resolveCards(cardUuids),
                 storage);
