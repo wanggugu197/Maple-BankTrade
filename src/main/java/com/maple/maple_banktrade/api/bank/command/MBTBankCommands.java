@@ -5,14 +5,18 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.commands.arguments.UuidArgument;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -188,41 +192,13 @@ public final class MBTBankCommands {
         source.sendSystemMessage(Component.translatable("command.mbt_bank.info.name_index", nameOf(card.getNameIndex())));
         source.sendSystemMessage(Component.translatable(
                 "command.mbt_bank.info.permission", Component.translatable(permission.getTranslationKey())));
-        sendCardContent(source, card);
+        source.sendSystemMessage(Component.nullToEmpty(PersistedParser.serializeNBT(card, source.getServer().registryAccess()).toString()));
         return 1;
     }
 
     // ==============================================
     // 工具
     // ==============================================
-
-    private static void sendCardContent(CommandSourceStack source, BankCard card) {
-        if (card instanceof CurrencyStorageBankCard currencyCard) {
-            var currencyIds = currencyCard.getSupportedCurrencyIds();
-            if (currencyIds.isEmpty()) {
-                source.sendSystemMessage(Component.translatable("command.mbt_bank.balance.empty"));
-            } else {
-                source.sendSystemMessage(Component.translatable("command.mbt_bank.balance.header"));
-                currencyIds.stream()
-                        .sorted(Comparator.comparing(Identifier::toString))
-                        .forEach(id -> source.sendSystemMessage(Component.translatable(
-                                "command.mbt_bank.balance.entry",
-                                id.toString(),
-                                currencyCard.getCurrencyBalanceAsString(id))));
-            }
-        }
-        if (card instanceof TaggedBankCard taggedCard) {
-            if (taggedCard.getTags().isEmpty()) {
-                source.sendSystemMessage(Component.translatable("ui.bank.card.detail.tags.empty"));
-            } else {
-                String tags = taggedCard.getTags().stream()
-                        .map(Identifier::toString)
-                        .sorted()
-                        .collect(Collectors.joining(", "));
-                source.sendSystemMessage(Component.translatable("ui.bank.card.detail.tags", tags));
-            }
-        }
-    }
 
     private static Component cardSummary(BankCard card, BankCardPermission permission) {
         return Component.translatable(

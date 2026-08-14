@@ -13,13 +13,15 @@ public final class TradableSingleCurrencyBankCardInfo {
 
     /** 创建简略卡 UI（复用单货币展示）。 */
     public static UIElement createSimplifiedUI(TradableSingleCurrencyBankCard card) {
-        return SingleCurrencyBankCardInfo.createSimplifiedUI(card);
+        UIElement simplified = SingleCurrencyBankCardInfo.createSimplifiedUI(card);
+        simplified.addChild(TradableUI.createTradeHead(card, 0.66f));
+        return simplified;
     }
 
     /** 创建详情卡 UI，并附加交易面板。 */
     public static UIElement createDetailsUI(Player player, TradableSingleCurrencyBankCard card) {
         UIElement detail = SingleCurrencyBankCardInfo.createDetailsUI(player, card);
-        TradableUI.createTradePanel(detail, player, card);
+        TradableUI.addTradePanel(detail, player, card);
         return detail;
     }
 

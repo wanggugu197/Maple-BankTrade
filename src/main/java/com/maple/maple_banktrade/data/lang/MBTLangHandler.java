@@ -42,6 +42,13 @@ public class MBTLangHandler {
         addLang("ui.bank.card.detail.currency_balance", "%s: %s", "%s: %s");
         addLang("ui.bank.card.detail.tags.empty", "标签: 无", "Tags: none");
         addLang("ui.bank.card.detail.tags", "标签: %s", "Tags: %s");
+        addLang("ui.bank.card.detail.info_list.summary", "%s 完成 %s / %s 项", "%s completed %s/%s items");
+        addLang("ui.bank.card.detail.info_list.missing", "信息列表未找到", "Info list not found");
+        addLang("ui.bank.card.detail.info_list.header", "信息列表：%s", "Info list: %s");
+        addLang("ui.bank.card.detail.info_list.empty", "该列表没有条目", "This list has no entries");
+        addLang("ui.bank.card.detail.complete", "已完成", "Completed");
+        addLang("ui.bank.card.detail.incomplete", "未完成", "Incomplete");
+
         addLang("ui.bank.card.manage.open", "\uD83D\uDC64", "\uD83D\uDC64");
         addLang("ui.bank.card.manage.title", "权限管理", "Permissions");
         addLang("ui.bank.card.manage.grant", "授予权限", "Grant");
@@ -54,12 +61,15 @@ public class MBTLangHandler {
         addLang("ui.bank.card.manage.delete_confirm_2", "再次确认!(%s/%s)", "Confirm again!(%s/%s)");
         addLang("ui.bank.card.manage.delete_confirm_3", "正在删除…(%s/%s)", "Deleting…(%s/%s)");
         addLang("ui.bank.card.manage.none", "无", "None");
+
         addLang("bank_card_permission.maple_banktrade.owner", "拥有者", "Owner");
         addLang("bank_card_permission.maple_banktrade.admin", "管理员", "Admin");
         addLang("bank_card_permission.maple_banktrade.usable", "可使用", "Usable");
         addLang("bank_card_permission.maple_banktrade.unusable", "不可使用", "Unusable");
+
         addLang("currency.maple_banktrade.trade_price", "交易价格: %s %s", "Trade price: %s %s");
         addLang("currency.maple_banktrade.trade_buy_only", "仅购买", "Buy only");
+
         addLang("trade.maple_banktrade.fail.no_card", "无法访问银行卡。", "Cannot access bank card.");
         addLang("trade.maple_banktrade.fail.no_player", "需要玩家才能购买。", "A player is required to buy.");
         addLang("trade.maple_banktrade.fail.unknown_trade", "未知交易项。", "Unknown trade entry.");
@@ -74,7 +84,6 @@ public class MBTLangHandler {
         addLang("trade.maple_banktrade.fail.machine_check_failed", "交易前检查返回失败，不满足交易条件", "The pre-trade check returned a failure because the trading conditions were not met.");
         addLang("trade.maple_banktrade.fail.machine_insufficient", "资源不足，无法执行交易。", "Insufficient resources to run this trade.");
         addLang("trade.maple_banktrade.fail.machine_transfer", "交易资源转移失败。", "Failed to transfer trade resources.");
-        addLang("ui.bank.card.detail.tag_count", "已存储标签 - %s", "Stored tags - %s");
 
         // 银行权限卡 UI
         addLang("ui.maple_banktrade.perm_card.title", "权限卡编辑", "Permission Card Editor");

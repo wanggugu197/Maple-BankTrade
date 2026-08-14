@@ -22,6 +22,7 @@ import com.maple.maple_banktrade.common.bank.BankRegistration;
 import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 import com.maple.maple_banktrade.common.bank.TradableTypeRegistration;
+import com.maple.maple_banktrade.common.infoList.InfoListRegistration;
 import com.maple.maple_banktrade.common.trade.CurrencyItemTradeRegistration;
 import com.maple.maple_banktrade.common.trade.MachineTradeRegistration;
 import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
@@ -65,6 +66,7 @@ public class CommonInit {
         // 初始化内置货币、交易类型显示、银行与银行卡
         CurrencyRegistration.init();
         TradableTypeRegistration.init();
+        InfoListRegistration.init();
         BankRegistration.init();
         CardRegistration.init();
         // 各贸易站：物品 / 流体 / 能量能力（基类统一注册）

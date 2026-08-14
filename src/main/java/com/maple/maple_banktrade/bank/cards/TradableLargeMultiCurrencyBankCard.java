@@ -21,7 +21,7 @@ public class TradableLargeMultiCurrencyBankCard extends LargeMultiCurrencyBankCa
                                                 implements TradableWalletBankCard {
 
     public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("tradable_large_multi_currency");
-    private static final Identifier NO_TRADE_TYPE_ID = MapleBankTrade.id("trade_type/none");
+    private static final Identifier NO_TRADE_TYPE_ID = MapleBankTrade.id("none");
 
     // ==============================================
     // Codec

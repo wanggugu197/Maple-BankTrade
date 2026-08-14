@@ -97,7 +97,7 @@ public final class BankCardInfoUI {
                         .textAlignVertical(Vertical.CENTER)
                         .adaptiveHeight(true)
                         .textWrap(TextWrap.WRAP))
-                .layout(l -> l.width(width).heightAuto());
+                .layout(l -> l.heightAuto().flexGrow(1));
     }
 
     // ==============================================

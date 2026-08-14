@@ -214,7 +214,8 @@ public final class TradingStationUi {
                 .layout(l -> l.width(250).gapAll(1).paddingAll(4).alignItems(AlignItems.FLEX_START))
                 .style(s -> s.background(Sprites.RECT_RD_T));
 
-        Label title = label(9);
+        Label title = new Label();
+        title.textStyle(s -> s.adaptiveHeight(true).adaptiveWidth(true).textWrap(TextWrap.WRAP));
         title.bind(DataBindingBuilder.componentS2C(() -> {
             Set<UUID> set = host.getBoundCardUuids();
             int n = set == null ? 0 : set.size();
@@ -226,9 +227,10 @@ public final class TradingStationUi {
                 .layout(l -> l.width(246).gapAll(1).flexDirection(FlexDirection.COLUMN).alignItems(AlignItems.STRETCH));
         Set<UUID> uuids = host.getBoundCardUuids();
         if (uuids == null || uuids.isEmpty()) {
-            Label empty = label(8);
+            Label empty = new Label();
+            empty.textStyle(s -> s.adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(8))
+                    .layout(l -> l.flexGrow(1));
             empty.setValue(Component.translatable("ui.maple_banktrade.trading_station.bound_cards.empty"));
-            empty.layout(l -> l.width(246));
             rows.addChild(empty);
         } else {
             for (UUID uuid : new ArrayList<>(uuids)) {
@@ -311,7 +313,8 @@ public final class TradingStationUi {
         return new UIElement()
                 .layout(l -> l.width(130).alignItems(AlignItems.CENTER))
                 .addChildren(
-                        titleText(title),
+                        new TextElement().setText(title)
+                                .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true)),
                         slotGrid(items.size(), i -> new ItemSlot().bind(items, i)),
                         slotGrid(fluids.size(), i -> new FluidSlot().bind(fluids, i)));
     }
@@ -359,19 +362,5 @@ public final class TradingStationUi {
             tab.style(s -> s.tooltips(type.description().toArray(new Component[0])));
         }
         return tab;
-    }
-
-    // ── 小工具 ────────────────────────────────────────
-
-    private static Label label(int fontSize) {
-        Label label = new Label();
-        label.textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).textWrap(TextWrap.WRAP).fontSize(fontSize));
-        return label;
-    }
-
-    private static TextElement titleText(Component title) {
-        return new TextElement()
-                .setText(title)
-                .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true));
     }
 }

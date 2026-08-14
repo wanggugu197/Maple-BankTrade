@@ -16,7 +16,7 @@ public class TradableSingleCurrencyBankCard extends SingleCurrencyBankCard imple
 
     /** 可交易单货币银行卡类型 ID。 */
     public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("tradable_single_currency");
-    private static final Identifier NO_TRADE_TYPE_ID = MapleBankTrade.id("trade_type/none");
+    private static final Identifier NO_TRADE_TYPE_ID = MapleBankTrade.id("none");
 
     // ==============================================
     // Codec

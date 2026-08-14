@@ -48,7 +48,6 @@ public class MachineTradeUIHelper {
         value.bind(DataBindingBuilder.create(
                 () -> {
                     if (i.incrementAndGet() % 20 == 0) {
-                        MapleBankTrade.LOGGER.info("check");
                         tradesForUi.clear();
                         tradesForUi.addAll(host.listTradesForUi(tradeTypeId));
                     }

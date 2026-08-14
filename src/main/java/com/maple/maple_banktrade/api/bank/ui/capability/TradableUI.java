@@ -26,6 +26,7 @@ import com.mapleutillib.api.resource.ObservableItemResourceHandler;
 import com.mapleutillib.utils.FormattingUtil;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.FlexWrap;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Map;
 import java.util.UUID;
@@ -52,7 +53,7 @@ public class TradableUI {
     // ==============================================
 
     /** 为可交易卡创建卖出槽与买入物品面板。 */
-    public static void createTradePanel(UIElement ui, Player player, BankCard card) {
+    public static void addTradePanel(UIElement ui, Player player, BankCard card) {
         if (!(card instanceof TradableWalletBankCard tradableBankCard)) return;
 
         Identifier tradeTypeId = tradableBankCard.getTradeTypeId();
@@ -72,7 +73,6 @@ public class TradableUI {
                 .style(s -> s
                         .backgroundTexture(panelBackground))
                 .layout(l -> l
-                        .width(BANK_CARD_DETAIL_CONTENT_WIDTH - 2 * WALLET_PAGE_PADDING)
                         .paddingHorizontal(4).paddingVertical(2)
                         .flexDirection(FlexDirection.ROW))
                 .addChild(new UIElement()
@@ -80,7 +80,8 @@ public class TradableUI {
                         .layout(l -> l.height(8).width(8)))
                 .addChild(new TextElement()
                         .setText(tradableType.getDisplayName())
-                        .textStyle(s -> s.adaptiveWidth(true).adaptiveHeight(true).fontSize(9))
+                        .textStyle(s -> s.adaptiveHeight(true).fontSize(9))
+                        .layout(l -> l.flexGrow(1))
                         .style(s -> s.tooltips(tradableType.description().toArray(new Component[0]))));
 
         UIElement content = new UIElement()
@@ -92,23 +93,7 @@ public class TradableUI {
                         .paddingBottom(4)
                         .paddingHorizontal(6));
 
-        ObservableItemResourceHandler sellHandler = new ObservableItemResourceHandler(1);
-        boolean[] trading = { false };
-        sellHandler.setOnChanged((index, _) -> {
-            if (index != 0 || trading[0]) return;
-            trading[0] = true;
-            try {
-                boolean success = canTrade(player, card.getCardUuid()) && CurrencyItemTradeHandler.sellAll(
-                        sellHandler, 0, card.getCardUuid(), player.level().getServer(), storage)
-                        .success();
-                ItemStack remaining = drainInput(sellHandler);
-                if (!remaining.isEmpty() && (!success || !player.getInventory().add(remaining))) {
-                    player.drop(remaining, false);
-                }
-            } finally {
-                trading[0] = false;
-            }
-        });
+        ObservableItemResourceHandler sellHandler = getObservableItemResourceHandler(player, card, storage);
         head.addChild(new ItemSlot().bind(new ItemResourceHandlerSlot(sellHandler, 0))
                 .layout(l -> l.width(0).height(0))
                 .style(s -> s.backgroundTexture(IGuiTexture.EMPTY)));
@@ -144,6 +129,53 @@ public class TradableUI {
 
         panel.addChildren(head, content);
         ui.addChild(panel);
+    }
+
+    public static UIElement createTradeHead(BankCard card, float scale) {
+        if (!(card instanceof TradableWalletBankCard tradableBankCard)) return null;
+
+        Identifier tradeTypeId = tradableBankCard.getTradeTypeId();
+        CurrencyItemTradeStorage storage = TradeRegistry.requireStorage(tradeTypeId, CurrencyItemTradeStorage.class);
+        if (storage == null || storage.isEmpty()) return null;
+
+        TradableType tradableType = TradableType.requireById(tradeTypeId);
+        if (tradableType == null) return null;
+
+        return new UIElement()
+                .style(s -> s
+                        .backgroundTexture(tradableType.backgroundTexture()))
+                .layout(l -> l
+                        .flexDirection(FlexDirection.ROW)
+                        .paddingHorizontal(4).paddingVertical(2))
+                .addChild(new UIElement()
+                        .style(s -> s.background(tradableType.tradableIcon()))
+                        .layout(l -> l.height(8 * scale).width(8 * scale)))
+                .addChild(new TextElement()
+                        .setText(tradableType.getDisplayName())
+                        .textStyle(s -> s.adaptiveHeight(true).fontSize(9 * scale))
+                        .layout(l -> l.flexGrow(1))
+                        .style(s -> s.tooltips(tradableType.description().toArray(new Component[0]))));
+    }
+
+    private static @NonNull ObservableItemResourceHandler getObservableItemResourceHandler(Player player, BankCard card, CurrencyItemTradeStorage storage) {
+        ObservableItemResourceHandler sellHandler = new ObservableItemResourceHandler(1);
+        boolean[] trading = { false };
+        sellHandler.setOnChanged((index, _) -> {
+            if (index != 0 || trading[0]) return;
+            trading[0] = true;
+            try {
+                boolean success = canTrade(player, card.getCardUuid()) && CurrencyItemTradeHandler.sellAll(
+                        sellHandler, 0, card.getCardUuid(), player.level().getServer(), storage)
+                        .success();
+                ItemStack remaining = drainInput(sellHandler);
+                if (!remaining.isEmpty() && (!success || !player.getInventory().add(remaining))) {
+                    player.drop(remaining, false);
+                }
+            } finally {
+                trading[0] = false;
+            }
+        });
+        return sellHandler;
     }
 
     // ==============================================

@@ -15,7 +15,9 @@ public final class TradableLargeMultiCurrencyBankCardInfo {
      * 创建简略卡 UI（复用大额多货币展示）。
      */
     public static UIElement createSimplifiedUI(TradableLargeMultiCurrencyBankCard card) {
-        return LargeMultiCurrencyBankCardInfo.createSimplifiedUI(card);
+        UIElement simplified = LargeMultiCurrencyBankCardInfo.createSimplifiedUI(card);
+        simplified.addChild(TradableUI.createTradeHead(card, 0.66f));
+        return simplified;
     }
 
     /**
@@ -23,7 +25,7 @@ public final class TradableLargeMultiCurrencyBankCardInfo {
      */
     public static UIElement createDetailsUI(Player player, TradableLargeMultiCurrencyBankCard card) {
         UIElement detail = LargeMultiCurrencyBankCardInfo.createDetailsUI(player, card);
-        TradableUI.createTradePanel(detail, player, card);
+        TradableUI.addTradePanel(detail, player, card);
         return detail;
     }
 

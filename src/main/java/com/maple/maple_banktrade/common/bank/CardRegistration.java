@@ -10,6 +10,7 @@ import com.maple.maple_banktrade.api.bank.data.CardInfo;
 import com.maple.maple_banktrade.bank.cards.*;
 import com.maple.maple_banktrade.bank.ui.cardInfos.*;
 import com.maple.maple_banktrade.common.MBTTab;
+import com.maple.maple_banktrade.common.infoList.InfoListRegistration;
 import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
 import com.maple.maple_banktrade.data.lang.MBTLangHandler;
 
@@ -78,7 +79,7 @@ public class CardRegistration {
     public static final BankCardFactory CENTRAL_TAGGED_CARD = BankCardFactory.register(
             MapleBankTrade.id("central_tagged_card"),
             STARRY_SKY,
-            TaggedBankCard::new,
+            (identity) -> new TaggedBankCard(identity, InfoListRegistration.combatList.id()),
             MBTTab.TAB_BANK.getKey());
 
     /** 自然银行单货币卡。 */
@@ -92,7 +93,7 @@ public class CardRegistration {
     public static final BankCardFactory MAGIC_TAGGED_CARD = BankCardFactory.register(
             MapleBankTrade.id("magic_tagged_card"),
             MAGIC,
-            TaggedBankCard::new,
+            (identity) -> new TaggedBankCard(identity, InfoListRegistration.miningList.id()),
             MBTTab.TAB_BANK.getKey());
 
     // ==============================================
@@ -143,7 +144,7 @@ public class CardRegistration {
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(CENTRAL_MULTI_CURRENCY_CARD.nameIndex()), "中央银行多货币卡", "Central Multi Currency Card");
 
         CardInfo.register(CENTRAL_TAGGED_CARD.nameIndex(),
-                Sprites.RECT_RD_LIGHT, Sprites.BORDER1_RT0_TRANSLATE,
+                Sprites.RECT_RD, DEFAULT_DETAIL_BACKGROUND,
                 (_, card) -> TaggedBankCardInfo.createSimplifiedUI((TaggedBankCard) card),
                 (player, card) -> TaggedBankCardInfo.createDetailsUI(player, (TaggedBankCard) card));
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(CENTRAL_TAGGED_CARD.nameIndex()), "中央银行标记卡", "Central Tagged Card");
@@ -155,7 +156,7 @@ public class CardRegistration {
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(NATURE_SINGLE_CURRENCY_CARD.nameIndex()), "自然银行单货币卡", "Nature Single Currency Card");
 
         CardInfo.register(MAGIC_TAGGED_CARD.nameIndex(),
-                Sprites.RECT_RD_LIGHT, Sprites.BORDER1_RT0_TRANSLATE,
+                Sprites.RECT_RD_LIGHT, DEFAULT_DETAIL_BACKGROUND,
                 (_, card) -> TaggedBankCardInfo.createSimplifiedUI((TaggedBankCard) card),
                 (player, card) -> TaggedBankCardInfo.createDetailsUI(player, (TaggedBankCard) card));
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(MAGIC_TAGGED_CARD.nameIndex()), "魔法银行标记卡", "Magic Tagged Card");

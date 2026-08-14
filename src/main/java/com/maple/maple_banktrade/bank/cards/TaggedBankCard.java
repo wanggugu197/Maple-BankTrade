@@ -6,20 +6,28 @@ import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
+import com.maple.maple_banktrade.api.bank.data.InfoList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
+/**
+ * 信息存储卡
+ * <p>
+ * 每张卡通过其 {@link #getNameIndex()} 绑定一个预定义的信息列表（{@link InfoList}），
+ * 卡内存储每个信息条目的当前完成次数。
+ * </p>
+ */
 public class TaggedBankCard extends BankCard {
 
     public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("tagged");
+    private static final Identifier NO_TAGGED_TYPE_ID = MapleBankTrade.id("none");
 
     // ==============================================
-    // Codec
+    // Codec（由 PersistedParser 生成）
     // ==============================================
 
     public static final Codec<TaggedBankCard> CODEC = PersistedParser.createCodec(TaggedBankCard::new);
@@ -32,38 +40,225 @@ public class TaggedBankCard extends BankCard {
     @Persisted
     @Getter
     @Setter
-    private Set<Identifier> tags;
+    private Identifier infoListId;
+
+    /** 进度存储：条目 ID -> 当前已完成次数 */
+    @Persisted
+    @Getter
+    @Setter
+    private Map<String, Integer> progress;
 
     // ==============================================
     // 构造
     // ==============================================
 
+    /** 无参构造（反序列化） */
     public TaggedBankCard() {
-        this.tags = new HashSet<>();
+        this.infoListId = NO_TAGGED_TYPE_ID;
+        this.progress = new LinkedHashMap<>();
     }
 
-    public TaggedBankCard(BankCardIdentity identity) {
-        this(identity, Set.of());
+    /**
+     * 业务构造，使用卡的身份信息创建空进度卡。
+     * 绑定的信息列表由 {@code identity.nameIndex()} 决定。
+     */
+    public TaggedBankCard(BankCardIdentity identity, Identifier infoListId) {
+        this(identity, infoListId, Collections.emptyMap());
     }
 
-    protected TaggedBankCard(BankCardIdentity identity, Set<Identifier> tags) {
-        this(identity, CARD_TYPE_ID, tags);
-    }
-
-    protected TaggedBankCard(BankCardIdentity identity, Identifier cardTypeId, Set<Identifier> tags) {
-        super(identity, cardTypeId);
-        this.tags = new HashSet<>(tags);
+    /**
+     * 完整构造，允许预设进度（供内部或测试使用）。
+     */
+    protected TaggedBankCard(BankCardIdentity identity, Identifier infoListId, Map<String, Integer> initialProgress) {
+        super(identity, CARD_TYPE_ID);
+        this.infoListId = infoListId;
+        this.progress = new LinkedHashMap<>();
+        if (initialProgress != null) {
+            initialProgress.forEach((id, count) -> {
+                if (count > 0) {
+                    this.progress.put(id, count);
+                }
+            });
+        }
     }
 
     // ==============================================
-    // 修改方法
+    // 信息列表绑定
     // ==============================================
 
-    public boolean addTag(Identifier tag) {
-        return tag != null && tags.add(tag);
+    /**
+     * 获取此卡绑定的信息列表。
+     * 列表 ID 即为卡的 {@link #getNameIndex()}。
+     *
+     * @return 对应的 InfoList，若未注册则返回 null
+     */
+    public InfoList getInfoList() {
+        return InfoList.requireByNameIndex(infoListId);
     }
 
-    public boolean removeTag(Identifier tag) {
-        return tag != null && tags.remove(tag);
+    // ==============================================
+    // 进度查询
+    // ==============================================
+
+    /**
+     * 获取某个信息条目的当前完成次数。
+     *
+     * @param entryId 条目 ID
+     * @return 当前次数（若条目不存在于任何列表中，返回 0）
+     */
+    public int getProgress(String entryId) {
+        return progress.getOrDefault(entryId, 0);
+    }
+
+    /**
+     * 获取所有进度的只读视图。
+     */
+    public Map<String, Integer> getAllProgress() {
+        return Collections.unmodifiableMap(progress);
+    }
+
+    /**
+     * 检查某个条目是否已完成（当前次数 >= 所需次数）。
+     *
+     * @param entryId 条目 ID
+     * @return 是否完成；若条目未定义则返回 false
+     */
+    public boolean isComplete(String entryId) {
+        InfoList list = getInfoList();
+        if (list == null) return false;
+        InfoList.InfoEntry infoEntry = list.getEntry(entryId);
+        if (infoEntry == null) return false;
+        return getProgress(entryId) >= infoEntry.requiredCount();
+    }
+
+    /**
+     * 获取某个条目的完成进度比例（0.0 ~ 1.0）。
+     *
+     * @param entryId 条目 ID
+     * @return 比例，若条目未定义则返回 0.0
+     */
+    public float getProgressRatio(String entryId) {
+        InfoList list = getInfoList();
+        if (list == null) return 0.0f;
+        InfoList.InfoEntry infoEntry = list.getEntry(entryId);
+        if (infoEntry == null || infoEntry.requiredCount() <= 0) return 0.0f;
+        return Math.min(1.0f, (float) getProgress(entryId) / infoEntry.requiredCount());
+    }
+
+    // ==============================================
+    // 任务完成统计
+    // ==============================================
+
+    public int getTotalEntries() {
+        InfoList list = getInfoList();
+        return list == null ? 0 : list.entries().size();
+    }
+
+    public int getCompletedEntries() {
+        InfoList list = getInfoList();
+        if (list == null) return 0;
+        int completed = 0;
+        for (String id : list.entries().keySet()) {
+            if (isComplete(id)) completed++;
+        }
+        return completed;
+    }
+
+    public int getCompletionRatio() {
+        int total = getTotalEntries();
+        if (total == 0) return 0;
+        return 100 * getCompletedEntries() / total;
+    }
+
+    // ---- 按 tier 统计 ----
+    public int getTotalEntriesByTier(short tier) {
+        InfoList list = getInfoList();
+        if (list == null) return 0;
+        int completed = 0;
+        for (InfoList.InfoEntry entry : list.entries().values()) {
+            if (entry.tire() == tier) completed++;
+        }
+        return completed;
+    }
+
+    public int getCompletedEntriesByTier(short tier) {
+        InfoList list = getInfoList();
+        if (list == null) return 0;
+        int completed = 0;
+        for (InfoList.InfoEntry entry : list.entries().values()) {
+            if (entry.tire() == tier && isComplete(entry.id())) {
+                completed++;
+            }
+        }
+        return completed;
+    }
+
+    public int getCompletionRatioByTier(short tier) {
+        int total = getTotalEntriesByTier(tier);
+        if (total == 0) return 0;
+        return 100 * getCompletedEntriesByTier(tier) / total;
+    }
+    // ==============================================
+    // 等级列表获取
+    // ==============================================
+
+    /**
+     * 获取该卡绑定的信息列表中所有不重复的 tier 值，按从高到低排序。
+     * 若列表未注册，返回空列表。
+     */
+    public List<Short> getSortedTiers() {
+        InfoList list = getInfoList();
+        if (list == null) return Collections.emptyList();
+        Set<Short> tierSet = new HashSet<>();
+        for (InfoList.InfoEntry entry : list.entries().values()) {
+            tierSet.add(entry.tire());  // 注意字段名为 tire（与 InfoEntry 定义一致）
+        }
+        List<Short> sorted = new ArrayList<>(tierSet);
+        sorted.sort((a, b) -> b.compareTo(a)); // 降序
+        return Collections.unmodifiableList(sorted);
+    }
+
+    // ==============================================
+    // 进度修改
+    // ==============================================
+
+    /**
+     * 增加某个条目的进度。
+     * <p>
+     * 增加后的次数不会超过所需次数，若已满则不再增加。
+     * </p>
+     *
+     * @param entryId 条目 ID
+     * @param amount  增加的数量（必须 > 0）
+     * @return 增加后是否达到完成状态（即增加后 >= requiredCount）
+     * @throws IllegalArgumentException 若条目未定义或 amount <= 0
+     */
+    public boolean addProgress(String entryId, int amount) {
+        if (amount <= 0) throw new IllegalArgumentException("Amount must be positive");
+        InfoList list = getInfoList();
+        if (list == null) throw new IllegalStateException("InfoList not found for nameIndex: " + getNameIndex());
+        InfoList.InfoEntry infoEntry = list.getEntry(entryId);
+        if (infoEntry == null) throw new IllegalArgumentException("Unknown entry id: " + entryId);
+
+        int current = progress.getOrDefault(entryId, 0);
+        int required = infoEntry.requiredCount();
+        if (current >= required) {
+            return true; // 已满，视为已完成
+        }
+        int newCount = Math.min(current + amount, required);
+        if (newCount != current) {
+            progress.put(entryId, newCount);
+        }
+        return newCount >= required;
+    }
+
+    /**
+     * 重置某个条目的进度为 0。
+     *
+     * @param entryId 条目 ID
+     * @return 是否实际修改（若原本就是 0 则返回 false）
+     */
+    public boolean resetProgress(String entryId) {
+        return progress.remove(entryId) != null;
     }
 }
