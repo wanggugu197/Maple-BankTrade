@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -18,6 +19,8 @@ import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.WalletApiRegistration;
 import com.maple.maple_banktrade.api.bank.item.BankDataComponent;
 import com.maple.maple_banktrade.api.trade.base.registry.*;
+import com.maple.maple_banktrade.collaboration.ftbq.reward.ELFTRewardTypes;
+import com.maple.maple_banktrade.collaboration.ftbq.task.ELFTTaskTypes;
 import com.maple.maple_banktrade.common.bank.BankRegistration;
 import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
@@ -49,6 +52,11 @@ public class CommonInit {
         WalletApiRegistration.init(modBus);
         // 交易数据包注册
         TradeRpcHandlers.init();
+
+        if (ModList.get().isLoaded("ftbquests")) {
+            ELFTTaskTypes.init();
+            ELFTRewardTypes.init();
+        }
 
         // 内置内容：银行/卡/货币/交易站/价目（可整体关闭，仅保留 API）
         if (MBTModConfig.enableModContent()) {

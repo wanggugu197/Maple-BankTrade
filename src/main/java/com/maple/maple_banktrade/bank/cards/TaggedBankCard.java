@@ -24,7 +24,6 @@ import java.util.*;
 public class TaggedBankCard extends BankCard {
 
     public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("tagged");
-    private static final Identifier NO_TAGGED_TYPE_ID = MapleBankTrade.id("none");
 
     // ==============================================
     // Codec（由 PersistedParser 生成）
@@ -36,11 +35,6 @@ public class TaggedBankCard extends BankCard {
     // ==============================================
     // 字段
     // ==============================================
-
-    @Persisted
-    @Getter
-    @Setter
-    private Identifier infoListId;
 
     /** 进度存储：条目 ID -> 当前已完成次数 */
     @Persisted
@@ -54,7 +48,6 @@ public class TaggedBankCard extends BankCard {
 
     /** 无参构造（反序列化） */
     public TaggedBankCard() {
-        this.infoListId = NO_TAGGED_TYPE_ID;
         this.progress = new LinkedHashMap<>();
     }
 
@@ -62,16 +55,15 @@ public class TaggedBankCard extends BankCard {
      * 业务构造，使用卡的身份信息创建空进度卡。
      * 绑定的信息列表由 {@code identity.nameIndex()} 决定。
      */
-    public TaggedBankCard(BankCardIdentity identity, Identifier infoListId) {
-        this(identity, infoListId, Collections.emptyMap());
+    public TaggedBankCard(BankCardIdentity identity) {
+        this(identity, Collections.emptyMap());
     }
 
     /**
      * 完整构造，允许预设进度（供内部或测试使用）。
      */
-    protected TaggedBankCard(BankCardIdentity identity, Identifier infoListId, Map<String, Integer> initialProgress) {
+    protected TaggedBankCard(BankCardIdentity identity, Map<String, Integer> initialProgress) {
         super(identity, CARD_TYPE_ID);
-        this.infoListId = infoListId;
         this.progress = new LinkedHashMap<>();
         if (initialProgress != null) {
             initialProgress.forEach((id, count) -> {
@@ -93,7 +85,7 @@ public class TaggedBankCard extends BankCard {
      * @return 对应的 InfoList，若未注册则返回 null
      */
     public InfoList getInfoList() {
-        return InfoList.requireByNameIndex(infoListId);
+        return InfoList.requireByNameIndex(getNameIndex());
     }
 
     // ==============================================
@@ -214,7 +206,7 @@ public class TaggedBankCard extends BankCard {
             tierSet.add(entry.tire());  // 注意字段名为 tire（与 InfoEntry 定义一致）
         }
         List<Short> sorted = new ArrayList<>(tierSet);
-        sorted.sort((a, b) -> b.compareTo(a)); // 降序
+        sorted.sort(Comparator.reverseOrder()); // 降序
         return Collections.unmodifiableList(sorted);
     }
 
@@ -227,21 +219,48 @@ public class TaggedBankCard extends BankCard {
      *
      * @param entryId 条目 ID
      * @param amount  增加的数量（必须 > 0）
-     * @return 增加后是否达到完成状态（即增加后 >= requiredCount）
-     * @throws IllegalArgumentException 若条目未定义或 amount <= 0
+     * @param limit   是否限制上限（true：不超过 requiredCount；false：不限制，可无限累加）
+     * @return 增加后是否达到完成状态（即增加后 >= requiredCount）。如果条目无效或 amount<=0，返回 false。
+     */
+    public boolean addProgress(String entryId, int amount, boolean limit) {
+        if (amount <= 0) {
+            MapleBankTrade.LOGGER.warn("Tried to add non-positive amount {} to entry {}, ignoring.", amount, entryId);
+            return false;
+        }
+        InfoList list = getInfoList();
+        if (list == null) {
+            MapleBankTrade.LOGGER.warn("InfoList not found for nameIndex: {}, cannot add progress to entry {}", getNameIndex(), entryId);
+            return false;
+        }
+        InfoList.InfoEntry infoEntry = list.getEntry(entryId);
+        if (infoEntry == null) {
+            MapleBankTrade.LOGGER.warn("Unknown entry id: {} in InfoList {}, cannot add progress.", entryId, getNameIndex());
+            return false;
+        }
+
+        int required = infoEntry.requiredCount();
+        int current = progress.getOrDefault(entryId, 0);
+        int newCount;
+        if (limit) {
+            newCount = Math.min(current + amount, required);
+        } else {
+            newCount = current + amount;
+        }
+        if (newCount > current) {
+            progress.put(entryId, newCount);
+        }
+        return newCount >= required;
+    }
+
+    /**
+     * 增加某个条目的进度（默认限制上限，保持原有行为）。
+     *
+     * @param entryId 条目 ID
+     * @param amount  增加的数量（必须 > 0）
+     * @return 增加后是否达到完成状态（即增加后 >= requiredCount）。如果条目无效或 amount<=0，返回 false。
      */
     public boolean addProgress(String entryId, int amount) {
-        if (amount <= 0) throw new IllegalArgumentException("Amount must be positive");
-        InfoList list = getInfoList();
-        if (list == null) throw new IllegalStateException("InfoList not found for nameIndex: " + getNameIndex());
-        InfoList.InfoEntry infoEntry = list.getEntry(entryId);
-        if (infoEntry == null) throw new IllegalArgumentException("Unknown entry id: " + entryId);
-
-        int current = progress.getOrDefault(entryId, 0);
-        int required = infoEntry.requiredCount();
-        int newCount = current + amount;
-        progress.put(entryId, newCount);
-        return newCount >= required;
+        return addProgress(entryId, amount, true);
     }
 
     /**

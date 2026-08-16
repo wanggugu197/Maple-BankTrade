@@ -5,11 +5,13 @@ configuration = "4.1.2+26.1.2"
 
 jei = "29.16.0.48"
 jade = "26.1.8+neoforge"
-ftbChunks = "2101.1.11"
-ftbLibrary = "2101.1.21"
 
 ae2 = "26.1.10-beta"
 ldlib2 = "26.1.2.35"
+
+ftbLibrary = "26.1.2.7"
+ftbTeams = "26.1.2.4"
+ftbQuests = "26.1.2.3"
 
 [libraries]
 registrylib = { group = "com.gto", name = "registrylib-neoforge-26.1.2", version.ref = "registryLib" }
@@ -20,10 +22,14 @@ jeiApi = { group = "mezz.jei", name = "jei-26.1.2-neoforge-api", version.ref = "
 jei = { group = "mezz.jei", name = "jei-26.1.2-neoforge", version.ref = "jei" }
 jade = { group = "maven.modrinth", name = "jade", version.ref = "jade" }
 
-ftbChunks = { group = "dev.ftb.mods", name = "ftb-chunks-neoforge", version.ref = "ftbChunks" }
-ftbLibrary = { group = "dev.ftb.mods", name = "ftb-library-neoforge", version.ref = "ftbLibrary" }
-
 ae2 = { group = "org.appliedenergistics", name = "appliedenergistics2", version.ref = "ae2" }
 ldlib2 = { group = "com.lowdragmc.ldlib2", name = "ldlib2-neoforge-26.1", version.ref = "ldlib2" }
+
+# https://maven.ftb.dev/#/releases/dev/ftb/mods/ftb-library-neoforge
+ftbLibrary = { group = "dev.ftb.mods", name = "ftb-library-neoforge", version.ref = "ftbLibrary" }
+# https://maven.ftb.dev/#/releases/dev/ftb/mods/ftb-teams-neoforge
+ftbTeams = { group = "dev.ftb.mods", name = "ftb-teams-neoforge", version.ref = "ftbTeams" }
+# https://maven.ftb.dev/#/releases/dev/ftb/mods/ftb-quests-neoforge
+ftbQuests = { group = "dev.ftb.mods", name = "ftb-quests-neoforge", version.ref = "ftbQuests" }
 
 [bundles]

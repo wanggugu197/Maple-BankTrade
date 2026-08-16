@@ -1,7 +1,7 @@
 {
   "values": [
     "maple_banktrade:item_card_trading_station",
-    "maple_banktrade:auto_trading_station",
-    "maple_banktrade:trading_station"
+    "maple_banktrade:trading_station",
+    "maple_banktrade:auto_trading_station"
   ]
 }

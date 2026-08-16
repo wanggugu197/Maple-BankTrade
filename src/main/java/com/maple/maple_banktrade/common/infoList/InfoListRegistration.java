@@ -3,8 +3,8 @@ package com.maple.maple_banktrade.common.infoList;
 import net.minecraft.network.chat.Component;
 
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
-import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.data.InfoList;
+import com.maple.maple_banktrade.common.bank.CardRegistration;
 
 import java.util.List;
 
@@ -18,10 +18,11 @@ public class InfoListRegistration {
     }
 
     public static final InfoList combatList = InfoList.register(
-            MapleBankTrade.id("combat"),
+            CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(),
             List.of(Component.literal("一些描述信息"), Component.literal("又是一些描述信息")),
             Sprites.RECT_RD_LIGHT);
-    public static final InfoList miningList = InfoList.register(MapleBankTrade.id("mining"),
+    public static final InfoList miningList = InfoList.register(
+            CardRegistration.MAGIC_TAGGED_CARD.nameIndex(),
             List.of(),
             Sprites.RECT_RD_LIGHT);
 

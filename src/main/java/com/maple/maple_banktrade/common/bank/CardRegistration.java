@@ -10,7 +10,6 @@ import com.maple.maple_banktrade.api.bank.data.CardInfo;
 import com.maple.maple_banktrade.bank.cards.*;
 import com.maple.maple_banktrade.bank.ui.cardInfos.*;
 import com.maple.maple_banktrade.common.MBTTab;
-import com.maple.maple_banktrade.common.infoList.InfoListRegistration;
 import com.maple.maple_banktrade.common.trade.TradeTypeRegistration;
 import com.maple.maple_banktrade.data.lang.MBTLangHandler;
 
@@ -79,7 +78,7 @@ public class CardRegistration {
     public static final BankCardFactory CENTRAL_TAGGED_CARD = BankCardFactory.register(
             MapleBankTrade.id("central_tagged_card"),
             STARRY_SKY,
-            (identity) -> new TaggedBankCard(identity, InfoListRegistration.combatList.id()),
+            TaggedBankCard::new,
             MBTTab.TAB_BANK.getKey());
 
     /** 自然银行单货币卡。 */
@@ -93,7 +92,7 @@ public class CardRegistration {
     public static final BankCardFactory MAGIC_TAGGED_CARD = BankCardFactory.register(
             MapleBankTrade.id("magic_tagged_card"),
             MAGIC,
-            (identity) -> new TaggedBankCard(identity, InfoListRegistration.miningList.id()),
+            TaggedBankCard::new,
             MBTTab.TAB_BANK.getKey());
 
     // ==============================================

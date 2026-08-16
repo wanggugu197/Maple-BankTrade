@@ -200,5 +200,57 @@ public class MBTLangHandler {
 
         // 交易符令 Tooltip
         addLang("tooltip.maple_banktrade.transaction_talisman", "可打开商店 - %s", "Openable store - %s");
+
+        // FTBQ 兼容
+        // Task type display names (used in quest editor)
+        addLang("ftbquests.task.maple_banktrade.tagged", "银行卡标记", "Bank Card Tag");
+        addLang("ftbquests.task.maple_banktrade.tagged_progress", "银行卡进度标记", "Bank Card Progress Tag");
+
+        // TaggedTask configuration fields
+        addLang("maple_banktrade.task.tagged.name_index", "银行卡", "Bank Card");
+        addLang("maple_banktrade.task.tagged.entry_id", "标记条目", "Tag Entry");
+        addLang("maple_banktrade.task.tagged.use_progress", "使用进度阈值", "Use Progress Threshold");
+        addLang("maple_banktrade.task.tagged.required_progress", "所需进度", "Required Progress");
+
+        // TaggedProgressTask configuration fields
+        addLang("maple_banktrade.task.tagged_progress.name_index", "银行卡", "Bank Card");
+        addLang("maple_banktrade.task.tagged_progress.mode", "检测模式", "Detection Mode");
+        addLang("maple_banktrade.task.tagged_progress.tier", "等级", "Tier");
+        addLang("maple_banktrade.task.tagged_progress.threshold", "阈值（数量）", "Threshold (number)");
+        addLang("maple_banktrade.task.tagged_progress.percent", "百分比（0~100）", "Percentage (0~100)");
+        addLang("maple_banktrade.task.tagged_progress.target_value", "目标值", "Target Value");
+
+        // TaggedProgressTask mode enum display names
+        addLang("maple_banktrade.task.tagged_progress.mode.total_count", "完成指定数量条目", "Complete N Entries");
+        addLang("maple_banktrade.task.tagged_progress.mode.total_ratio", "完成指定百分比条目", "Complete % of Entries");
+        addLang("maple_banktrade.task.tagged_progress.mode.tier_count", "完成指定等级指定数量条目", "Complete N Entries in Tier");
+        addLang("maple_banktrade.task.tagged_progress.mode.tier_ratio", "完成指定等级指定百分比条目", "Complete % of Entries in Tier");
+        addLang("maple_banktrade.task.tagged_progress.mode.all", "完成所有条目", "Complete All Entries");
+
+        // Reward type display names (used in quest editor)
+        addLang("ftbquests.reward.maple_banktrade.tagged_increase", "标记卡增加进度", "Tagged Card Increase Progress");
+        addLang("ftbquests.reward.maple_banktrade.tagged_reset", "标记卡重置进度", "Tagged Card Reset Progress");
+
+        // TaggedIncreaseReward configuration fields
+        addLang("maple_banktrade.reward.tagged_increase.name_index", "银行卡", "Bank Card");
+        addLang("maple_banktrade.reward.tagged_increase.entry_id", "标记条目", "Tag Entry");
+        addLang("maple_banktrade.reward.tagged_increase.amount", "增加数量", "Increase Amount");
+        addLang("maple_banktrade.reward.tagged_increase.limit", "限制上限", "Limit to Required");
+
+        // TaggedResetReward configuration fields
+        addLang("maple_banktrade.reward.tagged_reset.name_index", "银行卡", "Bank Card");
+        addLang("maple_banktrade.reward.tagged_reset.entry_id", "标记条目", "Tag Entry");
+        addLang("maple_banktrade.reward.tagged_reset.reset", "(重置)", "(Reset)");
+
+        addLang("ftbquests.task.maple_banktrade.currency", "银行卡货币检测", "Bank Card Currency Check");
+        addLang("maple_banktrade.task.currency.currency", "货币类型", "Currency Type");
+        addLang("maple_banktrade.task.currency.amount", "目标数量", "Target Amount");
+        addLang("maple_banktrade.task.currency.consume", "提交时消耗", "Consume on Submit");
+        addLang("maple_banktrade.task.currency.consume_suffix", " (消耗)", " (Consume)");
+        addLang("maple_banktrade.task.currency.detect_only_suffix", " (仅检测)", " (Detect Only)");
+
+        addLang("ftbquests.reward.maple_banktrade.bank_currency", "银行卡货币奖励", "Bank Card Currency Reward");
+        addLang("maple_banktrade.reward.bank_currency.currency", "货币类型", "Currency Type");
+        addLang("maple_banktrade.reward.bank_currency.amount", "数量", "Amount");
     }
 }

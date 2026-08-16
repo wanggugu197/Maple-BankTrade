@@ -9,4 +9,8 @@ dependencies {
     localRuntime(forge.jade)
 
     implementation(forge.ldlib2)
+
+    compileOnly(forge.ftbLibrary)
+    compileOnly(forge.ftbTeams)
+    compileOnly(forge.ftbQuests)
 }
