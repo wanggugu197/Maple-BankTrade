@@ -199,7 +199,7 @@ public class MBTLangHandler {
         addLang("trade.maple_banktrade.machine.tooltip.currency_entry", " - %s ", " - %s ");
 
         // 交易符令 Tooltip
-        addLang("tooltip.maple_banktrade.transaction_talisman", "可打开商店 - %s", "Openable store - %s");
+        addLang("tooltip.maple_banktrade.transaction_talisman", "可打开 - %s", "Openable - %s");
 
         // FTBQ 兼容
         // Task type display names (used in quest editor)

@@ -20,7 +20,6 @@ import dev.ftb.mods.ftblibrary.json5.Json5Util;
 import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
-import dev.ftb.mods.ftbquests.quest.reward.RewardAutoClaim;
 import dev.ftb.mods.ftbquests.quest.reward.RewardType;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,7 +45,6 @@ public class BankCurrencyReward extends Reward {
 
     public BankCurrencyReward(long id, Quest quest) {
         super(id, quest);
-        autoclaim = RewardAutoClaim.INVISIBLE;
     }
 
     @Override
@@ -145,7 +143,6 @@ public class BankCurrencyReward extends Reward {
                 break;
             }
         }
-
         MBTBankStates.markDirty(player.level());
     }
 

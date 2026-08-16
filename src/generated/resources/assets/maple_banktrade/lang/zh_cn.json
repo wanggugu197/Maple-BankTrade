@@ -148,7 +148,7 @@
   "tooltip.maple_banktrade.perm_card.empty": "（未写入任何卡）",
   "tooltip.maple_banktrade.perm_card.entry": " - %s · %s (%s)",
   "tooltip.maple_banktrade.perm_card.entry_unknown": " - %s",
-  "tooltip.maple_banktrade.transaction_talisman": "可打开商店 - %s",
+  "tooltip.maple_banktrade.transaction_talisman": "可打开 - %s",
   "tradable.maple_banktrade.auto_sell_mob_drops": "自动出售·怪物掉落",
   "tradable.maple_banktrade.auto_sell_mob_drops.0": "自动将怪物掉落物出售为硬币。",
   "tradable.maple_banktrade.auto_sell_ores_lava": "自动出售·矿物岩浆",

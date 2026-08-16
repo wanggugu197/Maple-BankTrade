@@ -53,7 +53,6 @@ public class TaggedIncreaseReward extends Reward {
 
     public TaggedIncreaseReward(long id, Quest quest) {
         super(id, quest);
-        autoclaim = RewardAutoClaim.INVISIBLE;
     }
 
     @Override

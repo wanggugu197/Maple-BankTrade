@@ -119,8 +119,18 @@ public final class MachineTradeBuilder {
         return this;
     }
 
+    public MachineTradeBuilder addDescriptionVisible(List<Component> line) {
+        this.descriptionVisible.addAll(line);
+        return this;
+    }
+
     public MachineTradeBuilder addDescriptionInvisible(Component line) {
         this.descriptionInvisible.add(line);
+        return this;
+    }
+
+    public MachineTradeBuilder addDescriptionInvisible(List<Component> line) {
+        this.descriptionInvisible.addAll(line);
         return this;
     }
 

@@ -47,7 +47,6 @@ public class TaggedResetReward extends Reward {
 
     public TaggedResetReward(long id, Quest quest) {
         super(id, quest);
-        autoclaim = RewardAutoClaim.INVISIBLE;
     }
 
     @Override

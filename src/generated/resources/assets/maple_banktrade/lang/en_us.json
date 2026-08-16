@@ -148,7 +148,7 @@
   "tooltip.maple_banktrade.perm_card.empty": "(No cards stored)",
   "tooltip.maple_banktrade.perm_card.entry": " - %s · %s (%s)",
   "tooltip.maple_banktrade.perm_card.entry_unknown": " - %s",
-  "tooltip.maple_banktrade.transaction_talisman": "Openable store - %s",
+  "tooltip.maple_banktrade.transaction_talisman": "Openable - %s",
   "tradable.maple_banktrade.auto_sell_mob_drops": "Auto-Sell Mob Drops",
   "tradable.maple_banktrade.auto_sell_mob_drops.0": "Automatically sell mob drops for coins.",
   "tradable.maple_banktrade.auto_sell_ores_lava": "Auto-Sell Ores & Lava",

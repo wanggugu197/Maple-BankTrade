@@ -1,4 +1,4 @@
-// 26.1.2	2026-08-16T09:43:31.0029765	RegistryCore Provider for maple_banktrade [, Loot Tables, Advancements, Datapack Registries, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), Model Definitions - maple_banktrade, Lang (Languages: en_us for mod: maple_banktrade), maple_banktrade, Lang (Languages: en_ud for mod: maple_banktrade), Lang (Languages: zh_cn for mod: maple_banktrade), Lang (Languages: zh_tw for mod: maple_banktrade), Lang (Languages: ja_jp for mod: maple_banktrade), Lang (Languages: ru_ru for mod: maple_banktrade), Lang (Languages: fr_fr for mod: maple_banktrade), Lang (Languages: de_de for mod: maple_banktrade), Lang (Languages: es_es for mod: maple_banktrade), Lang (Languages: pt_pt for mod: maple_banktrade), Lang (Languages: it_it for mod: maple_banktrade), Lang (Languages: ko_kr for mod: maple_banktrade)]
+// 26.1.2	2026-08-16T18:42:21.9101917	RegistryCore Provider for maple_banktrade [, Loot Tables, Advancements, Datapack Registries, Tags (enchantments), Tags (blocks), Tags (items), Tags (fluids), Tags (entity_types), Model Definitions - maple_banktrade, Lang (Languages: en_us for mod: maple_banktrade), maple_banktrade, Lang (Languages: en_ud for mod: maple_banktrade), Lang (Languages: zh_cn for mod: maple_banktrade), Lang (Languages: zh_tw for mod: maple_banktrade), Lang (Languages: ja_jp for mod: maple_banktrade), Lang (Languages: ru_ru for mod: maple_banktrade), Lang (Languages: fr_fr for mod: maple_banktrade), Lang (Languages: de_de for mod: maple_banktrade), Lang (Languages: es_es for mod: maple_banktrade), Lang (Languages: pt_pt for mod: maple_banktrade), Lang (Languages: it_it for mod: maple_banktrade), Lang (Languages: ko_kr for mod: maple_banktrade)]
 409cc75af1d77bde9c345b59b7b8a8ad1b82a438 assets/maple_banktrade/blockstates/auto_trading_station.json
 b54d35d3fd1cef1d034471197e971f1b7318f8ef assets/maple_banktrade/blockstates/item_card_trading_station.json
 1e4740bde7ba1ac56815dda9f1cc9e91400ca190 assets/maple_banktrade/blockstates/trading_station.json
@@ -10,8 +10,8 @@ c9ac8388f8bd0817592d8a0e1fb3436cd92bd70b assets/maple_banktrade/items/bank_card_
 056b3a775ef403afad6e05e1d992c05bfe76c7fb assets/maple_banktrade/items/trading_station.json
 c9f3c47699538faaa17a63fbd4c16dbb4b89d9c4 assets/maple_banktrade/items/transaction_talisman_machine_item_desk.json
 f0ec4cd2401fc097a4397880d1260a1bb005c4a3 assets/maple_banktrade/items/wallet.json
-d783960f71833a1071b4003efae64c4db2f27465 assets/maple_banktrade/lang/en_us.json
-d28de6cc6ecc061b92cbb6f217ddd01cbe2bf499 assets/maple_banktrade/lang/zh_cn.json
+1c0e80b8e1bd3e2d45bb91cc57e465451e5132e5 assets/maple_banktrade/lang/en_us.json
+85d27f6e527c0235b45ab7aae597cca3ddadd134 assets/maple_banktrade/lang/zh_cn.json
 52d41ead1635d9057f183f94a0d8f123b303e2e9 assets/maple_banktrade/models/block/trading_station/wallet.json
 0c137aaa261d55c1b21ab7cec0087522d65e5c22 assets/maple_banktrade/models/item/bank_card_authentication_key.json
 460ba1a06b95571a7ab3e161be8a77bd0f9e92a4 assets/maple_banktrade/models/item/bank_permissions_card.json
@@ -21,8 +21,8 @@ f770b034e0eafefc4afda88996f7f4402030170b assets/maple_banktrade/models/item/tran
 8667d38d92bb68c982c11e98bc3b69c9f52579c8 data/maple_banktrade/loot_table/blocks/auto_trading_station.json
 af92bd4da929897060f28356a9a2b0da9a5d1074 data/maple_banktrade/loot_table/blocks/item_card_trading_station.json
 a5759ecd9279018d996eedebfce55b0abe180830 data/maple_banktrade/loot_table/blocks/trading_station.json
-3c3e968149f390a83bf5ee021eb962418933953a data/maple_banktrade/tags/block/trading_station.json
-469e3bfecca3656c96543137b2e9fe99e008576e data/maple_banktrade/tags/item/trading_station.json
+3c547ad3f7f1991bdd023b6ef56b5615b018740e data/maple_banktrade/tags/block/trading_station.json
+3c547ad3f7f1991bdd023b6ef56b5615b018740e data/maple_banktrade/tags/item/trading_station.json
 dd75e8836b032eeb49468b93761dfaa920f371f1 data/maple_banktrade/tags/item/trading_talisman.json
 5953be974c4fedfc5d019e4f7047947051cc79be data/minecraft/advancement/recipes/combat/make_bank_permissions_card_builder.json
 a8fbbd5a12f7d50207f40e169ff5298c9dc3f1c6 data/minecraft/advancement/recipes/combat/make_wallet.json

@@ -168,16 +168,23 @@ public class CurrencyTask extends AbstractBooleanTask {
         return findFirstSufficientCard(player) != null;
     }
 
-    // ---------- 修正后的 submitTask ----------
+    // ---------- submitTask ----------
     @Override
     public void submitTask(@NonNull TeamData teamData, @NonNull ServerPlayer player, @NonNull ItemStack craftedItem) {
-        super.submitTask(teamData, player, craftedItem);
         if (consume) {
-            BankCard targetCard = findFirstSufficientCard(player);
-            if (targetCard instanceof CurrencyStorageBankCard currencyCard) {
-                currencyCard.decreaseCurrency(currencyTypeId, amount);
-                MBTBankStates.markDirty(player.level());
+            BankCard card = findFirstSufficientCard(player);
+            if (card instanceof CurrencyStorageBankCard currencyCard) {
+                boolean success = currencyCard.decreaseCurrency(currencyTypeId, amount);
+                if (success) {
+                    MBTBankStates.markDirty(player.level());
+                    super.submitTask(teamData, player, craftedItem);
+                }
             }
         }
+    }
+
+    @Override
+    public boolean consumesResources() {
+        return consume;
     }
 }

@@ -73,8 +73,10 @@ public record InfoList(Identifier id,
     }
 
     public void addEntries(InfoEntry... infoEntry) {
-        for (InfoEntry info : infoEntry) {
-            addEntry(info);
-        }
+        for (InfoEntry info : infoEntry) addEntry(info);
+    }
+
+    public void addEntries(List<InfoEntry> infoEntry) {
+        infoEntry.forEach(this::addEntry);
     }
 }
