@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.resources.Identifier;
 
@@ -12,12 +12,14 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigInteger;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 货币额度钩子：当货币 {@link #currencyTypeId} 量大于 {@link #amount} 时返回 true
+ * 货币额度钩子：当货币 {@link #currencyTypeId} 量大于 {@link #amount} 时可见。
  * {@link #flip} 用于反转逻辑
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class CurrencyAmountVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class CurrencyAmountVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private Identifier currencyTypeId;
@@ -33,12 +35,13 @@ public final class CurrencyAmountVisibleHook extends MachineTradeHooks.Visibilit
     }
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
-        return context.bankCards().stream().anyMatch(card -> {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
+        boolean condition = context.bankCards().stream().anyMatch(card -> {
             if (card instanceof CurrencyStorageBankCard currencyCard) {
                 return flip != currencyCard.getCurrencyBalance(currencyTypeId).compareTo(amount) > 0;
             }
             return false;
         });
+        return condition ? FLAG_VISIBLE : 0;
     }
 }

@@ -15,14 +15,38 @@ import lombok.Setter;
 public final class MachineTradeHooks {
 
     // ============================================
-    // 1. 可见性钩子基类
+    // 状态位常量（最低位控制可见性）
+    // ============================================
+    public static final int FLAG_VISIBLE = 1;           // 0x01
+    public static final int FLAG_COMPLETED = 1 << 1;    // 0x02
+    public static final int FLAG_IN_COOLDOWN = 1 << 2;  // 0x04
+
+    // ============================================
+    // 1. 状态钩子基类
     // ============================================
     @Setter
     @Getter
-    public abstract static class VisibilityHook implements IPersistedSerializable {
+    public abstract static class StateHook implements IPersistedSerializable {
 
-        /** 可见性检查 */
-        public abstract boolean isVisible(MachineTradeContext context, MachineTrade trade);
+        /**
+         * 获取交易在当前上下文下的状态码。
+         * <p>
+         * 最低位 (bit 0) 必须表达可见性：1 可见，0 不可见。
+         * </p>
+         * <p>
+         * 其他位由实现自由定义，用于附加状态信息。
+         * </p>
+         *
+         * @return 状态码
+         */
+        public abstract int getState(MachineTradeContext context, MachineTrade trade);
+
+        /**
+         * 便捷方法：判断是否可见（等价于 {@code (getState(...) & FLAG_VISIBLE) != 0}）
+         */
+        public final boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+            return (getState(context, trade) & FLAG_VISIBLE) != 0;
+        }
     }
 
     // ============================================
@@ -64,11 +88,11 @@ public final class MachineTradeHooks {
     // ============================================
 
     /** 始终可见 */
-    public static final class AlwaysVisibleHook extends VisibilityHook {
+    public static final class AlwaysVisibleStateHook extends StateHook {
 
         @Override
-        public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
-            return true;
+        public int getState(MachineTradeContext context, MachineTrade trade) {
+            return FLAG_VISIBLE;
         }
     }
 

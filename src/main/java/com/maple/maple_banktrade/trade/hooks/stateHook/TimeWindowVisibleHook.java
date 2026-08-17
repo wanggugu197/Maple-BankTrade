@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -7,11 +7,13 @@ import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 时间区间钩子：当前维度的维度默认时钟时间在 {@link #startTick} {@link #endTick} 之间时返回 true
+ * 时间区间钩子：当前维度的默认时钟时间在 {@link #startTick} {@link #endTick} 之间时可见。
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class TimeWindowVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class TimeWindowVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private long startTick;
@@ -19,12 +21,14 @@ public final class TimeWindowVisibleHook extends MachineTradeHooks.VisibilityHoo
     private long endTick;
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         long dayTime = context.level().getDefaultClockTime() % 24000L;
+        boolean inside;
         if (startTick <= endTick) {
-            return dayTime >= startTick && dayTime <= endTick;
+            inside = dayTime >= startTick && dayTime <= endTick;
         } else {
-            return dayTime >= startTick || dayTime <= endTick;
+            inside = dayTime >= startTick || dayTime <= endTick;
         }
+        return inside ? FLAG_VISIBLE : 0;
     }
 }

@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.world.entity.player.Player;
 
@@ -9,12 +9,14 @@ import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 玩家经验等级钩子：当触发实体为玩家且经验等级 ≥ {@link #level} 时返回 true。
+ * 玩家经验等级钩子：当触发实体为玩家且经验等级 ≥ {@link #level} 时可见。
  * {@link #flip} 用于反转逻辑
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class PlayerExperienceVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class PlayerExperienceVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private int level;
@@ -26,10 +28,10 @@ public final class PlayerExperienceVisibleHook extends MachineTradeHooks.Visibil
     }
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         if (!(context.entity() instanceof Player player)) {
-            return flip;
+            return flip ? FLAG_VISIBLE : 0;
         }
-        return flip != (player.experienceLevel >= level);
+        return (flip != (player.experienceLevel >= level)) ? FLAG_VISIBLE : 0;
     }
 }

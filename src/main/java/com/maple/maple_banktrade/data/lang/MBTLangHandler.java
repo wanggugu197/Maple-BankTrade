@@ -190,6 +190,7 @@ public class MBTLangHandler {
 
         // 机器交易配方 Tooltip
         addLang("trade.maple_banktrade.machine.tooltip.invisible", "不满足可见条件", "Visibility condition not met");
+        addLang("trade.maple_banktrade.machine.tooltip.completed", "已完成", "Completed");
         addLang("trade.maple_banktrade.machine.tooltip.inputs", "输入:", "Inputs:");
         addLang("trade.maple_banktrade.machine.tooltip.outputs", "输出:", "Outputs:");
         addLang("trade.maple_banktrade.machine.tooltip.item_entry", " - %sx ", " - %sx ");

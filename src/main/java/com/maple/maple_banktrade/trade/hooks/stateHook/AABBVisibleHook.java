@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.core.BlockPos;
 
@@ -9,11 +9,13 @@ import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 矩形区域钩子：当所在位置在由 {@link #minPos} 和 {@link #maxPos} 定义的轴对齐区域内时返回 true。
+ * 矩形区域钩子：当所在位置在由 {@link #minPos} 和 {@link #maxPos} 定义的轴对齐区域内时可见。
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class AABBVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class AABBVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private BlockPos minPos;
@@ -21,12 +23,12 @@ public final class AABBVisibleHook extends MachineTradeHooks.VisibilityHook {
     private BlockPos maxPos;
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         BlockPos pos = context.getPos();
-        if (pos == null) return false;
+        if (pos == null) return 0;
 
         // 确保 min 和 max 有效
-        if (minPos == null || maxPos == null) return false;
+        if (minPos == null || maxPos == null) return 0;
         int minX = Math.min(minPos.getX(), maxPos.getX());
         int minY = Math.min(minPos.getY(), maxPos.getY());
         int minZ = Math.min(minPos.getZ(), maxPos.getZ());
@@ -34,8 +36,9 @@ public final class AABBVisibleHook extends MachineTradeHooks.VisibilityHook {
         int maxY = Math.max(minPos.getY(), maxPos.getY());
         int maxZ = Math.max(minPos.getZ(), maxPos.getZ());
 
-        return pos.getX() >= minX && pos.getX() <= maxX &&
+        boolean inside = pos.getX() >= minX && pos.getX() <= maxX &&
                 pos.getY() >= minY && pos.getY() <= maxY &&
                 pos.getZ() >= minZ && pos.getZ() <= maxZ;
+        return inside ? FLAG_VISIBLE : 0;
     }
 }

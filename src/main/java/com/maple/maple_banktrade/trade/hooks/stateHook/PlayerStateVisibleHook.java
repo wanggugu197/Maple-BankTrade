@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.world.entity.player.Player;
 
@@ -13,15 +13,17 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 玩家身份钩子：当触发实体为玩家且 UUID / 玩家名匹配时返回 true。
+ * 玩家身份钩子：当触发实体为玩家且 UUID / 玩家名匹配时可见。
  * <p>
  * {@link #flip} 用于反转逻辑；{@link #playerUuid} 与 {@link #playerName} 均为空时匹配任意玩家；
- * 非玩家触发者（如纯机器）时返回 {@link #flip}。
+ * 非玩家触发者（如纯机器）时按 {@link #flip} 决定可见性。
  * </p>
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class PlayerStateVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class PlayerStateVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     @Nullable
@@ -41,9 +43,9 @@ public final class PlayerStateVisibleHook extends MachineTradeHooks.VisibilityHo
     }
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         if (!(context.entity() instanceof Player player)) {
-            return flip;
+            return flip ? FLAG_VISIBLE : 0;
         }
         boolean match;
         if (playerUuid != null) {
@@ -53,6 +55,6 @@ public final class PlayerStateVisibleHook extends MachineTradeHooks.VisibilityHo
         } else {
             match = true;
         }
-        return flip != match;
+        return (flip != match) ? FLAG_VISIBLE : 0;
     }
 }

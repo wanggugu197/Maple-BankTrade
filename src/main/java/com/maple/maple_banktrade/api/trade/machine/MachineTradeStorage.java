@@ -74,7 +74,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         List<Map.Entry<Identifier, MachineTrade>> visible = new ArrayList<>();
         for (Map.Entry<Identifier, MachineTrade> entry : entries().entrySet()) {
             MachineTrade trade = entry.getValue();
-            if (trade.visibilityHook().isVisible(context, trade)) {
+            if (trade.stateHook().isVisible(context, trade)) {
                 visible.add(entry);
             }
         }
@@ -97,7 +97,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
             return null;
         }
         if (context != null) {
-            if (!match.getValue().visibilityHook().isVisible(context, match.getValue())) {
+            if (!match.getValue().stateHook().isVisible(context, match.getValue())) {
                 return null;
             }
         }
@@ -120,7 +120,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
             return null;
         }
         if (context != null) {
-            if (!match.getValue().visibilityHook().isVisible(context, match.getValue())) {
+            if (!match.getValue().stateHook().isVisible(context, match.getValue())) {
                 return null;
             }
         }

@@ -185,6 +185,7 @@
   "trade.maple_banktrade.fail.not_enough_items": "物品数量不足。",
   "trade.maple_banktrade.fail.not_sellable": "该物品不可出售。",
   "trade.maple_banktrade.fail.unknown_trade": "未知交易项。",
+  "trade.maple_banktrade.machine.tooltip.completed": "已完成",
   "trade.maple_banktrade.machine.tooltip.currency_entry": " - %s ",
   "trade.maple_banktrade.machine.tooltip.energy_extract": " - 消耗 %s FE",
   "trade.maple_banktrade.machine.tooltip.energy_insert": " - 产出 %s FE",

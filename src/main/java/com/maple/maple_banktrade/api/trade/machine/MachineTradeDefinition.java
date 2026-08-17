@@ -64,7 +64,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
             return TradeCheckResult.of(MachineTradePlan.denied(requested));
         }
 
-        if (!trade.visibilityHook().isVisible(context, trade)) {
+        if (!trade.stateHook().isVisible(context, trade)) {
             return TradeCheckResult.of(
                     MachineTradePlan.denied(requested),
                     List.of(Component.translatable("trade.maple_banktrade.fail.machine_not_visible")));

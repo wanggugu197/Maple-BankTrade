@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.resources.Identifier;
 
@@ -11,12 +11,14 @@ import com.maple.maple_banktrade.bank.cards.TaggedBankCard;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 标记进度钩子：当标记卡 {@link #nameIndex} 中的 {@link #id} 进度大于 {@link #progress} 时返回 true
+ * 标记进度钩子：当标记卡 {@link #nameIndex} 中的 {@link #id} 进度大于 {@link #progress} 时可见。
  * {@link #flip} 用于反转逻辑
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class TaggedProgressVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class TaggedProgressVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private Identifier nameIndex;
@@ -35,13 +37,13 @@ public final class TaggedProgressVisibleHook extends MachineTradeHooks.Visibilit
     }
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         BankCard card = context.bankCards().stream()
                 .filter(c -> c.getNameIndex().equals(nameIndex))
                 .findAny().orElse(null);
         if (card instanceof TaggedBankCard taggedCard) {
-            return flip != taggedCard.getProgress(id) >= progress;
+            return (flip != (taggedCard.getProgress(id) >= progress)) ? FLAG_VISIBLE : 0;
         }
-        return flip;
+        return flip ? FLAG_VISIBLE : 0;
     }
 }

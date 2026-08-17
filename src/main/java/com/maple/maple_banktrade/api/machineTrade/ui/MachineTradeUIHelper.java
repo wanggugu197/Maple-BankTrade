@@ -3,6 +3,7 @@ package com.maple.maple_banktrade.api.machineTrade.ui;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
+import com.google.common.reflect.TypeToken;
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.SyncStrategy;
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
@@ -19,6 +20,8 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.data.TradableType;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeContext;
+import com.maple.maple_banktrade.api.trade.machine.MachineTradeUI;
 import com.mapleutillib.utils.RLUtils;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.FlexWrap;
@@ -39,38 +42,43 @@ public class MachineTradeUIHelper {
 
         var grid = new UIElement().layout(l -> l.width(260).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
 
-        List<Map.Entry<Identifier, MachineTrade>> tradesForUi = host.listTradesForUi(tradeTypeId);
-        AtomicInteger i = new AtomicInteger();
-        var value = new BindableValue<String[]>()
-                .setValue(tradesForUi.stream()
-                        .map(entry -> entry.getKey().toString())
-                        .toArray(String[]::new), true);
-        value.bind(DataBindingBuilder.create(
-                () -> {
-                    if (i.incrementAndGet() % 20 == 0) {
-                        tradesForUi.clear();
-                        tradesForUi.addAll(host.listTradesForUi(tradeTypeId));
-                    }
-                    return tradesForUi.stream()
-                            .map(entry -> entry.getKey().toString())
-                            .toArray(String[]::new);
-                }, _ -> {})
-                .c2sStrategy(SyncStrategy.NONE)
-                .build());
-
+        // 获取全部交易条目（用于 UI 显示）
         Map<Identifier, MachineTrade> trades = host.listAllTrades(tradeTypeId);
+
+        // 添加所有交易按钮（可见/不可见由后续状态控制）
         addTrades(host, trades, tradeTypeId, grid);
 
-        value.registerValueListener(ids -> {
-            Set<String> idSet = new HashSet<>(Arrays.asList(ids));
-            grid.getChildren().forEach(child -> {
-                if (idSet.contains(child.getId())) {
-                    MachineTrade.setMachineTradeVisible(trades.get(RLUtils.parse(child.getId())), child);
-                } else {
-                    MachineTrade.setMachineTradeInvisible(trades.get(RLUtils.parse(child.getId())), child);
-                }
-            });
-        });
+        // 状态映射：ID → 状态码 (int)
+        var value = new BindableValue<Map<String, Integer>>();
+        AtomicInteger counter = new AtomicInteger();
+        Map<String, Integer> map = new LinkedHashMap<>();
+        value.bind(DataBindingBuilder.create(
+                () -> {
+                    if (counter.incrementAndGet() % 20 == 1) {
+                        MachineTradeContext context = host.createTradeContext(tradeTypeId);
+                        if (context != null) {
+                            map.clear();
+                            for (Map.Entry<Identifier, MachineTrade> entry : trades.entrySet())
+                                map.put(entry.getKey().toString(), entry.getValue().stateHook().getState(context, entry.getValue()));
+                        }
+                    }
+                    return Map.copyOf(map);
+                },
+                _ -> {})
+                .syncType(new TypeToken<Map<String, Integer>>() {}.getType())
+                .initialValue(map)
+                .c2sStrategy(SyncStrategy.NONE)
+                .remoteSetter(stateMap -> {
+                    grid.getChildren().forEach(child -> {
+                        String id = child.getId();
+                        Integer state = stateMap.get(id);
+                        if (state == null) state = 0;
+                        MachineTrade trade = trades.get(RLUtils.parse(id));
+                        if (trade == null) return;
+                        MachineTradeUI.setMachineTradeState(trade, child, state);
+                    });
+                })
+                .build());
 
         scroller.addScrollViewChildren(grid, value);
         return scroller;
@@ -106,7 +114,7 @@ public class MachineTradeUIHelper {
             grid.addChild(new Label().setText(Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
         } else {
             trades.forEach((_, entry) -> {
-                UIElement tradeUI = MachineTrade.getMachineTradeIcon(entry);
+                UIElement tradeUI = MachineTradeUI.getMachineTradeIcon(entry);
                 tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
                     if (e.button == 0) e.modifiers = tradeCountFromKeyboard(e);
                 });

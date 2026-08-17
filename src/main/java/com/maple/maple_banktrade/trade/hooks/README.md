@@ -28,9 +28,9 @@ afterSuccess 阶段：
 
 ### 可见性 vs 检查钩子如何选择
 
-| | 可见性钩子 `VisibilityHook` | 检查钩子 `CheckHook` |
+| | 状态钩子 `StateHook` | 检查钩子 `CheckHook` |
 |---|---|---|
-| 方法 | `boolean isVisible(context, trade)` | `boolean check(context, request, trade)` |
+| 方法 | `int getState(context, trade)`（bit 0 = 可见），`isVisible` 便捷方法 | `boolean check(context, request, trade)` |
 | 影响 | 交易条目是否在 UI 显示、自动交易是否匹配 | 交易是否允许执行 |
 | 典型用途 | “完成任务才解锁 / 仅在某地显示” | “雨天才能买 / 每次最多 1 次” |
 | 共用 | 大部分逻辑成对出现（如 `WeatherVisibleHook` / `WeatherCheckHook`） | 同左 |
@@ -41,18 +41,23 @@ afterSuccess 阶段：
 
 | 类 | 作用 |
 |---|---|
-| `MachineTradeHooks.VisibilityHook` | 可见性钩子基类，抽象方法 `isVisible` |
+| `MachineTradeHooks.StateHook` | 状态钩子基类，抽象方法 `int getState(context, trade)`（按位状态码，bit 0 = `FLAG_VISIBLE` 可见）；`isVisible` 为 final 便捷方法 |
 | `MachineTradeHooks.CheckHook` | 检查钩子基类，抽象方法 `check` |
 | `MachineTradeHooks.SuccessHook` | 成功回调基类，抽象方法 `afterSuccess` |
-| `AlwaysVisibleHook` | 默认可见性：始终返回 true |
+| `AlwaysVisibleStateHook` | 默认状态钩子：始终可见（返回 `FLAG_VISIBLE`） |
 | `PassCheckHook` | 默认检查：始终放行 |
 | `NoopSuccessHook` | 默认回调：无操作 |
+
+> 状态码约定：最低位 `FLAG_VISIBLE`（=1）表示可见性；其余位（如 `FLAG_NEED_PASSWORD`、`FLAG_IN_COOLDOWN`）由子类按需定义，`getState` 可组合返回。
 
 ---
 
 ## 3. 可见性钩子（`visibleHook` 包，共 23 个）
 
-> 通用约定：除特别说明外，带 `flip` 字段的钩子均为 `flip != 条件` 语义（`flip=false` 正常判断，`flip=true` 取反）；当判断目标缺失（如卡不存在、无玩家、位置为空）时通常返回 `flip`。
+> 通用约定：全部钩子继承 `MachineTradeHooks.StateHook`，实现 `getState` 返回按位状态码
+> （可见时含 `FLAG_VISIBLE` 位）；除特别说明外，带 `flip` 字段的钩子均为 `flip != 条件` 语义
+> （`flip=false` 正常判断，`flip=true` 取反）；当判断目标缺失（如卡不存在、无玩家、位置为空）时
+> 通常按 `flip` 决定可见性。
 
 ### 3.1 位置 / 环境类
 

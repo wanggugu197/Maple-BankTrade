@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -13,11 +13,14 @@ import com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 群系钩子：当所在位置所属群系与 {@link #biomeId} 匹配时返回 true。
+ * 群系钩子：当所在位置所属群系与 {@link #biomeId} 匹配时可见。
+ * {@link #flip} 用于反转逻辑
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class BiomeVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class BiomeVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private Identifier biomeId;
@@ -29,11 +32,11 @@ public final class BiomeVisibleHook extends MachineTradeHooks.VisibilityHook {
     }
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         BlockPos pos = context.getPos();
-        if (pos == null) return flip;
+        if (pos == null) return flip ? FLAG_VISIBLE : 0;
         ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, biomeId);
         boolean condition = context.level().getBiome(pos).is(key);
-        return flip != condition;
+        return (flip != condition) ? FLAG_VISIBLE : 0;
     }
 }

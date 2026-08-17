@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.resources.Identifier;
 
@@ -11,34 +11,35 @@ import com.maple.maple_banktrade.bank.cards.TaggedBankCard;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_COMPLETED;
+
 /**
- * 标记完成钩子：当标记卡 {@link #nameIndex} 中的 {@link #id} 完成时返回 true
- * {@link #flip} 用于反转逻辑
+ * 仅检查完成状态，不控制可见性。
+ * 当卡片存在且对应任务完成时设置 FLAG_COMPLETED。
  */
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-public final class TaggedCompletedVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class TaggedCompletedStateHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private Identifier nameIndex;
     @Persisted
     private String id;
     @Persisted
-    private boolean flip;
+    private boolean flip; // 反转逻辑（可选）
 
-    public TaggedCompletedVisibleHook(Identifier nameIndex, String id) {
-        this.nameIndex = nameIndex;
-        this.id = id;
-        this.flip = false;
+    public TaggedCompletedStateHook(Identifier nameIndex, String id) {
+        this(nameIndex, id, false);
     }
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         BankCard card = context.bankCards().stream()
                 .filter(c -> c.getNameIndex().equals(nameIndex))
                 .findAny().orElse(null);
-        if (card instanceof TaggedBankCard taggedCard) {
-            return flip != taggedCard.isComplete(id);
+        if (card instanceof TaggedBankCard tagged) {
+            boolean completed = tagged.isComplete(id);
+            return (flip != completed) ? FLAG_COMPLETED : 0;
         }
-        return flip;
+        return flip ? FLAG_COMPLETED : 0;
     }
 }

@@ -1,4 +1,4 @@
-package com.maple.maple_banktrade.trade.hooks.visibleHook;
+package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.resources.Identifier;
 
@@ -13,11 +13,13 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG_VISIBLE;
+
 /**
- * 标记卡多条目完成钩子：当标记卡 {@link #nameIndex} 中的 {@link #ids} 全部完成时返回 true。
+ * 标记卡多条目完成钩子：当标记卡 {@link #nameIndex} 中的 {@link #ids} 全部完成时可见。
  * {@link #flip} 用于反转逻辑
  */
-public final class TaggedMultiCompletedVisibleHook extends MachineTradeHooks.VisibilityHook {
+public final class TaggedMultiCompletedVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
     private Identifier nameIndex;
@@ -42,14 +44,14 @@ public final class TaggedMultiCompletedVisibleHook extends MachineTradeHooks.Vis
     }
 
     @Override
-    public boolean isVisible(MachineTradeContext context, MachineTrade trade) {
+    public int getState(MachineTradeContext context, MachineTrade trade) {
         BankCard card = context.bankCards().stream()
                 .filter(c -> c.getNameIndex().equals(nameIndex))
                 .findAny().orElse(null);
         if (card instanceof TaggedBankCard taggedCard) {
             boolean condition = ids.stream().allMatch(taggedCard::isComplete);
-            return flip != condition;
+            return (flip != condition) ? FLAG_VISIBLE : 0;
         }
-        return flip;
+        return flip ? FLAG_VISIBLE : 0;
     }
 }

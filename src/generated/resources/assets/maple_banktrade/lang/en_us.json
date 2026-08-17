@@ -185,6 +185,7 @@
   "trade.maple_banktrade.fail.not_enough_items": "Not enough items.",
   "trade.maple_banktrade.fail.not_sellable": "This item cannot be sold.",
   "trade.maple_banktrade.fail.unknown_trade": "Unknown trade entry.",
+  "trade.maple_banktrade.machine.tooltip.completed": "Completed",
   "trade.maple_banktrade.machine.tooltip.currency_entry": " - %s ",
   "trade.maple_banktrade.machine.tooltip.energy_extract": " - Extract %s FE",
   "trade.maple_banktrade.machine.tooltip.energy_insert": " - Insert %s FE",

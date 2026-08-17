@@ -15,8 +15,8 @@ import com.maple.maple_banktrade.api.trade.machine.MachineTradeStorage;
 import com.maple.maple_banktrade.common.bank.CardRegistration;
 import com.maple.maple_banktrade.common.bank.CurrencyRegistration;
 import com.maple.maple_banktrade.trade.hooks.checkHook.*;
+import com.maple.maple_banktrade.trade.hooks.stateHook.*;
 import com.maple.maple_banktrade.trade.hooks.successHook.*;
-import com.maple.maple_banktrade.trade.hooks.visibleHook.*;
 
 import java.math.BigInteger;
 import java.util.Set;
@@ -211,13 +211,13 @@ public final class MachineTradeRegistration {
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_aaa"))
                 .addCurrencyExtract(coins, 6)
                 .addItemOutput(Items.DIAMOND_BLOCK, 1)
-                .visibilityHook(new CardExistenceVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
+                .stateHook(new CardExistenceVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_bbb"))
                 .addItemInput(Items.EMERALD, 1)
                 .addItemOutput(Items.DIAMOND_BLOCK, 1)
-                .visibilityHook(new CardExistenceVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
+                .stateHook(new CardExistenceVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex()))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_dddd"))
@@ -230,7 +230,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.EMERALD, 1)
                 .addDescriptionInvisible(Component.literal("可在地狱中解锁此交易"))
                 .addDescriptionVisible(Component.literal("已在地狱中解锁此交易"))
-                .visibilityHook(new DimensionVisibleHook(Level.NETHER.identifier()))
+                .stateHook(new DimensionVisibleHook(Level.NETHER.identifier()))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_fff"))
@@ -250,7 +250,7 @@ public final class MachineTradeRegistration {
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_hhh"))
                 .addItemInput(Items.CLAY, 1)
                 .addItemOutput(Items.EMERALD, 1)
-                .visibilityHook(new TimeWindowVisibleHook(0, 12000))
+                .stateHook(new TimeWindowVisibleHook(0, 12000))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("a1"))
@@ -283,7 +283,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 2)
                 .addDescriptionInvisible(Component.literal("下雨天才可出售黏土"))
                 .addDescriptionVisible(Component.literal("雨天收购：已解锁"))
-                .visibilityHook(new WeatherVisibleHook((short) 1))
+                .stateHook(new WeatherVisibleHook((short) 1))
                 .build());
 
         // 雷暴天才允许执行（WeatherCheckHook）
@@ -301,7 +301,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 3)
                 .addDescriptionInvisible(Component.literal("满月之夜才可交易"))
                 .addDescriptionVisible(Component.literal("满月之夜：已解锁"))
-                .visibilityHook(new MoonPhaseVisibleHook(0))
+                .stateHook(new MoonPhaseVisibleHook(0))
                 .build());
 
         // 高空（Y ≥ 120）才可见（HeightVisibleHook）
@@ -310,7 +310,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 3)
                 .addDescriptionInvisible(Component.literal("在 Y ≥ 120 的高空才可交易"))
                 .addDescriptionVisible(Component.literal("高空交易：已解锁"))
-                .visibilityHook(new HeightVisibleHook(120))
+                .stateHook(new HeightVisibleHook(120))
                 .build());
 
         // 平原群系才可见（BiomeVisibleHook）
@@ -319,7 +319,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 2)
                 .addDescriptionInvisible(Component.literal("在平原群系才可交易"))
                 .addDescriptionVisible(Component.literal("平原群系：已解锁"))
-                .visibilityHook(new BiomeVisibleHook(Identifier.parse("minecraft:plains")))
+                .stateHook(new BiomeVisibleHook(Identifier.parse("minecraft:plains")))
                 .build());
 
         // 海滩群系标签才可见（BiomeTagVisibleHook）
@@ -328,7 +328,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 1)
                 .addDescriptionInvisible(Component.literal("在海滩群系才可交易"))
                 .addDescriptionVisible(Component.literal("海滩群系：已解锁"))
-                .visibilityHook(new BiomeTagVisibleHook(Identifier.parse("minecraft:is_beach")))
+                .stateHook(new BiomeTagVisibleHook(Identifier.parse("minecraft:is_beach")))
                 .build());
 
         // 村庄结构内才可见（StructureTagVisibleHook）
@@ -337,7 +337,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.IRON_INGOT, 4)
                 .addDescriptionInvisible(Component.literal("在村庄内才可交易"))
                 .addDescriptionVisible(Component.literal("村庄内：已解锁"))
-                .visibilityHook(new StructureTagVisibleHook(Identifier.parse("minecraft:village")))
+                .stateHook(new StructureTagVisibleHook(Identifier.parse("minecraft:village")))
                 .build());
 
         // 出生点区域（±100 方块）内才允许执行（AABBCheckHook）
@@ -357,7 +357,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 1)
                 .addDescriptionInvisible(Component.literal("仅玩家 Steve 可交易"))
                 .addDescriptionVisible(Component.literal("玩家 Steve：已解锁"))
-                .visibilityHook(new PlayerStateVisibleHook("Steve"))
+                .stateHook(new PlayerStateVisibleHook("Steve"))
                 .build());
 
         // 指定玩家 UUID 才允许执行（PlayerStateCheckHook，按 UUID；替换为自己的玩家 UUID）
@@ -375,7 +375,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.DIAMOND, 1)
                 .addDescriptionInvisible(Component.literal("30 级才可交易"))
                 .addDescriptionVisible(Component.literal("30 级：已解锁"))
-                .visibilityHook(new PlayerExperienceVisibleHook(30))
+                .stateHook(new PlayerExperienceVisibleHook(30))
                 .build());
 
         // ── 银行卡类：货币额度 / Tagged 进度系列 ──
@@ -386,7 +386,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.DIAMOND_BLOCK, 1)
                 .addDescriptionInvisible(Component.literal("卡上金币需大于 100"))
                 .addDescriptionVisible(Component.literal("卡上金币充足：已解锁"))
-                .visibilityHook(new CurrencyAmountVisibleHook(coins.currencyTypeId(), BigInteger.valueOf(100)))
+                .stateHook(new CurrencyAmountVisibleHook(coins.currencyTypeId(), BigInteger.valueOf(100)))
                 .build());
 
         // combat_task_5 完成才可见（TaggedCompletedVisibleHook）
@@ -395,7 +395,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.IRON_SWORD, 1)
                 .addDescriptionInvisible(Component.literal("完成标记卡任务 combat_task_5 后解锁"))
                 .addDescriptionVisible(Component.literal("combat_task_5 已完成：已解锁"))
-                .visibilityHook(new TaggedCompletedVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), "combat_task_5"))
+                .stateHook(new TaggedCompletedVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), "combat_task_5"))
                 .build());
 
         // combat_task_1 进度 ≥ 5 才可见（TaggedProgressVisibleHook）
@@ -404,7 +404,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.BOW, 1)
                 .addDescriptionInvisible(Component.literal("标记卡任务 combat_task_1 进度需 ≥ 5"))
                 .addDescriptionVisible(Component.literal("combat_task_1 进度达标：已解锁"))
-                .visibilityHook(new TaggedProgressVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), "combat_task_1", 5))
+                .stateHook(new TaggedProgressVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), "combat_task_1", 5))
                 .build());
 
         // combat_task_1 与 combat_task_2 全部完成才可见（TaggedMultiCompletedVisibleHook）
@@ -413,7 +413,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.DIAMOND_HELMET, 1)
                 .addDescriptionInvisible(Component.literal("完成 combat_task_1 与 combat_task_2 后解锁"))
                 .addDescriptionVisible(Component.literal("任务组完成：已解锁"))
-                .visibilityHook(new TaggedMultiCompletedVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(),
+                .stateHook(new TaggedMultiCompletedVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(),
                         Set.of("combat_task_1", "combat_task_2")))
                 .build());
 
@@ -423,7 +423,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.GOLDEN_APPLE, 1)
                 .addDescriptionInvisible(Component.literal("标记卡 tier 1 完成数需 ≥ 3"))
                 .addDescriptionVisible(Component.literal("tier 1 完成数达标：已解锁"))
-                .visibilityHook(new TaggedTierCompletedCountHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), (short) 1, 3))
+                .stateHook(new TaggedTierCompletedCountHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), (short) 1, 3))
                 .build());
 
         // tier 1 完成比例 ≥ 50% 才可见（TaggedTierCompletedRatioHook）
@@ -432,7 +432,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.GOLDEN_APPLE, 1)
                 .addDescriptionInvisible(Component.literal("标记卡 tier 1 完成比例需 ≥ 50%"))
                 .addDescriptionVisible(Component.literal("tier 1 完成比例达标：已解锁"))
-                .visibilityHook(new TaggedTierCompletedRatioHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), (short) 1, 50))
+                .stateHook(new TaggedTierCompletedRatioHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), (short) 1, 50))
                 .build());
 
         // 总完成数 ≥ 5 才可见（TaggedTotalCompletedCountHook）
@@ -441,7 +441,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.ENDER_PEARL, 1)
                 .addDescriptionInvisible(Component.literal("标记卡总完成数需 ≥ 5"))
                 .addDescriptionVisible(Component.literal("总完成数达标：已解锁"))
-                .visibilityHook(new TaggedTotalCompletedCountHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), 5))
+                .stateHook(new TaggedTotalCompletedCountHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), 5))
                 .build());
 
         // 总完成比例 ≥ 30% 才可见（TaggedTotalCompletedRatioHook）
@@ -450,7 +450,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.ENDER_PEARL, 1)
                 .addDescriptionInvisible(Component.literal("标记卡总完成比例需 ≥ 30%"))
                 .addDescriptionVisible(Component.literal("总完成比例达标：已解锁"))
-                .visibilityHook(new TaggedTotalCompletedRatioHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), 30))
+                .stateHook(new TaggedTotalCompletedRatioHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), 30))
                 .build());
 
         // ── 组合 / 限购 ──
@@ -461,7 +461,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.EMERALD, 1)
                 .addDescriptionInvisible(Component.literal("需在白天且携带中央标记卡"))
                 .addDescriptionVisible(Component.literal("白天 + 标记卡：已解锁"))
-                .visibilityHook(new CompositeVisibilityHook(2,
+                .stateHook(new CompositeVisibilityHook(2,
                         new TimeWindowVisibleHook(0, 12000),
                         new CardExistenceVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex())))
                 .build());
@@ -503,7 +503,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.IRON_SWORD, 1)
                 .addDescriptionInvisible(Component.literal("完成 combat_task_1 后解锁（仅下雨天可执行）"))
                 .addDescriptionVisible(Component.literal("任务链第 2 步：已解锁（下雨天可执行）"))
-                .visibilityHook(new TaggedCompletedVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), "combat_task_1"))
+                .stateHook(new TaggedCompletedVisibleHook(CardRegistration.CENTRAL_TAGGED_CARD.nameIndex(), "combat_task_1"))
                 .checkHook(new WeatherCheckHook((short) 1))
                 .build());
 
@@ -513,7 +513,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.DIAMOND_SWORD, 1)
                 .addDescriptionInvisible(Component.literal("解锁 quest_2 后可见"))
                 .addDescriptionVisible(Component.literal("任务链第 3 步：已解锁"))
-                .visibilityHook(new SiblingTradeVisibleHook(MapleBankTrade.id("test_quest_2")))
+                .stateHook(new SiblingTradeVisibleHook(MapleBankTrade.id("test_quest_2")))
                 .build());
 
         // 仅当 quest_2 的检查（下雨）通过才允许执行（SiblingTradeCheckHook）
