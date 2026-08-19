@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "maple_banktrade:item_card_trading_station"
+          "name": "maple_banktrade:trading_station_auto_sell_ores_lava_auto_sell_mob_drops"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "maple_banktrade:blocks/item_card_trading_station"
+  "random_sequence": "maple_banktrade:blocks/trading_station_auto_sell_ores_lava_auto_sell_mob_drops"
 }

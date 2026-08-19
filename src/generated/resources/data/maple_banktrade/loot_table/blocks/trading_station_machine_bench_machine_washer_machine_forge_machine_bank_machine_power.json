@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "maple_banktrade:trading_station"
+          "name": "maple_banktrade:trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "maple_banktrade:blocks/trading_station"
+  "random_sequence": "maple_banktrade:blocks/trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power"
 }

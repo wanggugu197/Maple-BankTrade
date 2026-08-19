@@ -11,11 +11,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "maple_banktrade:auto_trading_station"
+          "name": "maple_banktrade:trading_station_machine_item_desk"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "maple_banktrade:blocks/auto_trading_station"
+  "random_sequence": "maple_banktrade:blocks/trading_station_machine_item_desk"
 }
