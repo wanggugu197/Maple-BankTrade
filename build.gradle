@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'com.gto.gtopublishgradleplugin' version '1.0.24'
+    id 'com.gto.gtopublishgradleplugin' version '1.0.25'
     id 'idea'
     alias libs.plugins.modDevGradle
     alias libs.plugins.spotless
