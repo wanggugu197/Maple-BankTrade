@@ -2,21 +2,27 @@ package com.maple.maple_banktrade.api.machineTrade.station;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.transfer.CombinedResourceHandler;
 import net.neoforged.neoforge.transfer.DelegatingResourceHandler;
 import net.neoforged.neoforge.transfer.ResourceHandler;
-import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import net.neoforged.neoforge.transfer.energy.SimpleEnergyHandler;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.fluid.FluidStacksResourceHandler;
 import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 import net.neoforged.neoforge.transfer.resource.Resource;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
@@ -128,6 +134,11 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
     @Getter
     private final ResourceHandler<FluidResource> fluidCapability;
 
+    /** 1.21.1 管道能力适配器（IItemHandler / IFluidHandler）。 */
+    private final IItemHandler itemCapabilityAdapter;
+
+    private final IFluidHandler fluidCapabilityAdapter;
+
     @Getter
     private final TradingStationStorageSpec storageSpec;
 
@@ -189,13 +200,15 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         wireFluid(fluidOutput, "fluidOutput", false);
 
         // 管道：insert→输入，extract→输出
-        this.itemCapability = new CombinedResourceHandler<>(itemOutput, new InsertOnly<>(itemInput));
-        this.fluidCapability = new CombinedResourceHandler<>(fluidOutput, new InsertOnly<>(fluidInput));
+        this.itemCapability = new CombinedResourceHandler<>(ItemStacksResourceHandler.wrap(itemOutput), new InsertOnly<>(ItemStacksResourceHandler.wrap(itemInput)));
+        this.fluidCapability = new CombinedResourceHandler<>(FluidStacksResourceHandler.wrap(fluidOutput), new InsertOnly<>(FluidStacksResourceHandler.wrap(fluidInput)));
+        this.itemCapabilityAdapter = itemHandlerAdapter(itemCapability);
+        this.fluidCapabilityAdapter = fluidHandlerAdapter(fluidCapability);
     }
 
     private void wireItem(ObservableItemResourceHandler handler, String field, boolean autoTradeOnChange) {
         handler.setContext(this);
-        handler.setOnChanged((_, _) -> {
+        handler.setOnChanged((slot, ignored) -> {
             markDirty(field);
             if (autoTradeOnChange) {
                 scheduleAutoTrade();
@@ -205,7 +218,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
 
     private void wireFluid(ObservableFluidResourceHandler handler, String field, boolean autoTradeOnChange) {
         handler.setContext(this);
-        handler.setOnChanged((_, _) -> {
+        handler.setOnChanged((slot, ignored) -> {
             markDirty(field);
             if (autoTradeOnChange) {
                 scheduleAutoTrade();
@@ -294,38 +307,38 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
 
     // ── 子类默认配方类型 ──
 
-    protected abstract List<Identifier> fallbackTradeTypeIds();
+    protected abstract List<ResourceLocation> fallbackTradeTypeIds();
 
-    protected abstract Identifier fallbackTradeTypeId();
+    protected abstract ResourceLocation fallbackTradeTypeId();
 
     // ── 能力 ──
 
-    public ResourceHandler<ItemResource> getItemCapability(@Nullable Direction side) {
-        return itemCapability;
+    public IItemHandler getItemCapability(@Nullable Direction side) {
+        return itemCapabilityAdapter;
     }
 
-    public ResourceHandler<FluidResource> getFluidCapability(@Nullable Direction side) {
-        return fluidCapability;
+    public IFluidHandler getFluidCapability(@Nullable Direction side) {
+        return fluidCapabilityAdapter;
     }
 
-    public EnergyHandler getEnergyCapability(@Nullable Direction side) {
+    public IEnergyStorage getEnergyCapability(@Nullable Direction side) {
         return energy;
     }
 
     public static void registerCapabilities(
                                             RegisterCapabilitiesEvent event,
                                             BlockEntityType<? extends BaseTradingStationBlockEntity> type) {
-        event.registerBlockEntity(Capabilities.Item.BLOCK, type, BaseTradingStationBlockEntity::getItemCapability);
-        event.registerBlockEntity(Capabilities.Fluid.BLOCK, type, BaseTradingStationBlockEntity::getFluidCapability);
-        event.registerBlockEntity(Capabilities.Energy.BLOCK, type, BaseTradingStationBlockEntity::getEnergyCapability);
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, type, BaseTradingStationBlockEntity::getItemCapability);
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, type, BaseTradingStationBlockEntity::getFluidCapability);
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, type, BaseTradingStationBlockEntity::getEnergyCapability);
     }
 
     // ── 交易类型 ──
 
     @Override
-    public List<Identifier> tradeTypeIds() {
+    public List<ResourceLocation> tradeTypeIds() {
         if (getBlockState().getBlock() instanceof MachineTradeType host) {
-            List<Identifier> configured = host.machineTradeTypes();
+            List<ResourceLocation> configured = host.machineTradeTypes();
             if (configured != null && !configured.isEmpty()) {
                 return List.copyOf(configured);
             }
@@ -333,8 +346,8 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         return fallbackTradeTypeIds();
     }
 
-    public Identifier tradeTypeId() {
-        List<Identifier> ids = tradeTypeIds();
+    public ResourceLocation tradeTypeId() {
+        List<ResourceLocation> ids = tradeTypeIds();
         return ids.isEmpty() ? fallbackTradeTypeId() : ids.getFirst();
     }
 
@@ -401,7 +414,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
     // ── 交易上下文 / 执行 ──
 
     @Override
-    public MachineTradeContext createTradeContext(Identifier tradeTypeId) {
+    public MachineTradeContext createTradeContext(ResourceLocation tradeTypeId) {
         if (!(getLevel() instanceof ServerLevel serverLevel)) return null;
         MinecraftServer server = serverLevel.getServer();
         MachineTradeStorage storage = tradeStorage(tradeTypeId);
@@ -423,7 +436,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
             return 0;
         }
         int success = 0;
-        for (Identifier typeId : tradeTypeIds()) {
+        for (ResourceLocation typeId : tradeTypeIds()) {
             if (isAutoTradeInputEmpty()) {
                 break;
             }
@@ -432,7 +445,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         return success;
     }
 
-    public int autoRunTrades(Identifier tradeTypeId) {
+    public int autoRunTrades(ResourceLocation tradeTypeId) {
         if (!isAutoTradeActive() || tradeTypeId == null) {
             return 0;
         }
@@ -441,16 +454,27 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
     }
 
     public boolean isAutoTradeInputEmpty() {
-        return isResourceHandlerEmpty(itemInput) && isResourceHandlerEmpty(fluidInput);
+        return isItemHandlerEmpty(itemInput) && isFluidHandlerEmpty(fluidInput);
     }
 
-    private static boolean isResourceHandlerEmpty(ResourceHandler<?> handler) {
+    private static boolean isItemHandlerEmpty(ObservableItemResourceHandler handler) {
         if (handler == null) {
             return true;
         }
         for (int i = 0; i < handler.size(); i++) {
-            Resource resource = handler.getResource(i);
-            if (!resource.isEmpty() && handler.getAmountAsInt(i) > 0) {
+            if (!handler.getStackInSlot(i).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isFluidHandlerEmpty(ObservableFluidResourceHandler handler) {
+        if (handler == null) {
+            return true;
+        }
+        for (int i = 0; i < handler.size(); i++) {
+            if (!handler.getFluidInSlot(i).isEmpty()) {
                 return false;
             }
         }
@@ -458,8 +482,8 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
     }
 
     public TradeExecuteResult<MachineTradeDetail> runTrade(
-                                                           Identifier tradeTypeId,
-                                                           Identifier tradeId,
+                                                           ResourceLocation tradeTypeId,
+                                                           ResourceLocation tradeId,
                                                            int desiredCount) {
         Objects.requireNonNull(tradeTypeId, "tradeTypeId");
         Objects.requireNonNull(tradeId, "tradeId");
@@ -476,7 +500,7 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
 
     // ── UI Host ──
     @Override
-    public void runTradeFromUi(Identifier tradeTypeId, Identifier tradeId, int desiredCount) {
+    public void runTradeFromUi(ResourceLocation tradeTypeId, ResourceLocation tradeId, int desiredCount) {
         runTrade(tradeTypeId, tradeId, desiredCount);
     }
 
@@ -543,6 +567,180 @@ public abstract class BaseTradingStationBlockEntity extends DirectionBlockEntity
         public int extract(@NonNull T resource, int amount, @NonNull TransactionContext transaction) {
             return 0;
         }
+    }
+
+    // ── 1.21.1 能力适配器 ──
+
+    /** 将物品资源处理器适配为管道可用的 IItemHandler。 */
+    private static IItemHandler itemHandlerAdapter(ResourceHandler<ItemResource> cap) {
+        return new IItemHandler() {
+
+            @Override
+            public int getSlots() {
+                return cap.size();
+            }
+
+            @Override
+            public ItemStack getStackInSlot(int slot) {
+                ItemResource resource = cap.getResource(slot);
+                return resource.toStack(cap.getAmountAsInt(slot));
+            }
+
+            @Override
+            public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+                if (stack == null || stack.isEmpty()) {
+                    return ItemStack.EMPTY;
+                }
+                ItemResource resource = ItemResource.of(stack);
+                int inserted;
+                if (simulate) {
+                    int current = cap.getAmountAsInt(slot);
+                    ItemResource cur = cap.getResource(slot);
+                    int capLimit = cap.getCapacityAsInt(slot, resource);
+                    int space = Math.max(0, capLimit - (cur.isEmpty() || cur.equals(resource) ? current : 0));
+                    inserted = Math.min(stack.getCount(), space);
+                } else {
+                    inserted = cap.insert(slot, resource, stack.getCount(), null);
+                }
+                if (inserted <= 0) {
+                    return stack;
+                }
+                ItemStack rem = stack.copy();
+                rem.shrink(inserted);
+                return rem;
+            }
+
+            @Override
+            public ItemStack extractItem(int slot, int amount, boolean simulate) {
+                ItemResource resource = cap.getResource(slot);
+                if (resource.isEmpty() || amount <= 0) {
+                    return ItemStack.EMPTY;
+                }
+                int extracted;
+                if (simulate) {
+                    extracted = Math.min(amount, cap.getAmountAsInt(slot));
+                } else {
+                    extracted = cap.extract(slot, resource, amount, null);
+                }
+                return extracted <= 0 ? ItemStack.EMPTY : resource.toStack(extracted);
+            }
+
+            @Override
+            public int getSlotLimit(int slot) {
+                return cap.getCapacityAsInt(slot, ItemResource.empty());
+            }
+
+            @Override
+            public boolean isItemValid(int slot, ItemStack stack) {
+                return cap.isValid(slot, ItemResource.of(stack));
+            }
+        };
+    }
+
+    /** 将流体资源处理器适配为管道可用的 IFluidHandler。 */
+    private static IFluidHandler fluidHandlerAdapter(ResourceHandler<FluidResource> cap) {
+        return new IFluidHandler() {
+
+            @Override
+            public int getTanks() {
+                return cap.size();
+            }
+
+            @Override
+            public FluidStack getFluidInTank(int tank) {
+                FluidResource resource = cap.getResource(tank);
+                return resource.toStack(cap.getAmountAsInt(tank));
+            }
+
+            @Override
+            public int getTankCapacity(int tank) {
+                return cap.getCapacityAsInt(tank, FluidResource.empty());
+            }
+
+            @Override
+            public boolean isFluidValid(int tank, FluidStack stack) {
+                return cap.isValid(tank, FluidResource.of(stack));
+            }
+
+            @Override
+            public int fill(FluidStack resource, FluidAction action) {
+                if (resource == null || resource.isEmpty()) {
+                    return 0;
+                }
+                int remaining = resource.getAmount();
+                int filled = 0;
+                for (int i = 0; i < cap.size() && remaining > 0; i++) {
+                    FluidResource cur = cap.getResource(i);
+                    int capLimit = cap.getCapacityAsInt(i, FluidResource.of(resource));
+                    int space = capLimit - (cur.isEmpty() || cur.matches(resource) ? cap.getAmountAsInt(i) : 0);
+                    if (space <= 0) {
+                        continue;
+                    }
+                    int amount = Math.min(space, remaining);
+                    int inserted = action.execute() ? cap.insert(i, FluidResource.of(resource), amount, null) : amount;
+                    filled += inserted;
+                    remaining -= inserted;
+                    if (!action.execute()) {
+                        remaining = Math.max(0, remaining);
+                    }
+                }
+                return filled;
+            }
+
+            @Override
+            public FluidStack drain(FluidStack resource, FluidAction action) {
+                if (resource == null || resource.isEmpty()) {
+                    return FluidStack.EMPTY;
+                }
+                int remaining = resource.getAmount();
+                FluidStack drained = FluidStack.EMPTY;
+                for (int i = 0; i < cap.size() && remaining > 0; i++) {
+                    FluidResource cur = cap.getResource(i);
+                    if (cur.isEmpty() || !cur.matches(resource)) {
+                        continue;
+                    }
+                    int amount = Math.min(remaining, cap.getAmountAsInt(i));
+                    if (amount <= 0) {
+                        continue;
+                    }
+                    int extracted = action.execute() ? cap.extract(i, cur, amount, null) : amount;
+                    if (drained.isEmpty()) {
+                        drained = resource.copyWithAmount(extracted);
+                    } else {
+                        drained.grow(extracted);
+                    }
+                    remaining -= extracted;
+                }
+                return drained;
+            }
+
+            @Override
+            public FluidStack drain(int maxDrain, FluidAction action) {
+                if (maxDrain <= 0) {
+                    return FluidStack.EMPTY;
+                }
+                int remaining = maxDrain;
+                FluidStack drained = FluidStack.EMPTY;
+                for (int i = 0; i < cap.size() && remaining > 0; i++) {
+                    FluidResource cur = cap.getResource(i);
+                    if (cur.isEmpty()) {
+                        continue;
+                    }
+                    int amount = Math.min(remaining, cap.getAmountAsInt(i));
+                    if (amount <= 0) {
+                        continue;
+                    }
+                    int extracted = action.execute() ? cap.extract(i, cur, amount, null) : amount;
+                    if (drained.isEmpty()) {
+                        drained = cur.toStack(extracted);
+                    } else {
+                        drained.grow(extracted);
+                    }
+                    remaining -= extracted;
+                }
+                return drained;
+            }
+        };
     }
 
     private void refreshOutputsForUiOpen() {

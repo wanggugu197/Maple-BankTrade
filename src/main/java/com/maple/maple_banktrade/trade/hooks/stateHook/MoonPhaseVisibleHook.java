@@ -30,7 +30,7 @@ public final class MoonPhaseVisibleHook extends MachineTradeHooks.StateHook {
 
     @Override
     public int getState(MachineTradeContext context, MachineTrade trade) {
-        long dayTime = context.level().getDefaultClockTime();
+        long dayTime = context.level().getDayTime();
         int current = (int) ((dayTime / 24000L) % 8);
         return (flip != (current == phase)) ? FLAG_VISIBLE : 0;
     }

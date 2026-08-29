@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
@@ -15,8 +15,8 @@ import lombok.Setter;
 public class TradableSingleCurrencyBankCard extends SingleCurrencyBankCard implements TradableWalletBankCard {
 
     /** 可交易单货币银行卡类型 ID。 */
-    public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("tradable_single_currency");
-    private static final Identifier NO_TRADE_TYPE_ID = MapleBankTrade.id("none");
+    public static final ResourceLocation CARD_TYPE_ID = MapleBankTrade.id("tradable_single_currency");
+    private static final ResourceLocation NO_TRADE_TYPE_ID = MapleBankTrade.id("none");
 
     // ==============================================
     // Codec
@@ -32,7 +32,7 @@ public class TradableSingleCurrencyBankCard extends SingleCurrencyBankCard imple
     @Persisted
     @Getter
     @Setter
-    private Identifier tradeTypeId;
+    private ResourceLocation tradeTypeId;
 
     // ==============================================
     // 构造
@@ -42,15 +42,15 @@ public class TradableSingleCurrencyBankCard extends SingleCurrencyBankCard imple
         this.tradeTypeId = NO_TRADE_TYPE_ID;
     }
 
-    public TradableSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, Identifier tradeTypeId) {
+    public TradableSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, ResourceLocation tradeTypeId) {
         this(identity, currencyType, 0L, tradeTypeId);
     }
 
-    public TradableSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, long balance, Identifier tradeTypeId) {
+    public TradableSingleCurrencyBankCard(BankCardIdentity identity, CurrencyType currencyType, long balance, ResourceLocation tradeTypeId) {
         this(identity, CARD_TYPE_ID, currencyType, balance, tradeTypeId);
     }
 
-    protected TradableSingleCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId, CurrencyType currencyType, long balance, Identifier tradeTypeId) {
+    protected TradableSingleCurrencyBankCard(BankCardIdentity identity, ResourceLocation cardTypeId, CurrencyType currencyType, long balance, ResourceLocation tradeTypeId) {
         super(identity, cardTypeId, currencyType, balance);
         this.tradeTypeId = tradeTypeId == null ? NO_TRADE_TYPE_ID : tradeTypeId;
     }

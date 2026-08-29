@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public final class MachineTradeBuilder {
 
-    final Identifier id;
+    final ResourceLocation id;
 
     private final List<MachineTradeIO.ItemIO> itemInputs = new ArrayList<>();
     private final List<MachineTradeIO.ItemIO> itemOutputs = new ArrayList<>();
@@ -34,7 +34,7 @@ public final class MachineTradeBuilder {
     private final List<MachineTradeIO.CurrencyIO> currencyExtract = new ArrayList<>();
     private final List<MachineTradeIO.CurrencyIO> currencyInsert = new ArrayList<>();
     @Nullable
-    private Identifier machineTradeIcon;
+    private ResourceLocation machineTradeIcon;
     private List<List<Component>> description = new ArrayList<>();
     private boolean autoTrade;
     private MachineTradeHooks.StateHook stateHook = new MachineTradeHooks.AlwaysVisibleStateHook();

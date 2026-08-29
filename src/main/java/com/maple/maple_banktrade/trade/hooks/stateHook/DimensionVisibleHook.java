@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.stateHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -19,17 +19,17 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class DimensionVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    private Identifier targetDimension;
+    private ResourceLocation targetDimension;
     @Persisted
     private boolean flip;
 
-    public DimensionVisibleHook(Identifier targetDimension) {
+    public DimensionVisibleHook(ResourceLocation targetDimension) {
         this.targetDimension = targetDimension;
     }
 
     @Override
     public int getState(MachineTradeContext context, MachineTrade trade) {
-        boolean condition = context.level().dimension().identifier().equals(targetDimension);
+        boolean condition = context.level().dimension().location().equals(targetDimension);
         return (flip != condition) ? FLAG_VISIBLE : 0;
     }
 }

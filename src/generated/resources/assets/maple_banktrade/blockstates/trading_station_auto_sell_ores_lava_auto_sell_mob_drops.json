@@ -2,7 +2,8 @@
   "multipart": [
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station/wallet"
+        "model": "maple_banktrade:block/trading_station_auto_sell_ores_lava_auto_sell_mob_drops",
+        "y": 0
       },
       "when": {
         "facing": "north"
@@ -10,7 +11,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station/wallet",
+        "model": "maple_banktrade:block/trading_station_auto_sell_ores_lava_auto_sell_mob_drops",
         "y": 90
       },
       "when": {
@@ -19,7 +20,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station/wallet",
+        "model": "maple_banktrade:block/trading_station_auto_sell_ores_lava_auto_sell_mob_drops",
         "y": 180
       },
       "when": {
@@ -28,42 +29,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station/wallet",
-        "y": 270
-      },
-      "when": {
-        "facing": "west"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/gold_block"
-      },
-      "when": {
-        "facing": "north"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/gold_block",
-        "y": 90
-      },
-      "when": {
-        "facing": "east"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/gold_block",
-        "y": 180
-      },
-      "when": {
-        "facing": "south"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/gold_block",
+        "model": "maple_banktrade:block/trading_station_auto_sell_ores_lava_auto_sell_mob_drops",
         "y": 270
       },
       "when": {

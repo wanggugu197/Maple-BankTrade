@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -20,7 +20,7 @@ import lombok.AllArgsConstructor;
 public final class TaggedTierCompletedRatioCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private short tier;
     @Persisted
@@ -31,7 +31,7 @@ public final class TaggedTierCompletedRatioCheckHook extends MachineTradeHooks.C
     /**
      * 便捷构造（flip = false）
      */
-    public TaggedTierCompletedRatioCheckHook(Identifier nameIndex, short tier, int percent) {
+    public TaggedTierCompletedRatioCheckHook(ResourceLocation nameIndex, short tier, int percent) {
         this(nameIndex, tier, percent, false);
     }
 

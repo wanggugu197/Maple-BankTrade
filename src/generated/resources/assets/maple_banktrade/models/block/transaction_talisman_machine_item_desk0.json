@@ -1,0 +1,7 @@
+{
+  "parent": "maple_banktrade:block/transaction_talisman",
+  "textures": {
+    "icon": "minecraft:item/diamond",
+    "talisman": "maple_banktrade:item/talisman"
+  }
+}

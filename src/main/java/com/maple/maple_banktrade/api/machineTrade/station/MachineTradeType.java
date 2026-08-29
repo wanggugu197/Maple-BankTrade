@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.machineTrade.station;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 
@@ -10,5 +10,5 @@ import java.util.List;
 public interface MachineTradeType {
 
     /** 非空时优先于 BE 的 fallback 列表。 */
-    List<Identifier> machineTradeTypes();
+    List<ResourceLocation> machineTradeTypes();
 }

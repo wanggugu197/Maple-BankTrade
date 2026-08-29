@@ -4,7 +4,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -36,7 +36,7 @@ public final class ParameterizedPlayerUIMenuType {
     // ==============================================
 
     /** UI 标识到编解码与 Holder 工厂的映射。 */
-    private static final Map<Identifier, Entry<?>> UI_HOLDERS = new ConcurrentHashMap<>();
+    private static final Map<ResourceLocation, Entry<?>> UI_HOLDERS = new ConcurrentHashMap<>();
 
     /** 菜单类型延迟注册表。 */
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(BuiltInRegistries.MENU, MapleBankTrade.MODID);
@@ -54,7 +54,7 @@ public final class ParameterizedPlayerUIMenuType {
     }
 
     /** 注册带参数的玩家 UI。 */
-    public static <T> void register(Identifier id, StreamCodec<RegistryFriendlyByteBuf, T> codec, BiFunction<Player, T, PlayerUIHolder> holderFactory) {
+    public static <T> void register(ResourceLocation id, StreamCodec<RegistryFriendlyByteBuf, T> codec, BiFunction<Player, T, PlayerUIHolder> holderFactory) {
         UI_HOLDERS.put(id, new Entry<>(codec, holderFactory));
     }
 
@@ -63,7 +63,7 @@ public final class ParameterizedPlayerUIMenuType {
     // ==============================================
 
     /** 在服务端为玩家打开指定参数化 UI。 */
-    public static <T> boolean openUI(ServerPlayer player, Identifier id, T payload) {
+    public static <T> boolean openUI(ServerPlayer player, ResourceLocation id, T payload) {
         Entry<T> entry = getEntry(id);
         if (entry == null) return false;
         PlayerUIHolder holder = entry.createHolder(player, payload);
@@ -82,7 +82,7 @@ public final class ParameterizedPlayerUIMenuType {
 
             @Override
             public void writeClientSideData(@NonNull AbstractContainerMenu menu, @NonNull RegistryFriendlyByteBuf buffer) {
-                buffer.writeIdentifier(id);
+                buffer.writeResourceLocation(id);
                 entry.writePayload(buffer, payload);
             }
         });
@@ -91,7 +91,7 @@ public final class ParameterizedPlayerUIMenuType {
 
     /** 客户端从网络缓冲创建参数化菜单。 */
     public static ModularUIContainerMenu create(int windowId, Inventory inventory, RegistryFriendlyByteBuf data) {
-        Identifier id = data.readIdentifier();
+        ResourceLocation id = data.readResourceLocation();
         Entry<?> entry = UI_HOLDERS.get(id);
         if (entry == null) {
             throw new IllegalArgumentException("No parameterized player ui holder found for id " + id);
@@ -105,7 +105,7 @@ public final class ParameterizedPlayerUIMenuType {
 
     /** 按标识获取注册条目。 */
     @SuppressWarnings("unchecked")
-    private static <T> Entry<T> getEntry(Identifier id) {
+    private static <T> Entry<T> getEntry(ResourceLocation id) {
         return (Entry<T>) UI_HOLDERS.get(id);
     }
 

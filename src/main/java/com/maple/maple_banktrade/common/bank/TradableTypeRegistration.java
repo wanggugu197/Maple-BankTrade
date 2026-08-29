@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.common.bank;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
@@ -124,7 +124,7 @@ public final class TradableTypeRegistration {
      * @param panelBackground 面板背景（Sprites）
      * @param description     中英文描述对：cn0, en0, cn1, en1, …
      */
-    private static void register(Identifier id,
+    private static void register(ResourceLocation id,
                                  Item iconItem,
                                  IGuiTexture panelBackground,
                                  String nameCn,

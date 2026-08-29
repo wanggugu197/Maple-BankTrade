@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.common.trade;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -230,7 +230,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.EMERALD, 1)
                 .addDescriptionInvisible(Component.literal("可在地狱中解锁此交易"))
                 .addDescriptionVisible(Component.literal("已在地狱中解锁此交易"))
-                .stateHook(new DimensionVisibleHook(Level.NETHER.identifier()))
+                .stateHook(new DimensionVisibleHook(Level.NETHER.location()))
                 .build());
 
         MachineItemDesk.register(MachineTrade.builder(MapleBankTrade.id("buy_fff"))
@@ -319,7 +319,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 2)
                 .addDescriptionInvisible(Component.literal("在平原群系才可交易"))
                 .addDescriptionVisible(Component.literal("平原群系：已解锁"))
-                .stateHook(new BiomeVisibleHook(Identifier.parse("minecraft:plains")))
+                .stateHook(new BiomeVisibleHook(ResourceLocation.parse("minecraft:plains")))
                 .build());
 
         // 海滩群系标签才可见（BiomeTagVisibleHook）
@@ -328,7 +328,7 @@ public final class MachineTradeRegistration {
                 .addCurrencyInsert(coins, 1)
                 .addDescriptionInvisible(Component.literal("在海滩群系才可交易"))
                 .addDescriptionVisible(Component.literal("海滩群系：已解锁"))
-                .stateHook(new BiomeTagVisibleHook(Identifier.parse("minecraft:is_beach")))
+                .stateHook(new BiomeTagVisibleHook(ResourceLocation.parse("minecraft:is_beach")))
                 .build());
 
         // 村庄结构内才可见（StructureTagVisibleHook）
@@ -337,7 +337,7 @@ public final class MachineTradeRegistration {
                 .addItemOutput(Items.IRON_INGOT, 4)
                 .addDescriptionInvisible(Component.literal("在村庄内才可交易"))
                 .addDescriptionVisible(Component.literal("村庄内：已解锁"))
-                .stateHook(new StructureTagVisibleHook(Identifier.parse("minecraft:village")))
+                .stateHook(new StructureTagVisibleHook(ResourceLocation.parse("minecraft:village")))
                 .build());
 
         // 出生点区域（±100 方块）内才允许执行（AABBCheckHook）

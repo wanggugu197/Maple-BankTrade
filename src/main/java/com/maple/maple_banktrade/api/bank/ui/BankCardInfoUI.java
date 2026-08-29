@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.bank.ui;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
@@ -110,7 +110,7 @@ public final class BankCardInfoUI {
     }
 
     /** 获取银行显示名称。 */
-    private static Component getBankName(Identifier bankTypeId) {
+    private static Component getBankName(ResourceLocation bankTypeId) {
         BankInfo info = BankInfo.of(BankType.requireById(bankTypeId));
         return info == null ? Component.literal(bankTypeId.toString()) : Component.translatable(BankInfo.getBankInfoTranslationKey(info.type()));
     }

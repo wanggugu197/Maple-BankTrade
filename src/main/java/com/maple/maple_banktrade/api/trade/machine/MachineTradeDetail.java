@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeIO.ScaledIO;
 
@@ -12,7 +12,7 @@ import java.util.UUID;
  * 机器交易执行明细。
  */
 public record MachineTradeDetail(
-                                 Identifier tradeId,
+                                 ResourceLocation tradeId,
                                  int desiredCount,
                                  int tradeCount,
                                  ScaledIO scaledIo,

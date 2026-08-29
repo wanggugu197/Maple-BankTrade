@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.stateHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -18,7 +18,7 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class CardExistenceVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    Identifier cardNameIndex;
+    ResourceLocation cardNameIndex;
 
     @Override
     public int getState(MachineTradeContext context, MachineTrade trade) {

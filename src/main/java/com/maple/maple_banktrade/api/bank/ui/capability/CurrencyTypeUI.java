@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.bank.ui.capability;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
@@ -25,13 +25,13 @@ public class CurrencyTypeUI {
     /** 为支持货币存储的卡添加全部货币余额行。 */
     public static void addCurrencyUI(UIElement ui, BankCard card, float scale) {
         if (!(card instanceof CurrencyStorageBankCard currencyCard)) return;
-        for (Identifier currencyId : currencyCard.getSupportedCurrencyIds()) {
+        for (ResourceLocation currencyId : currencyCard.getSupportedCurrencyIds()) {
             ui.addChild(createCurrencyUIElement(currencyId, currencyCard, scale));
         }
     }
 
     /** 创建单行货币图标、名称与绑定余额标签。 */
-    public static UIElement createCurrencyUIElement(Identifier typeId, CurrencyStorageBankCard currencyCard, float scale) {
+    public static UIElement createCurrencyUIElement(ResourceLocation typeId, CurrencyStorageBankCard currencyCard, float scale) {
         CurrencyType currencyType = CurrencyType.findById(typeId).orElse(null);
         if (currencyType == null) return null;
         UIElement currency = new UIElement()

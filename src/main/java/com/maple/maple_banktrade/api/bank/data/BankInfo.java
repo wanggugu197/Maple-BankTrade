@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.bank.data;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
@@ -76,7 +76,7 @@ public record BankInfo(BankType type, List<Component> description, IGuiTexture b
 
     /** 获取银行显示名称的翻译键。 */
     public static String getBankInfoTranslationKey(BankType type) {
-        Identifier id = type.id();
+        ResourceLocation id = type.id();
         return "bank." + id.getNamespace() + "." + id.getPath();
     }
 

@@ -1,15 +1,17 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
-import net.neoforged.neoforge.transfer.fluid.FluidStacksResourceHandler;
 import net.neoforged.neoforge.transfer.item.ItemResource;
-import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 
 import com.maple.maple_banktrade.api.trade.base.definition.TradeRunner;
 import com.maple.maple_banktrade.api.trade.base.input.TradeCheckInput;
 import com.maple.maple_banktrade.api.trade.base.result.TradeCheckResult;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
+import com.mapleutillib.api.resource.ObservableFluidResourceHandler;
+import com.mapleutillib.api.resource.ObservableItemResourceHandler;
 import lombok.experimental.UtilityClass;
 import org.jspecify.annotations.NonNull;
 
@@ -34,7 +36,7 @@ public class MachineTradeHandler {
      * 按期望次数执行；check 可能降级实际次数，成功时 detail.tradeCount 为实际值。
      */
     public static TradeExecuteResult<MachineTradeDetail> run(@NonNull MachineTradeContext context,
-                                                             @NonNull Identifier tradeId,
+                                                             @NonNull ResourceLocation tradeId,
                                                              int desiredCount) {
         if (desiredCount <= 0) {
             return TradeExecuteResult.failure(null);
@@ -49,7 +51,7 @@ public class MachineTradeHandler {
      * 仅 check，不提交；plan.tradeCount 为降级后的可执行次数。
      */
     public static TradeCheckResult<MachineTradePlan> check(@NonNull MachineTradeContext context,
-                                                           @NonNull Identifier tradeId,
+                                                           @NonNull ResourceLocation tradeId,
                                                            int desiredCount) {
         if (desiredCount <= 0) {
             return TradeCheckResult.of(MachineTradePlan.denied(desiredCount));
@@ -59,7 +61,7 @@ public class MachineTradeHandler {
     }
 
     /** 当前上下文下可见的交易条目。 */
-    public static List<Map.Entry<Identifier, MachineTrade>> listVisible(@NonNull MachineTradeContext context) {
+    public static List<Map.Entry<ResourceLocation, MachineTrade>> listVisible(@NonNull MachineTradeContext context) {
         return context.storage().listVisible(context);
     }
 
@@ -88,7 +90,7 @@ public class MachineTradeHandler {
      * 复杂度 O(S + R) 查找，不再 O(R·S) 重复 count、O(R·E) 线性 find。
      */
     private static int autoRunItems(MachineTradeContext context, MachineTradeStorage storage) {
-        ItemStacksResourceHandler handler = context.itemInput();
+        ObservableItemResourceHandler handler = context.itemInput();
         Map<ItemResource, Integer> totals = aggregateItemTotals(handler);
         if (totals.isEmpty()) {
             return 0;
@@ -100,7 +102,7 @@ public class MachineTradeHandler {
             if (totalEntry.getValue() <= 0) {
                 continue;
             }
-            Map.Entry<Identifier, MachineTrade> match = storage.findAutoTradeByItem(totalEntry.getKey(), context);
+            Map.Entry<ResourceLocation, MachineTrade> match = storage.findAutoTradeByItem(totalEntry.getKey(), context);
             if (match == null) {
                 continue;
             }
@@ -113,7 +115,7 @@ public class MachineTradeHandler {
     }
 
     private static int autoRunFluids(MachineTradeContext context, MachineTradeStorage storage) {
-        FluidStacksResourceHandler handler = context.fluidInput();
+        ObservableFluidResourceHandler handler = context.fluidInput();
         Map<FluidResource, Integer> totals = aggregateFluidTotals(handler);
         if (totals.isEmpty()) {
             return 0;
@@ -124,7 +126,7 @@ public class MachineTradeHandler {
             if (totalEntry.getValue() <= 0) {
                 continue;
             }
-            Map.Entry<Identifier, MachineTrade> match = storage.findAutoTradeByFluid(totalEntry.getKey(), context);
+            Map.Entry<ResourceLocation, MachineTrade> match = storage.findAutoTradeByFluid(totalEntry.getKey(), context);
             if (match == null) {
                 continue;
             }
@@ -137,14 +139,18 @@ public class MachineTradeHandler {
     }
 
     /** 单次遍历聚合各物品资源总量（保持首次出现顺序）。 */
-    private static Map<ItemResource, Integer> aggregateItemTotals(ItemStacksResourceHandler handler) {
+    private static Map<ItemResource, Integer> aggregateItemTotals(ObservableItemResourceHandler handler) {
         Map<ItemResource, Integer> totals = new LinkedHashMap<>();
         for (int i = 0; i < handler.size(); i++) {
-            ItemResource resource = handler.getResource(i);
+            ItemStack stack = handler.getStackInSlot(i);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            ItemResource resource = ItemResource.of(stack);
             if (resource.isEmpty()) {
                 continue;
             }
-            int amount = handler.getAmountAsInt(i);
+            int amount = stack.getCount();
             if (amount <= 0) {
                 continue;
             }
@@ -153,14 +159,18 @@ public class MachineTradeHandler {
         return totals;
     }
 
-    private static Map<FluidResource, Integer> aggregateFluidTotals(FluidStacksResourceHandler handler) {
+    private static Map<FluidResource, Integer> aggregateFluidTotals(ObservableFluidResourceHandler handler) {
         Map<FluidResource, Integer> totals = new LinkedHashMap<>();
         for (int i = 0; i < handler.size(); i++) {
-            FluidResource resource = handler.getResource(i);
+            FluidStack stack = handler.getFluidInSlot(i);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            FluidResource resource = FluidResource.of(stack);
             if (resource.isEmpty()) {
                 continue;
             }
-            int amount = handler.getAmountAsInt(i);
+            int amount = stack.getAmount();
             if (amount <= 0) {
                 continue;
             }
@@ -170,9 +180,9 @@ public class MachineTradeHandler {
     }
 
     /** 列出本 storage 中所有自动交易条目（调试/UI 用）。 */
-    public static List<Map.Entry<Identifier, MachineTrade>> listAutoTrades(@NonNull MachineTradeStorage storage) {
-        List<Map.Entry<Identifier, MachineTrade>> list = new ArrayList<>();
-        for (Map.Entry<Identifier, MachineTrade> e : storage.entries().entrySet()) {
+    public static List<Map.Entry<ResourceLocation, MachineTrade>> listAutoTrades(@NonNull MachineTradeStorage storage) {
+        List<Map.Entry<ResourceLocation, MachineTrade>> list = new ArrayList<>();
+        for (Map.Entry<ResourceLocation, MachineTrade> e : storage.entries().entrySet()) {
             if (e.getValue().autoTrade()) {
                 list.add(e);
             }

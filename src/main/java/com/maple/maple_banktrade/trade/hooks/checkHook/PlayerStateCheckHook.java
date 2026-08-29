@@ -50,7 +50,7 @@ public final class PlayerStateCheckHook extends MachineTradeHooks.CheckHook {
         if (playerUuid != null) {
             match = playerUuid.equals(player.getUUID());
         } else if (playerName != null) {
-            match = playerName.equals(player.getGameProfile().name());
+            match = playerName.equals(player.getGameProfile().getName());
         } else {
             match = true;
         }

@@ -1,3 +1,7 @@
+static def isJetBrainsRuntime() {
+    return System.getProperty('java.vm.vendor').contains('JetBrains')
+}
+
 // 从 gradle.properties 读取模组配置属性
 def mod_id = project.properties['mod_id']
 
@@ -5,6 +9,11 @@ def mod_id = project.properties['mod_id']
 neoForge {
     // 指定 NeoForge 版本（从 libs.versions.toml 读取）
     version = libs.versions.neoForge.get()
+
+    parchment {
+        minecraftVersion = libs.versions.minecraft.get()
+        mappingsVersion = libs.versions.parchment.get()
+    }
 
     // 向测试源码集添加模组开发依赖
     addModdingDependenciesTo(sourceSets.test)
@@ -78,8 +87,7 @@ neoForge {
 
         // 数据生成配置 - 用于自动生成方块/物品注册、语言文件等
         data {
-            serverData()  // 启用服务端数据生成
-            clientData()  // 启用客户端数据生成
+            data()  // 启用数据生成
             sourceSet = sourceSets.main
             ideName = "Data Generation"
 

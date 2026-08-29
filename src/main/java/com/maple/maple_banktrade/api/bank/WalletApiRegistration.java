@@ -1,11 +1,13 @@
 package com.maple.maple_banktrade.api.bank;
 
 import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.IEventBus;
 
 import com.gto.registrylib.composite.ComponentItem;
 import com.gto.registrylib.util.entry.ItemEntry;
+import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
 import com.maple.maple_banktrade.api.bank.command.MBTBankCommands;
 import com.maple.maple_banktrade.api.bank.item.*;
@@ -81,20 +83,20 @@ public class WalletApiRegistration {
 
     private static void addRecipe() {
         REGISTRY.addRecipeData(prov -> {
-            prov.shaped(RecipeCategory.COMBAT, WALLET.get())
+            ShapedRecipeBuilder.shaped(RecipeCategory.COMBAT, WALLET.get())
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .define('A', Items.BLUE_DYE)
                     .define('B', Items.PAPER)
                     .unlockedBy("unlocked", UNCONDITIONAL_CRITERION)
-                    .save(prov, "make_wallet");
+                    .save(prov, MapleBankTrade.id("make_wallet"));
 
-            prov.shaped(RecipeCategory.COMBAT, BANK_PERMISSIONS_CARD_BUILDER.get())
+            ShapedRecipeBuilder.shaped(RecipeCategory.COMBAT, BANK_PERMISSIONS_CARD_BUILDER.get())
                     .pattern("BBB").pattern("BOB").pattern("BAB")
                     .define('A', Items.ORANGE_DYE)
                     .define('B', Items.BLUE_DYE)
                     .define('O', Items.BLUE_STAINED_GLASS_PANE)
                     .unlockedBy("unlocked", UNCONDITIONAL_CRITERION)
-                    .save(prov, "make_bank_permissions_card_builder");
+                    .save(prov, MapleBankTrade.id("make_bank_permissions_card_builder"));
         });
     }
 

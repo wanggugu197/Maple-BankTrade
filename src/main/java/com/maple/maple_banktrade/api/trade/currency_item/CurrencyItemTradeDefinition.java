@@ -1,6 +1,7 @@
 package com.maple.maple_banktrade.api.trade.currency_item;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.item.PlayerInventoryWrapper;
@@ -16,6 +17,7 @@ import com.maple.maple_banktrade.api.trade.base.input.TradeExecuteInput;
 import com.maple.maple_banktrade.api.trade.base.input.TradeSuccessInput;
 import com.maple.maple_banktrade.api.trade.base.result.TradeCheckResult;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
+import com.mapleutillib.api.resource.ObservableItemResourceHandler;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -92,14 +94,15 @@ public final class CurrencyItemTradeDefinition implements TradeDefinition<TradeC
                 if (!inserted.equals(plan.currencyAmount())) {
                     return TradeExecuteResult.failure(null, List.of(msg("trade.maple_banktrade.fail.currency_insert")));
                 }
-                int extracted = request.sourceHandler().extract(
-                        request.sourceSlot(),
-                        ItemResource.of(trade.item()),
-                        plan.itemAmount(),
-                        tx);
-                if (extracted != plan.itemAmount()) {
+                // 1.21.1 无事务 API：直接操作卖出槽并登记回滚
+                ObservableItemResourceHandler sourceHandler = request.sourceHandler();
+                int sourceSlot = request.sourceSlot();
+                ItemStack before = sourceHandler.getStackInSlot(sourceSlot).copy();
+                ItemStack out = sourceHandler.extractBypassFilter(sourceSlot, plan.itemAmount(), false);
+                if (out.getCount() != plan.itemAmount()) {
                     return TradeExecuteResult.failure(null, List.of(msg("trade.maple_banktrade.fail.item_extract")));
                 }
+                tx.addRollback(() -> sourceHandler.setStackInSlot(sourceSlot, before));
             }
             tx.commit();
             return TradeExecuteResult.success(new CurrencyItemTradeDetail(
@@ -127,9 +130,9 @@ public final class CurrencyItemTradeDefinition implements TradeDefinition<TradeC
             return context.storage().require(request.tradeId());
         }
         if (request.isSell() && request.sourceHandler() != null) {
-            ItemResource resource = request.sourceHandler().getResource(request.sourceSlot());
-            if (!resource.isEmpty()) {
-                return context.storage().findSellableByItem(resource.toStack(1));
+            ItemStack slotStack = request.sourceHandler().getStackInSlot(request.sourceSlot());
+            if (!slotStack.isEmpty()) {
+                return context.storage().findSellableByItem(slotStack);
             }
         }
         return null;

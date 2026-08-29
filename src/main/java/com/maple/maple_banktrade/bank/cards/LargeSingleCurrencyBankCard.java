@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
@@ -19,7 +19,7 @@ import java.util.Set;
 
 public class LargeSingleCurrencyBankCard extends BankCard implements CurrencyStorageBankCard {
 
-    public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("large_single_currency");
+    public static final ResourceLocation CARD_TYPE_ID = MapleBankTrade.id("large_single_currency");
 
     // ==============================================
     // Codec
@@ -35,7 +35,7 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
     @Persisted
     @Getter
     @Setter
-    private Identifier currencyTypeId;
+    private ResourceLocation currencyTypeId;
 
     @Persisted
     @Getter
@@ -60,7 +60,7 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
         this(identity, CARD_TYPE_ID, currencyType, balance);
     }
 
-    protected LargeSingleCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId,
+    protected LargeSingleCurrencyBankCard(BankCardIdentity identity, ResourceLocation cardTypeId,
                                           CurrencyType currencyType, BigInteger balance) {
         super(identity, cardTypeId);
         this.currencyTypeId = Objects.requireNonNull(currencyType, "currencyType").id();
@@ -72,34 +72,34 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
     // ==============================================
 
     @Override
-    public Set<Identifier> getSupportedCurrencyIds() {
+    public Set<ResourceLocation> getSupportedCurrencyIds() {
         return Set.of(currencyTypeId);
     }
 
     @Override
-    public BigInteger getCurrencyBalance(Identifier currencyTypeId) {
+    public BigInteger getCurrencyBalance(ResourceLocation currencyTypeId) {
         return supportsCurrency(currencyTypeId) ? balance : BigInteger.ZERO;
     }
 
     @Override
-    public long getCurrencyBalanceAsLong(Identifier currencyTypeId) {
+    public long getCurrencyBalanceAsLong(ResourceLocation currencyTypeId) {
         return CurrencyStorageBankCard.saturatingLongValue(getCurrencyBalance(currencyTypeId));
     }
 
     @Override
-    public boolean increaseCurrency(Identifier currencyTypeId, BigInteger amount) {
+    public boolean increaseCurrency(ResourceLocation currencyTypeId, BigInteger amount) {
         if (amount.signum() <= 0 || !supportsCurrency(currencyTypeId)) return false;
         balance = balance.add(amount);
         return true;
     }
 
     @Override
-    public boolean increaseCurrency(Identifier currencyTypeId, long amount) {
+    public boolean increaseCurrency(ResourceLocation currencyTypeId, long amount) {
         return increaseCurrency(currencyTypeId, BigInteger.valueOf(amount));
     }
 
     @Override
-    public boolean decreaseCurrency(Identifier currencyTypeId, BigInteger amount) {
+    public boolean decreaseCurrency(ResourceLocation currencyTypeId, BigInteger amount) {
         if (amount.signum() <= 0 || !supportsCurrency(currencyTypeId)) return false;
         if (balance.compareTo(amount) < 0) return false;
         balance = balance.subtract(amount);
@@ -107,7 +107,7 @@ public class LargeSingleCurrencyBankCard extends BankCard implements CurrencySto
     }
 
     @Override
-    public boolean decreaseCurrency(Identifier currencyTypeId, long amount) {
+    public boolean decreaseCurrency(ResourceLocation currencyTypeId, long amount) {
         return decreaseCurrency(currencyTypeId, BigInteger.valueOf(amount));
     }
 

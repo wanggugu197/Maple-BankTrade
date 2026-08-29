@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -17,10 +17,10 @@ import lombok.AllArgsConstructor;
 public final class DimensionCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier targetDimension;
+    private ResourceLocation targetDimension;
 
     @Override
     public boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade) {
-        return context.level().dimension().identifier().equals(targetDimension);
+        return context.level().dimension().location().equals(targetDimension);
     }
 }

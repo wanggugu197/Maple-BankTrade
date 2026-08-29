@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.base.registry;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 
@@ -15,8 +15,8 @@ public final class TradeRegistry {
     // 字段
     // ==============================================
 
-    private static final Map<Identifier, TradeType<?>> TYPES = new LinkedHashMap<>();
-    private static final Map<Identifier, TradeStorage> STORAGES = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, TradeType<?>> TYPES = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, TradeStorage> STORAGES = new LinkedHashMap<>();
 
     // ==============================================
     // 注册
@@ -25,7 +25,7 @@ public final class TradeRegistry {
     /** 注册交易类型并创建存储器；已存在时返回已有实例。 */
     public static <S extends TradeStorage> S registerType(TradeType<S> type) {
         Objects.requireNonNull(type, "type");
-        Identifier id = Objects.requireNonNull(type.id(), "type.id");
+        ResourceLocation id = Objects.requireNonNull(type.id(), "type.id");
 
         TradeType<?> existingType = TYPES.get(id);
         if (existingType != null) {
@@ -48,19 +48,19 @@ public final class TradeRegistry {
     // ==============================================
 
     /** 按类型 ID 查找交易类型。 */
-    public static Optional<TradeType<?>> findType(Identifier tradeTypeId) {
+    public static Optional<TradeType<?>> findType(ResourceLocation tradeTypeId) {
         if (tradeTypeId == null) return Optional.empty();
         return Optional.ofNullable(TYPES.get(tradeTypeId));
     }
 
     /** 按类型 ID 查找存储器。 */
-    public static Optional<TradeStorage> findStorage(Identifier tradeTypeId) {
+    public static Optional<TradeStorage> findStorage(ResourceLocation tradeTypeId) {
         if (tradeTypeId == null) return Optional.empty();
         return Optional.ofNullable(STORAGES.get(tradeTypeId));
     }
 
     /** 按类型 ID 与期望类查找存储器。 */
-    public static <S extends TradeStorage> Optional<S> findStorage(Identifier tradeTypeId, Class<S> storageClass) {
+    public static <S extends TradeStorage> Optional<S> findStorage(ResourceLocation tradeTypeId, Class<S> storageClass) {
         Objects.requireNonNull(storageClass, "storageClass");
         return findStorage(tradeTypeId)
                 .filter(storageClass::isInstance)
@@ -68,17 +68,17 @@ public final class TradeRegistry {
     }
 
     /** 按类型 ID 与期望类获取存储器，不存在时返回 null。 */
-    public static <S extends TradeStorage> S requireStorage(Identifier tradeTypeId, Class<S> storageClass) {
+    public static <S extends TradeStorage> S requireStorage(ResourceLocation tradeTypeId, Class<S> storageClass) {
         return findStorage(tradeTypeId, storageClass).orElse(null);
     }
 
     /** 返回全部已注册交易类型的只读视图。 */
-    public static Map<Identifier, TradeType<?>> types() {
+    public static Map<ResourceLocation, TradeType<?>> types() {
         return Collections.unmodifiableMap(TYPES);
     }
 
     /** 返回全部已实例化存储器的只读视图。 */
-    public static Map<Identifier, TradeStorage> storages() {
+    public static Map<ResourceLocation, TradeStorage> storages() {
         return Collections.unmodifiableMap(STORAGES);
     }
 

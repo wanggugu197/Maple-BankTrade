@@ -2,10 +2,11 @@ package com.maple.maple_banktrade.collaboration.ftbq.reward;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import com.maple.maple_banktrade.api.bank.BankHelper;
@@ -14,14 +15,11 @@ import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
 import com.maple.maple_banktrade.api.bank.data.InfoList;
 import com.maple.maple_banktrade.bank.cards.TaggedBankCard;
-import de.marhali.json5.Json5Object;
-import dev.ftb.mods.ftblibrary.client.config.EditableConfigGroup;
+import dev.ftb.mods.ftblibrary.config.ConfigGroup;
+import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.json5.Json5Util;
-import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
-import dev.ftb.mods.ftbquests.quest.reward.RewardAutoClaim;
 import dev.ftb.mods.ftbquests.quest.reward.RewardType;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,11 +34,11 @@ import java.util.List;
  */
 public class TaggedResetReward extends Reward {
 
-    private static final Identifier DEFAULT = Identifier.withDefaultNamespace("default");
+    private static final ResourceLocation DEFAULT = ResourceLocation.withDefaultNamespace("default");
 
     @Getter
     @Setter
-    private Identifier nameIndex = DEFAULT;
+    private ResourceLocation nameIndex = DEFAULT;
     @Getter
     @Setter
     private String entryId = "";
@@ -56,48 +54,53 @@ public class TaggedResetReward extends Reward {
 
     // ---------- 序列化 ----------
     @Override
-    public void writeData(@NonNull Json5Object json, HolderLookup.@NonNull Provider provider) {
-        super.writeData(json, provider);
-        Json5Util.store(json, "name_index", Identifier.CODEC, nameIndex);
-        json.addProperty("entry_id", entryId);
+    public void writeData(@NonNull CompoundTag tag, HolderLookup.@NonNull Provider provider) {
+        super.writeData(tag, provider);
+        tag.putString("name_index", nameIndex.toString());
+        tag.putString("entry_id", entryId);
     }
 
     @Override
-    public void readData(@NonNull Json5Object json, HolderLookup.@NonNull Provider provider) {
-        super.readData(json, provider);
-        nameIndex = Json5Util.fetch(json, "name_index", Identifier.CODEC).orElse(DEFAULT);
-        entryId = Json5Util.getString(json, "entry_id").orElse("");
+    public void readData(@NonNull CompoundTag tag, HolderLookup.@NonNull Provider provider) {
+        super.readData(tag, provider);
+        if (tag.contains("name_index")) {
+            ResourceLocation parsed = ResourceLocation.tryParse(tag.getString("name_index"));
+            nameIndex = parsed == null ? DEFAULT : parsed;
+        } else {
+            nameIndex = DEFAULT;
+        }
+        entryId = tag.getString("entry_id");
     }
 
     // ---------- 网络同步 ----------
     @Override
     public void writeNetData(@NonNull RegistryFriendlyByteBuf buffer) {
         super.writeNetData(buffer);
-        buffer.writeIdentifier(nameIndex);
+        buffer.writeResourceLocation(nameIndex);
         buffer.writeUtf(entryId, 32767);
     }
 
     @Override
     public void readNetData(@NonNull RegistryFriendlyByteBuf buffer) {
         super.readNetData(buffer);
-        nameIndex = buffer.readIdentifier();
+        nameIndex = buffer.readResourceLocation();
         entryId = buffer.readUtf(32767);
     }
 
     // ---------- 配置界面 ----------
     @Override
-    public void fillConfigGroup(@NonNull EditableConfigGroup config) {
+    public void fillConfigGroup(@NonNull ConfigGroup config) {
         super.fillConfigGroup(config);
 
-        List<Identifier> available = BankCardFactory.values().stream()
+        List<ResourceLocation> available = BankCardFactory.values().stream()
                 .map(BankCardFactory::nameIndex)
-                .sorted(Comparator.comparing(Identifier::toString))
+                .sorted(Comparator.comparing(ResourceLocation::toString))
                 .toList();
         if (!available.isEmpty()) {
-            NameMap<Identifier> nameMap = NameMap.of(available.getFirst(), available.toArray(new Identifier[0]))
+            NameMap<ResourceLocation> nameMap = NameMap.of(available.getFirst(), available.toArray(new ResourceLocation[0]))
                     .name(id -> Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(id))
                             .append(" · ").append(id.toString()))
-                    .icon(_ -> Icon.getIcon("maple_banktrade:item/bank_permissions_card_builder"))
+                    .icon(ignored -> Icon.getIcon("maple_banktrade:item/bank_permissions_card_builder"))
                     .create();
             config.addEnum("name_index", nameIndex, v -> nameIndex = v, nameMap)
                     .setNameKey("maple_banktrade.reward.tagged_reset.name_index");
@@ -113,7 +116,7 @@ public class TaggedResetReward extends Reward {
                             return entry.display().copy().append(" · ").append(id);
                         return Component.literal(id);
                     })
-                    .icon(_ -> Icon.getIcon("maple_banktrade:item/bank_permissions_card_builder"))
+                    .icon(ignored -> Icon.getIcon("maple_banktrade:item/bank_permissions_card_builder"))
                     .create();
             config.addEnum("entry_id", entryId, v -> entryId = v, entryMap)
                     .setNameKey("maple_banktrade.reward.tagged_reset.entry_id");
@@ -151,7 +154,7 @@ public class TaggedResetReward extends Reward {
     // ---------- 核心逻辑 ----------
     @Override
     public void claim(ServerPlayer player, boolean notify) {
-        BankCard card = MBTBankStates.getBankCards(player.level())
+        BankCard card = MBTBankStates.getBankCards(player.serverLevel())
                 .getUsableCardsForPlayer(BankHelper.getUuid(player))
                 .stream()
                 .filter(c -> c.getNameIndex().equals(nameIndex))
@@ -160,7 +163,7 @@ public class TaggedResetReward extends Reward {
 
         if (card instanceof TaggedBankCard taggedCard) {
             taggedCard.resetProgress(entryId);
-            MBTBankStates.markDirty(player.level());
+            MBTBankStates.markDirty(player.serverLevel());
         }
     }
 

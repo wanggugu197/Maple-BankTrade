@@ -1,8 +1,9 @@
 plugins {
     id 'java-library'
+    id 'eclipse'
     id 'maven-publish'
-    id 'com.gto.gtopublishgradleplugin' version '1.0.25'
     id 'idea'
+    id 'com.gto.gtopublishgradleplugin' version '1.0.25'
     alias libs.plugins.modDevGradle
     alias libs.plugins.spotless
     alias libs.plugins.lombok
@@ -25,14 +26,12 @@ if (secretFile.exists()){
 }
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
 sourceSets {
     main.resources {
-        srcDirs 'src/main/resources', 'src/generated/resources'
+        srcDir 'src/generated/resources'
     }
 
     client {
@@ -84,5 +83,5 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 lombok {
-    version = "1.18.38"
+    version = "1.18.36"
 }

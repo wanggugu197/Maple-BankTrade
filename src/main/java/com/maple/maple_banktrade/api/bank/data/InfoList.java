@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.bank.data;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.maple.maple_banktrade.MapleBankTrade;
@@ -14,7 +14,7 @@ import java.util.*;
  *
  * @param id 与卡的 nameIndex 对应
  */
-public record InfoList(Identifier id,
+public record InfoList(ResourceLocation id,
                        LinkedHashMap<String, InfoEntry> entries,
                        List<Component> description,
                        IGuiTexture backgroundTexture) {
@@ -34,13 +34,13 @@ public record InfoList(Identifier id,
     // 注册表
     // ==============================================
 
-    private static final Map<Identifier, InfoList> REGISTRY = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, InfoList> REGISTRY = new LinkedHashMap<>();
 
     // ==============================================
     // 注册
     // ==============================================
 
-    public static InfoList register(Identifier id,
+    public static InfoList register(ResourceLocation id,
                                     List<Component> description,
                                     IGuiTexture backgroundTexture) {
         if (REGISTRY.containsKey(id)) {
@@ -52,7 +52,7 @@ public record InfoList(Identifier id,
         return list;
     }
 
-    public static InfoList requireByNameIndex(Identifier nameIndex) {
+    public static InfoList requireByNameIndex(ResourceLocation nameIndex) {
         return REGISTRY.get(nameIndex);
     }
 

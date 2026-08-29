@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -20,13 +20,13 @@ import lombok.AllArgsConstructor;
 public final class TaggedCompletedCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private String id;
     @Persisted
     private boolean flip;
 
-    public TaggedCompletedCheckHook(Identifier nameIndex, String id) {
+    public TaggedCompletedCheckHook(ResourceLocation nameIndex, String id) {
         this.nameIndex = nameIndex;
         this.id = id;
         this.flip = false;

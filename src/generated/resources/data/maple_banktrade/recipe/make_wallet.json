@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": "minecraft:blue_dye",
-    "B": "minecraft:paper"
+    "A": {
+      "item": "minecraft:blue_dye"
+    },
+    "B": {
+      "item": "minecraft:paper"
+    }
   },
   "pattern": [
     "AAA",
@@ -11,6 +15,7 @@
     "AAA"
   ],
   "result": {
+    "count": 1,
     "id": "maple_banktrade:wallet"
   }
 }

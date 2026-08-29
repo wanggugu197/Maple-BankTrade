@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.api.trade.base.registry;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
@@ -16,23 +16,23 @@ import java.util.*;
 
 public abstract class AbstractTradeEntryStorage<E extends TradeInfo> implements TradeEntryStorage<E> {
 
-    private final Identifier tradeTypeId;
+    private final ResourceLocation tradeTypeId;
 
     // 服务端实际存储
-    private final Map<Identifier, E> entries = new LinkedHashMap<>();
+    private final Map<ResourceLocation, E> entries = new LinkedHashMap<>();
 
     // 客户端同步缓存（完整数据）
-    private final Map<Identifier, E> clientEntries = new LinkedHashMap<>();
+    private final Map<ResourceLocation, E> clientEntries = new LinkedHashMap<>();
 
     // 客户端元数据缓存（ID → 版本号）
-    private final Map<Identifier, Integer> metaCache = new LinkedHashMap<>();
+    private final Map<ResourceLocation, Integer> metaCache = new LinkedHashMap<>();
 
-    protected AbstractTradeEntryStorage(Identifier tradeTypeId) {
+    protected AbstractTradeEntryStorage(ResourceLocation tradeTypeId) {
         this.tradeTypeId = Objects.requireNonNull(tradeTypeId, "tradeTypeId");
     }
 
     @Override
-    public Identifier tradeTypeId() {
+    public ResourceLocation tradeTypeId() {
         return tradeTypeId;
     }
 
@@ -44,7 +44,7 @@ public abstract class AbstractTradeEntryStorage<E extends TradeInfo> implements 
     }
 
     @Override
-    public Optional<E> find(Identifier tradeId) {
+    public Optional<E> find(ResourceLocation tradeId) {
         if (tradeId == null) return Optional.empty();
         if (isServer()) {
             return Optional.ofNullable(entries.get(tradeId));
@@ -54,7 +54,7 @@ public abstract class AbstractTradeEntryStorage<E extends TradeInfo> implements 
     }
 
     @Override
-    public E require(Identifier tradeId) {
+    public E require(ResourceLocation tradeId) {
         if (tradeId == null) return null;
         if (isServer()) {
             return entries.get(tradeId);
@@ -64,7 +64,7 @@ public abstract class AbstractTradeEntryStorage<E extends TradeInfo> implements 
     }
 
     @Override
-    public Map<Identifier, E> entries() {
+    public Map<ResourceLocation, E> entries() {
         if (isServer()) {
             return Collections.unmodifiableMap(entries);
         } else {
@@ -105,17 +105,17 @@ public abstract class AbstractTradeEntryStorage<E extends TradeInfo> implements 
     }
 
     // ---------- 客户端专用方法 ----------
-    public void replaceClientCache(Map<Identifier, ? extends TradeInfo> newEntries) {
+    public void replaceClientCache(Map<ResourceLocation, ? extends TradeInfo> newEntries) {
         if (!Platform.isClient()) return;
         clientEntries.clear();
-        for (Map.Entry<Identifier, ? extends TradeInfo> e : newEntries.entrySet()) {
+        for (Map.Entry<ResourceLocation, ? extends TradeInfo> e : newEntries.entrySet()) {
             @SuppressWarnings("unchecked")
             E entry = (E) e.getValue();
             clientEntries.put(e.getKey(), entry);
         }
     }
 
-    public void updateClientEntry(Identifier entryId, E entry) {
+    public void updateClientEntry(ResourceLocation entryId, E entry) {
         if (!Platform.isClient()) return;
         clientEntries.put(entryId, entry);
     }

@@ -9,7 +9,7 @@ import static com.maple.maple_banktrade.MapleBankTrade.REGISTRY;
 public class MBTLevelTask {
 
     public static final AttachmentTypeEntry<LevelTaskData> LEVEL_TASK_DATA = REGISTRY
-            .attachmentType("level_task_data", _ -> new LevelTaskData())
+            .attachmentType("level_task_data", ignored -> new LevelTaskData())
             .serialize(LevelTaskData.CODEC)
             .register();
 

@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.stateHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.capability.CurrencyStorageBankCard;
@@ -22,13 +22,13 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class CurrencyAmountVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    private Identifier currencyTypeId;
+    private ResourceLocation currencyTypeId;
     @Persisted
     private BigInteger amount;
     @Persisted
     private boolean flip;
 
-    public CurrencyAmountVisibleHook(Identifier currencyTypeId, BigInteger amount) {
+    public CurrencyAmountVisibleHook(ResourceLocation currencyTypeId, BigInteger amount) {
         this.currencyTypeId = currencyTypeId;
         this.amount = amount;
         this.flip = false;

@@ -21,7 +21,7 @@ public final class TimeWindowCheckHook extends MachineTradeHooks.CheckHook {
 
     @Override
     public boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade) {
-        long dayTime = context.level().getDefaultClockTime() % 24000L;
+        long dayTime = context.level().getDayTime() % 24000L;
         return dayTime >= startTick && dayTime <= endTick;
     }
 }

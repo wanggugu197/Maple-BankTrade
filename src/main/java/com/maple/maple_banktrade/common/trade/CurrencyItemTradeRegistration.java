@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.common.trade;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
@@ -170,7 +170,7 @@ public final class CurrencyItemTradeRegistration {
 
     /** 注册类型并向存储器填充价目条目。 */
     private static void fill(CurrencyItemTradeStorage storage, CoinEntry... entries) {
-        Identifier coins = CurrencyRegistration.COINS.id();
+        ResourceLocation coins = CurrencyRegistration.COINS.id();
         for (CoinEntry entry : entries) {
             storage.register(CurrencyItemTrade.of(entry.id, entry.item(), coins, entry.price(), Mode.BUY_AND_SELL));
         }
@@ -184,7 +184,7 @@ public final class CurrencyItemTradeRegistration {
     /**
      * 内置价目临时数据。
      */
-    private record CoinEntry(Identifier id, Item item, long price) {}
+    private record CoinEntry(ResourceLocation id, Item item, long price) {}
 
     private CurrencyItemTradeRegistration() {}
 }

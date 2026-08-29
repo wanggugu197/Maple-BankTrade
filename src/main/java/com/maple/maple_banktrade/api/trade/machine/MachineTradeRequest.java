@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.maple.maple_banktrade.api.trade.base.context.TradeRequest;
 
@@ -16,15 +16,15 @@ import java.util.Objects;
  */
 public final class MachineTradeRequest implements TradeRequest {
 
-    private final Identifier tradeId;
+    private final ResourceLocation tradeId;
     private int desiredCount;
 
-    public MachineTradeRequest(Identifier tradeId, int desiredCount) {
+    public MachineTradeRequest(ResourceLocation tradeId, int desiredCount) {
         this.tradeId = Objects.requireNonNull(tradeId, "tradeId");
         setDesiredCount(desiredCount);
     }
 
-    public Identifier tradeId() {
+    public ResourceLocation tradeId() {
         return tradeId;
     }
 
@@ -45,7 +45,7 @@ public final class MachineTradeRequest implements TradeRequest {
     }
 
     /** 创建请求。 */
-    public static MachineTradeRequest of(Identifier tradeId, int desiredCount) {
+    public static MachineTradeRequest of(ResourceLocation tradeId, int desiredCount) {
         return new MachineTradeRequest(tradeId, desiredCount);
     }
 

@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.trade.hooks.checkHook;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 
@@ -22,11 +22,11 @@ import lombok.AllArgsConstructor;
 public final class BiomeTagCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier tagId;
+    private ResourceLocation tagId;
     @Persisted
     private boolean flip;
 
-    public BiomeTagCheckHook(Identifier tagId) {
+    public BiomeTagCheckHook(ResourceLocation tagId) {
         this(tagId, false);
     }
 

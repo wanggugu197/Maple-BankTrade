@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.trade.hooks.checkHook;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
@@ -22,11 +22,11 @@ import lombok.AllArgsConstructor;
 public final class StructureTagCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier tagId;
+    private ResourceLocation tagId;
     @Persisted
     private boolean flip;
 
-    public StructureTagCheckHook(Identifier tagId) {
+    public StructureTagCheckHook(ResourceLocation tagId) {
         this(tagId, false);
     }
 

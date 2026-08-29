@@ -3,8 +3,8 @@ package com.maple.maple_banktrade.trade.hooks.checkHook;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -23,11 +23,11 @@ import lombok.AllArgsConstructor;
 public final class StructureCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier structureId;
+    private ResourceLocation structureId;
     @Persisted
     private boolean flip;
 
-    public StructureCheckHook(Identifier structureId) {
+    public StructureCheckHook(ResourceLocation structureId) {
         this(structureId, false);
     }
 

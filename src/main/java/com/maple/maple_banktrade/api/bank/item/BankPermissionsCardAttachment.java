@@ -57,7 +57,7 @@ public class BankPermissionsCardAttachment extends ItemAttachment<ComponentItem>
         Set<UUID> fromCard = BankDataComponent.CARD_PERMISSIONS.getOrDefault(stack, Set.of());
         if (fromCard == null || fromCard.isEmpty()) {
             if (player instanceof ServerPlayer serverPlayer) {
-                serverPlayer.sendOverlayMessage(
+                serverPlayer.sendSystemMessage(
                         Component.translatable("message.maple_banktrade.perm_card.apply.empty"));
             }
             return InteractionResult.FAIL;
@@ -70,12 +70,12 @@ public class BankPermissionsCardAttachment extends ItemAttachment<ComponentItem>
 
         if (player instanceof ServerPlayer serverPlayer) {
             if (added > 0) {
-                serverPlayer.sendOverlayMessage(
+                serverPlayer.sendSystemMessage(
                         Component.translatable(
                                 "message.maple_banktrade.perm_card.apply.success",
                                 added, skipped, total));
             } else {
-                serverPlayer.sendOverlayMessage(
+                serverPlayer.sendSystemMessage(
                         Component.translatable(
                                 "message.maple_banktrade.perm_card.apply.none_new",
                                 before));

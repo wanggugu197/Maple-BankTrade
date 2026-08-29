@@ -1,7 +1,3 @@
 {
-  "parent": "maple_banktrade:item/transaction_talisman",
-  "textures": {
-    "layer0": "maple_banktrade:item/talisman",
-    "layer1": "minecraft:item/diamond"
-  }
+  "parent": "maple_banktrade:block/transaction_talisman_machine_item_desk0"
 }

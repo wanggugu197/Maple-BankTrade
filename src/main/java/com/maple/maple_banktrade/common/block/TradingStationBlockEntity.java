@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.common.block;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -12,22 +12,22 @@ import java.util.List;
 
 public class TradingStationBlockEntity extends BaseTradingStationBlockEntity {
 
-    private final List<Identifier> fallbackIds = List.of();
-    private final Identifier fallbackId = MapleBankTrade.id("dummy");
+    private final List<ResourceLocation> fallbackIds = List.of();
+    private final ResourceLocation fallbackId = MapleBankTrade.id("dummy");
 
     public TradingStationBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        TradingStationBlock block = (TradingStationBlock) state.getBlock();
-
-        super(type, pos, state, block.getStorageSpec(), block.isRunsAutoTrade());
+        super(type, pos, state,
+                ((TradingStationBlock) state.getBlock()).getStorageSpec(),
+                ((TradingStationBlock) state.getBlock()).isRunsAutoTrade());
     }
 
     @Override
-    protected List<Identifier> fallbackTradeTypeIds() {
+    protected List<ResourceLocation> fallbackTradeTypeIds() {
         return fallbackIds;
     }
 
     @Override
-    protected Identifier fallbackTradeTypeId() {
+    protected ResourceLocation fallbackTradeTypeId() {
         return fallbackId;
     }
 }

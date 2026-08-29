@@ -22,7 +22,7 @@ public final class TimeWindowVisibleHook extends MachineTradeHooks.StateHook {
 
     @Override
     public int getState(MachineTradeContext context, MachineTrade trade) {
-        long dayTime = context.level().getDefaultClockTime() % 24000L;
+        long dayTime = context.level().getDayTime() % 24000L;
         boolean inside;
         if (startTick <= endTick) {
             inside = dayTime >= startTick && dayTime <= endTick;

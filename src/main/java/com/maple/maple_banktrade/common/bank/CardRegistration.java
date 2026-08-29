@@ -132,31 +132,31 @@ public class CardRegistration {
 
         CardInfo.register(CENTRAL_LARGE_SINGLE_CURRENCY_CARD.nameIndex(),
                 Sprites.RECT_RD_T_DARK, DEFAULT_DETAIL_BACKGROUND,
-                (_, card) -> LargeSingleCurrencyBankCardInfo.createSimplifiedUI((LargeSingleCurrencyBankCard) card),
+                (ignored, card) -> LargeSingleCurrencyBankCardInfo.createSimplifiedUI((LargeSingleCurrencyBankCard) card),
                 (player, card) -> LargeSingleCurrencyBankCardInfo.createDetailsUI(player, (LargeSingleCurrencyBankCard) card));
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(CENTRAL_LARGE_SINGLE_CURRENCY_CARD.nameIndex()), "中央银行大额单货币卡", "Central Large Single Currency Card");
 
         CardInfo.register(CENTRAL_MULTI_CURRENCY_CARD.nameIndex(),
                 Sprites.RECT_RD, DEFAULT_DETAIL_BACKGROUND,
-                (_, card) -> MultiCurrencyBankCardInfo.createSimplifiedUI((MultiCurrencyBankCard) card),
+                (ignored, card) -> MultiCurrencyBankCardInfo.createSimplifiedUI((MultiCurrencyBankCard) card),
                 (player, card) -> MultiCurrencyBankCardInfo.createDetailsUI(player, (MultiCurrencyBankCard) card));
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(CENTRAL_MULTI_CURRENCY_CARD.nameIndex()), "中央银行多货币卡", "Central Multi Currency Card");
 
         CardInfo.register(CENTRAL_TAGGED_CARD.nameIndex(),
                 Sprites.RECT_RD, DEFAULT_DETAIL_BACKGROUND,
-                (_, card) -> TaggedBankCardInfo.createSimplifiedUI((TaggedBankCard) card),
+                (ignored, card) -> TaggedBankCardInfo.createSimplifiedUI((TaggedBankCard) card),
                 (player, card) -> TaggedBankCardInfo.createDetailsUI(player, (TaggedBankCard) card));
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(CENTRAL_TAGGED_CARD.nameIndex()), "中央银行标记卡", "Central Tagged Card");
 
         CardInfo.register(NATURE_SINGLE_CURRENCY_CARD.nameIndex(),
                 Sprites.RECT_RD_LIGHT, DEFAULT_DETAIL_BACKGROUND,
-                (_, card) -> SingleCurrencyBankCardInfo.createSimplifiedUI((SingleCurrencyBankCard) card),
+                (ignored, card) -> SingleCurrencyBankCardInfo.createSimplifiedUI((SingleCurrencyBankCard) card),
                 (player, card) -> SingleCurrencyBankCardInfo.createDetailsUI(player, (SingleCurrencyBankCard) card));
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(NATURE_SINGLE_CURRENCY_CARD.nameIndex()), "自然银行单货币卡", "Nature Single Currency Card");
 
         CardInfo.register(MAGIC_TAGGED_CARD.nameIndex(),
                 Sprites.RECT_RD_LIGHT, DEFAULT_DETAIL_BACKGROUND,
-                (_, card) -> TaggedBankCardInfo.createSimplifiedUI((TaggedBankCard) card),
+                (ignored, card) -> TaggedBankCardInfo.createSimplifiedUI((TaggedBankCard) card),
                 (player, card) -> TaggedBankCardInfo.createDetailsUI(player, (TaggedBankCard) card));
         MBTLangHandler.addLang(getBankCardFactoryTranslationKey(MAGIC_TAGGED_CARD.nameIndex()), "魔法银行标记卡", "Magic Tagged Card");
     }

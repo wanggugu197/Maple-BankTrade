@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.stateHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -21,7 +21,7 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class TaggedTotalCompletedRatioHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private int percent;
     @Persisted
@@ -30,7 +30,7 @@ public final class TaggedTotalCompletedRatioHook extends MachineTradeHooks.State
     /**
      * 便捷构造（flip = false）
      */
-    public TaggedTotalCompletedRatioHook(Identifier nameIndex, int percent) {
+    public TaggedTotalCompletedRatioHook(ResourceLocation nameIndex, int percent) {
         this(nameIndex, percent, false);
     }
 

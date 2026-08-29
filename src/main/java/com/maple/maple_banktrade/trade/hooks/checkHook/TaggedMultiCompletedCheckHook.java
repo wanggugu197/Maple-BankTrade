@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -21,24 +21,24 @@ import java.util.Set;
 public final class TaggedMultiCompletedCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private Set<String> ids;
     @Persisted
     private boolean flip;
 
-    public TaggedMultiCompletedCheckHook(Identifier nameIndex, Set<String> ids) {
+    public TaggedMultiCompletedCheckHook(ResourceLocation nameIndex, Set<String> ids) {
         this(nameIndex, ids, false);
     }
 
-    public TaggedMultiCompletedCheckHook(Identifier nameIndex, Set<String> ids, boolean flip) {
+    public TaggedMultiCompletedCheckHook(ResourceLocation nameIndex, Set<String> ids, boolean flip) {
         this.nameIndex = Objects.requireNonNull(nameIndex, "nameIndex");
         // 必须保持可变集合：LDLib2 CollectionAccessor 反序列化时会 clear + add
         this.ids = ids == null ? new LinkedHashSet<>() : new LinkedHashSet<>(ids);
         this.flip = flip;
     }
 
-    public TaggedMultiCompletedCheckHook(Identifier nameIndex, String... ids) {
+    public TaggedMultiCompletedCheckHook(ResourceLocation nameIndex, String... ids) {
         this(nameIndex, ids == null ? Set.of() : Set.of(ids));
     }
 

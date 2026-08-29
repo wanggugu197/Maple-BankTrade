@@ -4,7 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -37,7 +37,7 @@ import java.util.*;
  */
 public final class BankPermissionsCardUIRegistration {
 
-    public static final Identifier BANK_PERMISSIONS_CARD_UI = MapleBankTrade.id("bank_permissions_card_ui");
+    public static final ResourceLocation BANK_PERMISSIONS_CARD_UI = MapleBankTrade.id("bank_permissions_card_ui");
 
     private static final String K_LEFT = "left", K_RIGHT = "right";
     private static final String K_UUID = "uuid", K_NAME = "name", K_BANK = "bank", K_PERM = "perm";
@@ -80,17 +80,17 @@ public final class BankPermissionsCardUIRegistration {
             UUID id = parseUuid(tag);
             if (id != null && selected.remove(id)) push.run();
         });
-        root.onMessage(M_CLEAR, _ -> {
+        root.onMessage(M_CLEAR, ignored -> {
             if (player.level().isClientSide() || selected.isEmpty()) return;
             selected.clear();
             push.run();
         });
-        root.onMessage(M_EXPORT, _ -> exportCard(player, selected));
+        root.onMessage(M_EXPORT, ignored -> exportCard(player, selected));
 
         Button clear = btn("ui.maple_banktrade.perm_card.clear", "mbt-perm-card-button");
-        clear.setOnClick(_ -> root.sendMessage(M_CLEAR));
+        clear.setOnClick(ignored -> root.sendMessage(M_CLEAR));
         Button export = btn("ui.maple_banktrade.perm_card.export", "mbt-perm-card-button");
-        export.setOnClick(_ -> root.sendMessage(M_EXPORT));
+        export.setOnClick(ignored -> root.sendMessage(M_EXPORT));
 
         root.addChildren(
                 label("ui.maple_banktrade.perm_card.title", "mbt-perm-card-title"),
@@ -189,9 +189,9 @@ public final class BankPermissionsCardUIRegistration {
     private static CompoundTag entry(BankCard card, BankCardPermission perm) {
         CompoundTag t = new CompoundTag();
         t.putString(K_UUID, card.getCardUuid().toString());
-        Identifier name = card.getNameIndex();
+        ResourceLocation name = card.getNameIndex();
         t.putString(K_NAME, name == null ? "" : name.toString());
-        Identifier bank = card.getBankTypeId();
+        ResourceLocation bank = card.getBankTypeId();
         t.putString(K_BANK, bank == null ? "" : bank.toString());
         t.putString(K_PERM, perm == null ? BankCardPermission.UNUSABLE.getSerializedName() : perm.getSerializedName());
         return t;
@@ -201,9 +201,9 @@ public final class BankPermissionsCardUIRegistration {
         left.clearAllScrollViewChildren();
         right.clearAllScrollViewChildren();
         if (!(tag instanceof CompoundTag root)) return;
-        fill(left, root.getListOrEmpty(K_LEFT), "ui.maple_banktrade.perm_card.empty_manageable",
+        fill(left, (root.contains(K_LEFT, Tag.TAG_LIST) ? root.getList(K_LEFT, Tag.TAG_COMPOUND) : new ListTag()), "ui.maple_banktrade.perm_card.empty_manageable",
                 host, M_ADD, "ui.maple_banktrade.perm_card.add");
-        fill(right, root.getListOrEmpty(K_RIGHT), "ui.maple_banktrade.perm_card.empty_selected",
+        fill(right, (root.contains(K_RIGHT, Tag.TAG_LIST) ? root.getList(K_RIGHT, Tag.TAG_COMPOUND) : new ListTag()), "ui.maple_banktrade.perm_card.empty_selected",
                 host, M_REMOVE, "ui.maple_banktrade.perm_card.remove");
     }
 
@@ -220,14 +220,14 @@ public final class BankPermissionsCardUIRegistration {
         }
         for (Tag t : entries) {
             if (!(t instanceof CompoundTag e)) continue;
-            String uuid = e.getStringOr(K_UUID, "");
+            String uuid = (e.contains(K_UUID) ? e.getString(K_UUID) : "");
             UIElement row = new UIElement().addClass("mbt-perm-card-row");
             TextElement name = label(cardName(e));
             name.style(s -> s.tooltips(buildTooltips(e)));
             Button action = btn(actionKey, "mbt-perm-card-row-button");
             CompoundTag payload = new CompoundTag();
             payload.putString(K_UUID, uuid);
-            action.setOnClick(_ -> host.sendMessage(msg, payload));
+            action.setOnClick(ignored -> host.sendMessage(msg, payload));
             row.addChildren(name, action);
             list.addScrollViewChild(row);
         }
@@ -235,9 +235,9 @@ public final class BankPermissionsCardUIRegistration {
 
     /** 主行：卡显示名。 */
     private static Component cardName(CompoundTag entry) {
-        String raw = entry.getStringOr(K_NAME, "");
+        String raw = (entry.contains(K_NAME) ? entry.getString(K_NAME) : "");
         if (raw.isEmpty()) return Component.translatable("ui.maple_banktrade.perm_card.unknown_card");
-        Identifier id = Identifier.tryParse(raw);
+        ResourceLocation id = ResourceLocation.tryParse(raw);
         return id == null ? Component.literal(raw) : Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(id));
     }
 
@@ -248,15 +248,15 @@ public final class BankPermissionsCardUIRegistration {
                 Component.translatable("ui.maple_banktrade.perm_card.tip.card", cardName(entry)),
                 Component.translatable("ui.maple_banktrade.perm_card.tip.perm",
                         Component.translatable(BankCardPermission.bySerializedName(
-                                entry.getStringOr(K_PERM, "unusable")).getTranslationKey())),
-                Component.translatable("ui.bank.card.detail.uuid", entry.getStringOr(K_UUID, "")),
+                                (entry.contains(K_PERM) ? entry.getString(K_PERM) : "unusable")).getTranslationKey())),
+                Component.translatable("ui.bank.card.detail.uuid", (entry.contains(K_UUID) ? entry.getString(K_UUID) : "")),
         };
     }
 
     private static Component bankName(CompoundTag entry) {
-        String raw = entry.getStringOr(K_BANK, "");
+        String raw = (entry.contains(K_BANK) ? entry.getString(K_BANK) : "");
         if (raw.isEmpty()) return Component.translatable("ui.maple_banktrade.perm_card.unknown_bank");
-        Identifier id = Identifier.tryParse(raw);
+        ResourceLocation id = ResourceLocation.tryParse(raw);
         if (id == null) return Component.literal(raw);
         BankInfo info = BankInfo.of(BankType.requireById(id));
         return info == null ? Component.literal(id.toString()) : Component.translatable(BankInfo.getBankInfoTranslationKey(info.type()));
@@ -304,7 +304,7 @@ public final class BankPermissionsCardUIRegistration {
 
     private static UUID parseUuid(CompoundTag tag) {
         if (tag == null) return null;
-        String s = tag.getStringOr(K_UUID, "");
+        String s = (tag.contains(K_UUID) ? tag.getString(K_UUID) : "");
         if (s.isEmpty()) return null;
         try {
             return UUID.fromString(s);

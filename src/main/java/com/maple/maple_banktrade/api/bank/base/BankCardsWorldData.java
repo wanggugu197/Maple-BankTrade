@@ -1,9 +1,10 @@
 package com.maple.maple_banktrade.api.bank.base;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.mojang.datafixers.util.Pair;
@@ -11,6 +12,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -86,11 +88,51 @@ public class BankCardsWorldData extends SavedData {
                     .forGetter(BankCardsWorldData::cardPermissions))
             .apply(instance, BankCardsWorldData::new));
 
-    /** 全局 SavedData 类型；文件为 data/maple_banktrade/bank_cards.dat。 */
-    public static final SavedDataType<BankCardsWorldData> TYPE = new SavedDataType<>(
-            MapleBankTrade.id("bank_cards"),
-            BankCardsWorldData::new,
-            CODEC);
+    /** 全局 SavedData 工厂；文件为 data/maple_banktrade/bank_cards.dat。 */
+    public static final SavedData.Factory<BankCardsWorldData> FACTORY = new SavedData.Factory<>(
+            () -> new BankCardsWorldData(),
+            (net.minecraft.nbt.CompoundTag tag, HolderLookup.Provider provider) -> CODEC
+                    .decode(provider.createSerializationContext(NbtOps.INSTANCE), tag)
+                    .resultOrPartial(error -> MapleBankTrade.LOGGER.error("Failed to load bank cards: {}", error))
+                    .map(com.mojang.datafixers.util.Pair::getFirst)
+                    .orElseGet(() -> new BankCardsWorldData()));
+
+    /** 世界数据文件名（1.21.1：data/maple_banktrade/bank_cards.dat）。 */
+    public static final String DATA_NAME = "maple_banktrade/bank_cards";
+
+    // ==============================================
+    // SavedData 序列化（1.21.1：save(CompoundTag, Provider)）
+    // ==============================================
+
+    @Override
+    public net.minecraft.nbt.CompoundTag save(net.minecraft.nbt.CompoundTag tag, HolderLookup.Provider provider) {
+        CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), this)
+                .resultOrPartial(error -> MapleBankTrade.LOGGER.error("Failed to save bank cards: {}", error))
+                .ifPresent(encoded -> {
+                    if (encoded instanceof net.minecraft.nbt.CompoundTag compoundTag) {
+                        tag.merge(compoundTag);
+                    } else {
+                        tag.put("data", encoded);
+                    }
+                });
+        return tag;
+    }
+
+    /**
+     * 写盘前确保目标目录存在。
+     * <p>
+     * 1.21.1 的 {@code DimensionDataStorage.getDataFile(name)} 不会为含路径分隔符的文件名
+     * 创建中间目录（如 {@code data/maple_banktrade/bank_cards.dat}），导致异步写临时文件时
+     * {@code NoSuchFileException} 而保存失败。此处先创建父目录。
+     * </p>
+     */
+    @Override
+    public void save(java.io.File file, HolderLookup.@NonNull Provider registries) {
+        if (file.getParentFile() != null) {
+            file.getParentFile().mkdirs();
+        }
+        super.save(file, registries);
+    }
 
     // ==============================================
     // 构造
@@ -238,7 +280,7 @@ public class BankCardsWorldData extends SavedData {
     }
 
     /** 按名称索引查询玩家当前可用的银行卡。 */
-    public List<BankCard> getUsableCardsForPlayerByNameIndex(UUID playerUuid, Identifier nameIndex) {
+    public List<BankCard> getUsableCardsForPlayerByNameIndex(UUID playerUuid, ResourceLocation nameIndex) {
         if (playerUuid == null || nameIndex == null) return Collections.emptyList();
         return getUsableCardsForPlayer(playerUuid).stream()
                 .filter(card -> nameIndex.equals(card.getNameIndex()))
@@ -251,7 +293,7 @@ public class BankCardsWorldData extends SavedData {
      * 仅包含 {@link BankCardPermission#canUse()} 的卡；同一 nameIndex 可对应多张卡。
      * </p>
      */
-    public List<UUID> getCardUuidsForPlayerByNameIndex(UUID playerUuid, Identifier nameIndex) {
+    public List<UUID> getCardUuidsForPlayerByNameIndex(UUID playerUuid, ResourceLocation nameIndex) {
         return getUsableCardsForPlayerByNameIndex(playerUuid, nameIndex).stream()
                 .map(BankCard::getCardUuid)
                 .toList();
@@ -264,7 +306,7 @@ public class BankCardsWorldData extends SavedData {
      * @return 无匹配可用卡时返回 null
      */
     @Nullable
-    public BankCard getHighestPermissionCardForPlayerByNameIndex(UUID playerUuid, Identifier nameIndex) {
+    public BankCard getHighestPermissionCardForPlayerByNameIndex(UUID playerUuid, ResourceLocation nameIndex) {
         if (playerUuid == null || nameIndex == null) return null;
         Map<UUID, BankCardPermission> permissions = getPermissionsForPlayer(playerUuid);
         if (permissions.isEmpty()) return null;
@@ -291,18 +333,18 @@ public class BankCardsWorldData extends SavedData {
      * @return 无匹配可用卡时返回 null
      */
     @Nullable
-    public UUID getHighestPermissionCardUuidForPlayerByNameIndex(UUID playerUuid, Identifier nameIndex) {
+    public UUID getHighestPermissionCardUuidForPlayerByNameIndex(UUID playerUuid, ResourceLocation nameIndex) {
         BankCard card = getHighestPermissionCardForPlayerByNameIndex(playerUuid, nameIndex);
         return card == null ? null : card.getCardUuid();
     }
 
     /** 获取玩家拥有可用卡的银行 ID 集合（仅 canUse 计入）。 */
-    public Set<Identifier> getBankTypeIdsForPlayer(UUID playerUuid) {
+    public Set<ResourceLocation> getBankTypeIdsForPlayer(UUID playerUuid) {
         if (playerUuid == null) return Collections.emptySet();
         Map<UUID, BankCardPermission> permissions = getPermissionsForPlayer(playerUuid);
         if (permissions.isEmpty()) return Collections.emptySet();
 
-        Set<Identifier> result = new HashSet<>();
+        Set<ResourceLocation> result = new HashSet<>();
         permissions.forEach((cardUuid, permission) -> {
             if (!permission.canUse()) return;
             BankCard card = cards.get(cardUuid);
@@ -314,11 +356,11 @@ public class BankCardsWorldData extends SavedData {
     }
 
     /** 获取玩家拥有可用卡的银行列表，顺序与 BankType 注册顺序一致。 */
-    public List<Identifier> getBankTypesForPlayer(UUID playerUuid) {
-        Set<Identifier> bankTypeIds = getBankTypeIdsForPlayer(playerUuid);
+    public List<ResourceLocation> getBankTypesForPlayer(UUID playerUuid) {
+        Set<ResourceLocation> bankTypeIds = getBankTypeIdsForPlayer(playerUuid);
         if (bankTypeIds.isEmpty()) return Collections.emptyList();
 
-        List<Identifier> result = new ArrayList<>();
+        List<ResourceLocation> result = new ArrayList<>();
         BankType.values().forEach(bankType -> {
             if (bankTypeIds.contains(bankType.id())) {
                 result.add(bankType.id());
@@ -334,7 +376,7 @@ public class BankCardsWorldData extends SavedData {
     }
 
     /** 查询玩家在指定银行 ID 下拥有的全部可用银行卡 UUID。 */
-    public Set<UUID> getCardsForPlayerInBank(UUID playerUuid, Identifier bankTypeId) {
+    public Set<UUID> getCardsForPlayerInBank(UUID playerUuid, ResourceLocation bankTypeId) {
         if (playerUuid == null || bankTypeId == null) return Collections.emptySet();
         Map<UUID, BankCardPermission> permissions = getPermissionsForPlayer(playerUuid);
         if (permissions.isEmpty()) return Collections.emptySet();

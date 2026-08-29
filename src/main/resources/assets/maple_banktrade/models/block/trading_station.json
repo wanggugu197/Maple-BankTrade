@@ -1,10 +1,13 @@
 {
-	"parent": "minecraft:block/cube_all",
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"render_type": "minecraft:cutout",
 	"textures": {
-		"particle": "maple_banktrade:block/trading_station/bring",
+		"base": "maple_banktrade:block/void",
 		"bring": "maple_banktrade:block/trading_station/bring",
 		"icon": "maple_banktrade:block/trading_station/icon",
-		"roof": "maple_banktrade:block/trading_station/roof"
+		"roof": "maple_banktrade:block/trading_station/roof",
+		"particle": "#base"
 	},
 	"elements": [
 		{
@@ -83,9 +86,9 @@
 		},
 		{
 			"name": "icon",
-			"from": [4, 27.99, 7],
-			"to": [12, 29.01, 15],
-			"rotation": {"angle": 0, "axis": "y", "origin": [4, 28, 7]},
+			"from": [4, 29.1, 7],
+			"to": [12, 29.1, 15],
+			"rotation": {"angle": 0, "axis": "y", "origin": [4, 30, 7]},
 			"faces": {
 				"up": {"uv": [0, 0, 16, 16], "rotation": 180, "texture": "#icon"},
 				"down": {"uv": [0, 16, 16, 0], "rotation": 180, "texture": "#icon"}
@@ -117,6 +120,18 @@
 			"faces": {
 				"north": {"uv": [0, 10, 16, 16], "texture": "#bring"}
 			}
+		},
+		{
+			"from": [0, 0, 0],
+			"to": [16, 16, 16],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#base"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#base"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#base"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#base"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#base"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#base"}
+			}
 		}
 	],
 	"groups": [
@@ -140,6 +155,40 @@
 			"scope": 0,
 			"color": 0,
 			"children": [7, 8, 9]
+		},
+		10
+	],
+	"gui_light": "side",
+	"display": {
+		"gui": {
+			"rotation": [ 30, 225, 0 ],
+			"translation": [ 0, 0, 0],
+			"scale":[ 0.625, 0.625, 0.625 ]
+		},
+		"ground": {
+			"rotation": [ 0, 0, 0 ],
+			"translation": [ 0, 3, 0],
+			"scale":[ 0.25, 0.25, 0.25 ]
+		},
+		"fixed": {
+			"rotation": [ 0, 0, 0 ],
+			"translation": [ 0, 0, 0],
+			"scale":[ 0.5, 0.5, 0.5 ]
+		},
+		"thirdperson_righthand": {
+			"rotation": [ 75, 45, 0 ],
+			"translation": [ 0, 2.5, 0],
+			"scale": [ 0.375, 0.375, 0.375 ]
+		},
+		"firstperson_righthand": {
+			"rotation": [ 0, 45, 0 ],
+			"translation": [ 0, 0, 0 ],
+			"scale": [ 0.40, 0.40, 0.40 ]
+		},
+		"firstperson_lefthand": {
+			"rotation": [ 0, 225, 0 ],
+			"translation": [ 0, 0, 0 ],
+			"scale": [ 0.40, 0.40, 0.40 ]
 		}
-	]
+	}
 }

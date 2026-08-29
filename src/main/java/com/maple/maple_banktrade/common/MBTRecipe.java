@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.common;
 
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.advancements.Criterion;
-import net.minecraft.advancements.criterion.InventoryChangeTrigger;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 
 import java.util.List;
 import java.util.Optional;

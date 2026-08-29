@@ -6,7 +6,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -31,11 +31,11 @@ public final class TradeRpcHandlers {
     // 客户端收到后替换整个 clientEntries
     // ==========================================================
     @RPCPacket("trade_full_sync")
-    public static void handleFullSync(RPCSender sender, Identifier tradeTypeId, ListTag listTag) {
+    public static void handleFullSync(RPCSender sender, ResourceLocation tradeTypeId, ListTag listTag) {
         AbstractTradeEntryStorage<?> storage = findStorage(tradeTypeId);
         if (storage == null) return;
         HolderLookup.Provider provider = getProvider(sender);
-        Map<Identifier, TradeInfo> newMap = new LinkedHashMap<>();
+        Map<ResourceLocation, TradeInfo> newMap = new LinkedHashMap<>();
         for (Tag tag : listTag) {
             if (tag instanceof CompoundTag entryTag) {
                 TradeInfo entry = storage.createEmptyEntry();
@@ -53,7 +53,7 @@ public final class TradeRpcHandlers {
     // 用于添加或更新单个/多个条目（客户端合并到 clientEntries）
     // ==========================================================
     @RPCPacket("trade_sync_entries")
-    public static void handleSyncEntries(RPCSender sender, Identifier tradeTypeId, ListTag listTag) {
+    public static void handleSyncEntries(RPCSender sender, ResourceLocation tradeTypeId, ListTag listTag) {
         AbstractTradeEntryStorage<?> storage = findStorage(tradeTypeId);
         if (storage == null) return;
         HolderLookup.Provider provider = getProvider(sender);
@@ -78,7 +78,7 @@ public final class TradeRpcHandlers {
         storage.updateClientEntry(entry.id(), entry);
     }
 
-    private static AbstractTradeEntryStorage<?> findStorage(Identifier tradeTypeId) {
+    private static AbstractTradeEntryStorage<?> findStorage(ResourceLocation tradeTypeId) {
         if (TradeRegistry.findStorage(tradeTypeId).orElse(null) instanceof AbstractTradeEntryStorage<?> storage)
             return storage;
         return null;

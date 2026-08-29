@@ -32,12 +32,9 @@ gtoPublish {
 
     mavenRepoUrl = 'releases'
 
-    minecraftVersion = '26.1.2'
+    minecraftVersion = '1.21.1'
     modLoader = 'NeoForge'
 
-    githubRepo = 'wanggugu197/Maple-BankTrade'
-
     curseforgeProjectId = '1620324'
-    curseforgeJavaVersion = 'Java 25'
-    curseforgeEnvironment = 'both'
+    curseforgeJavaVersion = 'Java 21'
 }

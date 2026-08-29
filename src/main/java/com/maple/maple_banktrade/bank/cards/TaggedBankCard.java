@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
@@ -23,7 +23,7 @@ import java.util.*;
  */
 public class TaggedBankCard extends BankCard {
 
-    public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("tagged");
+    public static final ResourceLocation CARD_TYPE_ID = MapleBankTrade.id("tagged");
 
     // ==============================================
     // Codec（由 PersistedParser 生成）

@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.stateHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -22,24 +22,24 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class TaggedMultiCompletedVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private Set<String> ids;
     @Persisted
     private boolean flip;
 
-    public TaggedMultiCompletedVisibleHook(Identifier nameIndex, Set<String> ids) {
+    public TaggedMultiCompletedVisibleHook(ResourceLocation nameIndex, Set<String> ids) {
         this(nameIndex, ids, false);
     }
 
-    public TaggedMultiCompletedVisibleHook(Identifier nameIndex, Set<String> ids, boolean flip) {
+    public TaggedMultiCompletedVisibleHook(ResourceLocation nameIndex, Set<String> ids, boolean flip) {
         this.nameIndex = Objects.requireNonNull(nameIndex, "nameIndex");
         // 必须保持可变集合：LDLib2 CollectionAccessor 反序列化时会 clear + add
         this.ids = ids == null ? new LinkedHashSet<>() : new LinkedHashSet<>(ids);
         this.flip = flip;
     }
 
-    public TaggedMultiCompletedVisibleHook(Identifier nameIndex, String... ids) {
+    public TaggedMultiCompletedVisibleHook(ResourceLocation nameIndex, String... ids) {
         this(nameIndex, ids == null ? Set.of() : Set.of(ids));
     }
 

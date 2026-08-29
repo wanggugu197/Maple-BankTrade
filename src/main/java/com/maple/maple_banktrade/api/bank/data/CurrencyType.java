@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.bank.data;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
@@ -13,13 +13,13 @@ import org.jspecify.annotations.NonNull;
 import java.util.*;
 
 /**
- * 银行卡货币类型，以 Identifier 为键统一注册。
+ * 银行卡货币类型，以 ResourceLocation 为键统一注册。
  * <p>
  * {@code currencyTexture} 可为 {@link IGuiTexture#dynamic} 包装的 lazy 图标
  * （如 {@code ItemStackTexture(Items.*)}，首次绘制时再构造）。
  * </p>
  */
-public record CurrencyType(Identifier id,
+public record CurrencyType(ResourceLocation id,
                            List<Component> description,
                            IGuiTexture currencyTexture,
                            IGuiTexture backgroundTexture)
@@ -32,12 +32,12 @@ public record CurrencyType(Identifier id,
     // 注册表
     // ==============================================
 
-    private static final Map<Identifier, CurrencyType> REGISTRY = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, CurrencyType> REGISTRY = new LinkedHashMap<>();
     /** 仅允许已注册货币 ID 通过。 */
-    public static final Codec<Identifier> ID_CODEC = Identifier.CODEC.flatXmap(CurrencyType::decodeId, CurrencyType::decodeId);
+    public static final Codec<ResourceLocation> ID_CODEC = ResourceLocation.CODEC.flatXmap(CurrencyType::decodeId, CurrencyType::decodeId);
 
     /** 存档与网络用 Codec：按已注册货币 ID 编解码为 CurrencyType 对象。 */
-    public static final Codec<CurrencyType> CODEC = Identifier.CODEC.flatXmap(
+    public static final Codec<CurrencyType> CODEC = ResourceLocation.CODEC.flatXmap(
             CurrencyType::decode,
             type -> DataResult.success(type.id()));
 
@@ -55,7 +55,7 @@ public record CurrencyType(Identifier id,
     }
 
     /** 生成货币翻译键。 */
-    public static String getCurrencyTypeTranslationKey(Identifier id) {
+    public static String getCurrencyTypeTranslationKey(ResourceLocation id) {
         return "currency." + id.getNamespace() + "." + id.getPath();
     }
 
@@ -69,7 +69,7 @@ public record CurrencyType(Identifier id,
     // ==============================================
 
     /** 注册货币类型；重复注册时返回已有实例。 */
-    public static CurrencyType register(Identifier id, List<Component> description, IGuiTexture currencyTexture, IGuiTexture backgroundTexture) {
+    public static CurrencyType register(ResourceLocation id, List<Component> description, IGuiTexture currencyTexture, IGuiTexture backgroundTexture) {
         if (REGISTRY.containsKey(id)) {
             MapleBankTrade.LOGGER.error("Currency type with id {} already exists", id);
             return REGISTRY.get(id);
@@ -98,12 +98,12 @@ public record CurrencyType(Identifier id,
     // ==============================================
 
     /** 查询已注册类型；未知类型不自动注册。 */
-    public static Optional<CurrencyType> findById(Identifier id) {
+    public static Optional<CurrencyType> findById(ResourceLocation id) {
         return Optional.ofNullable(REGISTRY.get(Objects.requireNonNull(id, "id")));
     }
 
     /** 查询已注册类型；未知类型返回 null。 */
-    public static CurrencyType requireById(Identifier id) {
+    public static CurrencyType requireById(ResourceLocation id) {
         return id == null ? null : REGISTRY.get(id);
     }
 
@@ -113,14 +113,14 @@ public record CurrencyType(Identifier id,
     }
 
     /** 解析并规范化已注册货币 ID。 */
-    private static DataResult<Identifier> decodeId(Identifier id) {
+    private static DataResult<ResourceLocation> decodeId(ResourceLocation id) {
         return findById(id)
                 .map(type -> DataResult.success(type.id()))
                 .orElseGet(() -> DataResult.error(() -> "Unknown currency type: " + id));
     }
 
     /** 按 ID 查找已注册货币类型；未知货币返回错误。 */
-    private static DataResult<CurrencyType> decode(Identifier id) {
+    private static DataResult<CurrencyType> decode(ResourceLocation id) {
         CurrencyType type = requireById(id);
         return type == null ? DataResult.error(() -> "Unknown currency type: " + id) : DataResult.success(type);
     }

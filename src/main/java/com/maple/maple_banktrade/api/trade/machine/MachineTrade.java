@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -32,7 +32,7 @@ public final class MachineTrade implements TradeInfo {
     // ==============================================
 
     @Persisted
-    private Identifier id;
+    private ResourceLocation id;
 
     @Persisted
     private List<ItemIO> itemInputs;
@@ -55,7 +55,7 @@ public final class MachineTrade implements TradeInfo {
     private boolean autoTrade;
 
     @Persisted
-    private Identifier machineTradeIcon;
+    private ResourceLocation machineTradeIcon;
     @Persisted
     private List<List<Component>> description;
 
@@ -123,7 +123,7 @@ public final class MachineTrade implements TradeInfo {
     // Builder 工厂方法
     // ==============================================
 
-    public static MachineTradeBuilder builder(Identifier id) {
+    public static MachineTradeBuilder builder(ResourceLocation id) {
         return new MachineTradeBuilder(id);
     }
 }

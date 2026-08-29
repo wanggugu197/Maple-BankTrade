@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.bank.capability;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.maple.maple_banktrade.api.bank.data.CurrencyType;
 import com.mapleutillib.utils.FormattingUtil;
@@ -14,44 +14,44 @@ import java.util.*;
 public interface CurrencyStorageBankCard {
 
     /** 获取当前卡支持的货币 ID。 */
-    Set<Identifier> getSupportedCurrencyIds();
+    Set<ResourceLocation> getSupportedCurrencyIds();
 
     /** 判断当前卡是否支持指定货币。 */
-    default boolean supportsCurrency(Identifier currencyTypeId) {
+    default boolean supportsCurrency(ResourceLocation currencyTypeId) {
         CurrencyType type = CurrencyType.requireById(currencyTypeId);
         return type != null && getSupportedCurrencyIds().contains(type.id());
     }
 
     /** 查询指定货币余额；不支持时返回 0。 */
-    default BigInteger getCurrencyBalance(Identifier currencyTypeId) {
+    default BigInteger getCurrencyBalance(ResourceLocation currencyTypeId) {
         return BigInteger.valueOf(getCurrencyBalanceAsLong(currencyTypeId));
     }
 
     /** 查询指定货币余额并格式化为字符串。 */
-    default String getCurrencyBalanceAsString(Identifier currencyTypeId) {
+    default String getCurrencyBalanceAsString(ResourceLocation currencyTypeId) {
         return formatCurrencyAmount(getCurrencyBalance(currencyTypeId));
     }
 
     /** 查询 long 余额；超范围实现应返回饱和值。 */
-    long getCurrencyBalanceAsLong(Identifier currencyTypeId);
+    long getCurrencyBalanceAsLong(ResourceLocation currencyTypeId);
 
     /** 增加余额；默认仅支持 long 范围内金额。 */
-    default boolean increaseCurrency(Identifier currencyTypeId, BigInteger amount) {
+    default boolean increaseCurrency(ResourceLocation currencyTypeId, BigInteger amount) {
         Objects.requireNonNull(amount, "amount");
         return canRepresentAsLong(amount) && increaseCurrency(currencyTypeId, amount.longValue());
     }
 
     /** 增加指定货币余额。 */
-    boolean increaseCurrency(Identifier currencyTypeId, long amount);
+    boolean increaseCurrency(ResourceLocation currencyTypeId, long amount);
 
     /** 减少余额；默认仅支持 long 范围内金额。 */
-    default boolean decreaseCurrency(Identifier currencyTypeId, BigInteger amount) {
+    default boolean decreaseCurrency(ResourceLocation currencyTypeId, BigInteger amount) {
         Objects.requireNonNull(amount, "amount");
         return canRepresentAsLong(amount) && decreaseCurrency(currencyTypeId, amount.longValue());
     }
 
     /** 减少指定货币余额。 */
-    boolean decreaseCurrency(Identifier currencyTypeId, long amount);
+    boolean decreaseCurrency(ResourceLocation currencyTypeId, long amount);
 
     /** 将金额转为 long，超出时饱和到边界。 */
     static long saturatingLongValue(BigInteger amount) {
@@ -74,8 +74,8 @@ public interface CurrencyStorageBankCard {
     }
 
     /** 创建固定货币键的初始余额表，跳过空货币。 */
-    static <V> Map<Identifier, V> createInitialBalances(Collection<CurrencyType> currencyTypes, V initialValue) {
-        Map<Identifier, V> result = new HashMap<>();
+    static <V> Map<ResourceLocation, V> createInitialBalances(Collection<CurrencyType> currencyTypes, V initialValue) {
+        Map<ResourceLocation, V> result = new HashMap<>();
         if (currencyTypes != null) {
             for (CurrencyType type : currencyTypes) {
                 if (type != null) result.put(type.id(), initialValue);
@@ -85,7 +85,7 @@ public interface CurrencyStorageBankCard {
     }
 
     /** 创建固定货币键的初始余额表，跳过空货币。 */
-    static <V> Map<Identifier, V> createInitialBalances(V initialValue, CurrencyType... currencyTypes) {
+    static <V> Map<ResourceLocation, V> createInitialBalances(V initialValue, CurrencyType... currencyTypes) {
         return createInitialBalances(currencyTypes == null ? List.of() : Arrays.asList(currencyTypes), initialValue);
     }
 }

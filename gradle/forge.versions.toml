@@ -1,29 +1,29 @@
 [versions]
-registryLib = "[8.0.14,)"
-mapleutillib = "[0.0.3,)"
-configuration = "4.1.2+26.1.2"
+registryLib = "8.0.16"
+mapleutillib = "0.3.0"
+configuration = "3.1.1"
 
-jei = "29.16.0.48"
-jade = "26.1.8+neoforge"
+jei = "19.44.0.406"
+jade = "15.10.0+neoforge"
 
-ae2 = "26.1.10-beta"
-ldlib2 = "26.1.2.35"
+ae2 = "19.2.17"
+ldlib2 = "2.2.37"
 
-ftbLibrary = "26.1.2.7"
-ftbTeams = "26.1.2.4"
-ftbQuests = "26.1.2.3"
+ftbLibrary = "2101.1.21"
+ftbTeams = "2101.1.11"
+ftbQuests = "2101.1.34"
 
 [libraries]
-registrylib = { group = "com.gto", name = "registrylib-neoforge-26.1.2", version.ref = "registryLib" }
-mapleutillib = { group = "com.maple197", name = "MapleUtilLib-neoforge-26.1.2", version.ref = "mapleutillib" }
-configuration = { module = "dev.toma.configuration:configuration-neoforge", version.ref = "configuration" }
+registrylib = { group = "com.gto", name = "registrylib-neoforge-1.21.1", version.ref = "registryLib" }
+mapleutillib = { group = "com.maple197", name = "MapleUtilLib-neoforge-1.21.1", version.ref = "mapleutillib" }
+configuration = { module = "com.maple.deps:configuration-neoforge", version.ref = "configuration" }
 
-jeiApi = { group = "mezz.jei", name = "jei-26.1.2-neoforge-api", version.ref = "jei" }
-jei = { group = "mezz.jei", name = "jei-26.1.2-neoforge", version.ref = "jei" }
+jeiApi = { group = "mezz.jei", name = "jei-1.21.1-neoforge-api", version.ref = "jei" }
+jei = { group = "mezz.jei", name = "jei-1.21.1-neoforge", version.ref = "jei" }
 jade = { group = "maven.modrinth", name = "jade", version.ref = "jade" }
 
 ae2 = { group = "org.appliedenergistics", name = "appliedenergistics2", version.ref = "ae2" }
-ldlib2 = { group = "com.lowdragmc.ldlib2", name = "ldlib2-neoforge-26.1", version.ref = "ldlib2" }
+ldlib2 = { group = "com.lowdragmc.ldlib2", name = "ldlib2-neoforge-1.21.1", version.ref = "ldlib2" }
 
 # https://maven.ftb.dev/#/releases/dev/ftb/mods/ftb-library-neoforge
 ftbLibrary = { group = "dev.ftb.mods", name = "ftb-library-neoforge", version.ref = "ftbLibrary" }

@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.api.bank.item;
 
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -26,9 +26,9 @@ public class BankDataComponent {
                     .persistent(UUIDUtil.CODEC_LINKED_SET)
                     .networkSynchronized(UUIDUtil.STREAM_CODEC.apply(ByteBufCodecs.list()).map(Sets::newLinkedHashSet, Lists::newArrayList)));
 
-    public static final DataComponentTypeEntry<Identifier> CARD_NAME_INDEX = REGISTRY.dataComponentTypeEntry(
+    public static final DataComponentTypeEntry<ResourceLocation> CARD_NAME_INDEX = REGISTRY.dataComponentTypeEntry(
             "card_name_index",
             builder -> builder
-                    .persistent(Identifier.CODEC)
-                    .networkSynchronized(Identifier.STREAM_CODEC));
+                    .persistent(ResourceLocation.CODEC)
+                    .networkSynchronized(ResourceLocation.STREAM_CODEC));
 }

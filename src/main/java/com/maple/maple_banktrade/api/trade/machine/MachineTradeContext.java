@@ -7,13 +7,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
-import net.neoforged.neoforge.transfer.fluid.FluidStacksResourceHandler;
-import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.resource.BankCurrencyResourceHandler;
 import com.maple.maple_banktrade.api.trade.base.context.TradeContext;
+import com.mapleutillib.api.resource.ObservableFluidResourceHandler;
+import com.mapleutillib.api.resource.ObservableItemResourceHandler;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -29,10 +29,10 @@ public record MachineTradeContext(
                                   @Nullable Entity entity,
                                   ServerLevel level,
                                   MinecraftServer server,
-                                  ItemStacksResourceHandler itemInput,
-                                  ItemStacksResourceHandler itemOutput,
-                                  FluidStacksResourceHandler fluidInput,
-                                  FluidStacksResourceHandler fluidOutput,
+                                  ObservableItemResourceHandler itemInput,
+                                  ObservableItemResourceHandler itemOutput,
+                                  ObservableFluidResourceHandler fluidInput,
+                                  ObservableFluidResourceHandler fluidOutput,
                                   EnergyHandler energy,
                                   Set<BankCard> bankCards,
                                   MachineTradeStorage storage)

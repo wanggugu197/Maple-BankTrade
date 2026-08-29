@@ -6,7 +6,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.NameAndId;
+import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.world.entity.player.Player;
 
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
@@ -71,19 +71,19 @@ public final class BankCardPermissionPanel {
         // 消息挂 panel，避免列表重建丢 handler
         panel.onMessage(M_GRANT, p -> mutate(player, p, rev, (data, target) -> data.grantPermission(
                 BankHelper.getUuid(player), target, cardId,
-                BankCardPermission.bySerializedName(p.getStringOr(K_PERM, "usable")))));
+                BankCardPermission.bySerializedName((p.contains(K_PERM) ? p.getString(K_PERM) : "usable")))));
         panel.onMessage(M_REVOKE, p -> mutate(player, p, rev,
                 (data, target) -> data.revokeManagedPermission(BankHelper.getUuid(player), target, cardId)));
         // 删除：服务端计数并执行；文案在客户端 setOnClick 中逐步更新
-        panel.onMessage(M_DELETE, _ -> handleDelete(player, cardId, delClicks));
-        panel.onMessage(M_REFRESH, _ -> {
+        panel.onMessage(M_DELETE, ignored -> handleDelete(player, cardId, delClicks));
+        panel.onMessage(M_REFRESH, ignored -> {
             rev[0]++;
             delClicks[0] = 0; // 重开面板时重置服务端确认进度
         });
 
         // 关闭钮放 header 行；按钮视觉由 LSS 控制
         Button close = button(Component.literal("×"), "mbt-card-perm-close");
-        close.setOnClick(_ -> {
+        close.setOnClick(ignored -> {
             panel.setDisplay(false);
             resetDelete(delBtn, delClicks);
         });
@@ -95,7 +95,7 @@ public final class BankCardPermissionPanel {
         if (access(player, card, BankCardPermission::isOwner, BankCardsWorldData::isOwner)) {
             delBtn[0] = button(Component.translatable("ui.bank.card.manage.delete"), "mbt-card-perm-manage-button");
             // 客户端逐步改文案；每次点击仍发消息给服务端累计确认
-            delBtn[0].setOnClick(_ -> {
+            delBtn[0].setOnClick(ignored -> {
                 delClicks[0]++;
                 applyDeleteButtonLabel(delBtn[0], delClicks[0]);
                 panel.sendMessage(M_DELETE, new CompoundTag());
@@ -126,7 +126,7 @@ public final class BankCardPermissionPanel {
         applySync(panel, grants, holders, initial);
 
         Button manage = button(Component.translatable("ui.bank.card.manage.open"), "mbt-card-perm-open-button");
-        manage.setOnClick(_ -> {
+        manage.setOnClick(ignored -> {
             boolean open = !panel.isDisplayed();
             panel.setDisplay(open);
             if (open) {
@@ -185,7 +185,7 @@ public final class BankCardPermissionPanel {
         holders.clearAllScrollViewChildren();
         if (!(tag instanceof CompoundTag root)) return;
         BankCardPermission actor = BankCardPermission.bySerializedName(
-                root.getStringOr(K_ACTOR, BankCardPermission.UNUSABLE.getSerializedName()));
+                (root.contains(K_ACTOR) ? root.getString(K_ACTOR) : BankCardPermission.UNUSABLE.getSerializedName()));
         fill(grants, root, K_GRANTS, e -> row(host, actor, e, true));
         fill(holders, root, K_HOLDERS, e -> row(host, actor, e, false));
     }
@@ -194,7 +194,7 @@ public final class BankCardPermissionPanel {
     private static void fill(ScrollerView list, CompoundTag root, String key,
                              java.util.function.Function<CompoundTag, UIElement> factory) {
         Tag raw = root.get(key);
-        ListTag entries = raw instanceof ListTag l ? l : root.getListOrEmpty(key);
+        ListTag entries = raw instanceof ListTag l ? l : (root.contains(key, Tag.TAG_LIST) ? root.getList(key, Tag.TAG_COMPOUND) : new ListTag());
         for (Tag t : entries) {
             if (t instanceof CompoundTag e) list.addScrollViewChild(factory.apply(e));
         }
@@ -206,10 +206,10 @@ public final class BankCardPermissionPanel {
 
     /** 构建授予/持有者列表中的单行。 */
     private static UIElement row(UIElement host, BankCardPermission actor, CompoundTag entry, boolean grant) {
-        String uuid = entry.getStringOr(K_UUID, "");
-        String name = entry.getStringOr(K_NAME, "?");
+        String uuid = (entry.contains(K_UUID) ? entry.getString(K_UUID) : "");
+        String name = (entry.contains(K_NAME) ? entry.getString(K_NAME) : "?");
         BankCardPermission perm = BankCardPermission.bySerializedName(
-                entry.getStringOr(K_PERM, BankCardPermission.UNUSABLE.getSerializedName()));
+                (entry.contains(K_PERM) ? entry.getString(K_PERM) : BankCardPermission.UNUSABLE.getSerializedName()));
 
         UIElement actions = new UIElement().addClass("mbt-card-perm-actions");
         if (grant) {
@@ -225,7 +225,7 @@ public final class BankCardPermissionPanel {
             Button revoke = button(
                     Component.translatable("ui.bank.card.manage.revoke"),
                     "mbt-card-perm-action-button");
-            revoke.setOnClick(_ -> host.sendMessage(M_REVOKE, uuidTag(uuid)));
+            revoke.setOnClick(ignored -> host.sendMessage(M_REVOKE, uuidTag(uuid)));
             actions.addChild(revoke);
         }
 
@@ -243,7 +243,7 @@ public final class BankCardPermissionPanel {
         Button b = button(
                 Component.translatable(admin ? "ui.bank.card.manage.grant_admin" : "ui.bank.card.manage.grant_usable"),
                 "mbt-card-perm-action-button");
-        b.setOnClick(_ -> {
+        b.setOnClick(ignored -> {
             CompoundTag p = uuidTag(targetUuid);
             p.putString(K_PERM, grant.getSerializedName());
             host.sendMessage(M_GRANT, p);
@@ -265,7 +265,7 @@ public final class BankCardPermissionPanel {
     private static void mutate(Player player, CompoundTag payload, int[] rev,
                                BiConsumer<BankCardsWorldData, UUID> action) {
         if (!serverPlayer(player) || payload == null) return;
-        UUID target = parseUuid(payload.getStringOr(K_UUID, ""));
+        UUID target = parseUuid((payload.contains(K_UUID) ? payload.getString(K_UUID) : ""));
         if (target == null) return;
         MBTBankStates.modifyBankCards(player.level().getServer(), data -> action.accept(data, target));
         rev[0]++;
@@ -385,11 +385,16 @@ public final class BankCardPermissionPanel {
     private static String playerLabel(MinecraftServer server, UUID uuid) {
         if (server == null || uuid == null) return "?";
         ServerPlayer online = server.getPlayerList().getPlayer(uuid);
-        if (online != null) return online.getPlainTextName();
-        return server.services().nameToIdCache().get(uuid).map(NameAndId::name).orElseGet(() -> {
-            String s = uuid.toString();
-            return s.length() > 8 ? s.substring(0, 8) : s;
-        });
+        if (online != null) return online.getName().getString();
+        GameProfileCache profileCache = server.getProfileCache();
+        if (profileCache != null) {
+            return profileCache.get(uuid).map(profile -> profile.getName()).orElseGet(() -> {
+                String s = uuid.toString();
+                return s.length() > 8 ? s.substring(0, 8) : s;
+            });
+        }
+        String s = uuid.toString();
+        return s.length() > 8 ? s.substring(0, 8) : s;
     }
 
     // ==============================================

@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.machineTrade.ui;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.maple.maple_banktrade.api.trade.base.registry.TradeRegistry;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -22,14 +22,14 @@ import java.util.UUID;
 public interface MachineTradeUiHost {
 
     /** 本站绑定的交易类型 ID（决定配方标签页顺序）。 */
-    List<Identifier> tradeTypeIds();
+    List<ResourceLocation> tradeTypeIds();
 
     /**
      * UI 点击配方后在服务端执行。
      *
      * @param desiredCount 由修饰键解码的期望次数（≥1）
      */
-    void runTradeFromUi(Identifier tradeTypeId, Identifier tradeId, int desiredCount);
+    void runTradeFromUi(ResourceLocation tradeTypeId, ResourceLocation tradeId, int desiredCount);
 
     /** 当前绑定的银行卡 UUID（库存页列表用，顺序尽量与插入顺序一致）。 */
     Set<UUID> getBoundCardUuids();
@@ -42,7 +42,7 @@ public interface MachineTradeUiHost {
     boolean unbindCardFromUi(UUID cardUuid);
 
     /** 创建运行交易的上下文 */
-    MachineTradeContext createTradeContext(Identifier tradeTypeId);
+    MachineTradeContext createTradeContext(ResourceLocation tradeTypeId);
 
     /**
      * 本站硬件/类型是否支持自动交易（对应 BE 构造时的 allowAutoTrade）。
@@ -61,14 +61,14 @@ public interface MachineTradeUiHost {
     default void setAutoTradeEnabled(boolean enabled) {}
 
     /** 获取交易存储器 */
-    default MachineTradeStorage tradeStorage(Identifier tradeTypeId) {
+    default MachineTradeStorage tradeStorage(ResourceLocation tradeTypeId) {
         return TradeRegistry.requireStorage(tradeTypeId, MachineTradeStorage.class);
     }
 
     /**
      * UI 用配方可见项列表。
      */
-    default List<Map.Entry<Identifier, MachineTrade>> listTradesForUi(Identifier tradeTypeId) {
+    default List<Map.Entry<ResourceLocation, MachineTrade>> listTradesForUi(ResourceLocation tradeTypeId) {
         MachineTradeContext context = createTradeContext(tradeTypeId);
         if (context != null) return MachineTradeHandler.listVisible(context);
         return List.of();
@@ -77,7 +77,7 @@ public interface MachineTradeUiHost {
     /**
      * UI 配方全部列表。
      */
-    default Map<Identifier, MachineTrade> listAllTrades(Identifier tradeTypeId) {
+    default Map<ResourceLocation, MachineTrade> listAllTrades(ResourceLocation tradeTypeId) {
         MachineTradeStorage storage = tradeStorage(tradeTypeId);
         if (storage != null) return storage.entries();
         return Map.of();

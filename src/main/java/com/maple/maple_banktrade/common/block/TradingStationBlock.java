@@ -1,7 +1,8 @@
 package com.maple.maple_banktrade.common.block;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -22,11 +23,21 @@ public class TradingStationBlock extends BaseTradingStationBlock {
     private final TradingStationStorageSpec storageSpec;
 
     public TradingStationBlock(Properties properties,
-                               List<Identifier> tradeType,
+                               List<ResourceLocation> tradeType,
                                boolean allowAutoTrade,
                                TradingStationStorageSpec storageSpec) {
         super(properties, tradeType, allowAutoTrade);
         this.storageSpec = storageSpec;
+    }
+
+    /**
+     * 1.21.1 的 {@link net.minecraft.world.level.block.BaseEntityBlock#getRenderShape} 默认返回
+     * {@link RenderShape#INVISIBLE}（带方块实体的方块不渲染模型），必须覆盖为
+     * {@link RenderShape#MODEL} 才能显示交易站方块模型。
+     */
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
     }
 
     // 静态工厂方法，用于 codec 捕获 tradeType

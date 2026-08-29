@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.bank.base;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.mojang.serialization.DataResult;
@@ -13,14 +13,14 @@ import java.util.Objects;
 /**
  * 银行卡类型定义：card_type 对应的实现类与 Codec。
  */
-public record BankCardType<T extends BankCard>(Identifier cardTypeId, Class<T> cardClass, MapCodec<T> codec) {
+public record BankCardType<T extends BankCard>(ResourceLocation cardTypeId, Class<T> cardClass, MapCodec<T> codec) {
 
     // ==============================================
     // 注册表
     // ==============================================
 
     /** 银行卡类型 ID 到类型定义的映射。 */
-    private static final Map<Identifier, BankCardType<?>> REGISTRY = new HashMap<>();
+    private static final Map<ResourceLocation, BankCardType<?>> REGISTRY = new HashMap<>();
 
     // ==============================================
     // 构造
@@ -38,7 +38,7 @@ public record BankCardType<T extends BankCard>(Identifier cardTypeId, Class<T> c
     // ==============================================
 
     /** 注册银行卡实现类型定义。 */
-    public static <T extends BankCard> void register(Identifier cardTypeId, Class<T> cardClass, MapCodec<T> codec) {
+    public static <T extends BankCard> void register(ResourceLocation cardTypeId, Class<T> cardClass, MapCodec<T> codec) {
         if (cardTypeId == null || cardClass == null || codec == null) return;
         if (REGISTRY.containsKey(cardTypeId)) {
             MapleBankTrade.LOGGER.error("Bank card type with id {} already exists", cardTypeId);
@@ -52,13 +52,13 @@ public record BankCardType<T extends BankCard>(Identifier cardTypeId, Class<T> c
     // ==============================================
 
     /** 查询银行卡类型定义，未知类型返回 null。 */
-    public static BankCardType<?> get(Identifier cardTypeId) {
+    public static BankCardType<?> get(ResourceLocation cardTypeId) {
         if (cardTypeId == null) return null;
         return REGISTRY.get(cardTypeId);
     }
 
     /** 查询银行卡类型定义对应的 MapCodec；未知类型返回错误，由 dispatch 上报。 */
-    public static DataResult<? extends MapCodec<? extends BankCard>> getCodecResult(Identifier cardTypeId) {
+    public static DataResult<? extends MapCodec<? extends BankCard>> getCodecResult(ResourceLocation cardTypeId) {
         BankCardType<?> definition = get(cardTypeId);
         return definition == null ? DataResult.error(() -> "Unknown bank card type: " + cardTypeId) : DataResult.success(definition.codec());
     }

@@ -2,7 +2,8 @@
   "multipart": [
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station"
+        "model": "maple_banktrade:block/trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power",
+        "y": 0
       },
       "when": {
         "facing": "north"
@@ -10,7 +11,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station",
+        "model": "maple_banktrade:block/trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power",
         "y": 90
       },
       "when": {
@@ -19,7 +20,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station",
+        "model": "maple_banktrade:block/trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power",
         "y": 180
       },
       "when": {
@@ -28,42 +29,7 @@
     },
     {
       "apply": {
-        "model": "maple_banktrade:block/trading_station",
-        "y": 270
-      },
-      "when": {
-        "facing": "west"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/oak_planks"
-      },
-      "when": {
-        "facing": "north"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/oak_planks",
-        "y": 90
-      },
-      "when": {
-        "facing": "east"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/oak_planks",
-        "y": 180
-      },
-      "when": {
-        "facing": "south"
-      }
-    },
-    {
-      "apply": {
-        "model": "minecraft:block/oak_planks",
+        "model": "maple_banktrade:block/trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power",
         "y": 270
       },
       "when": {

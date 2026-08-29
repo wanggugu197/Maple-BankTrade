@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.bank.base;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 
 import com.maple.maple_banktrade.MapleBankTrade;
@@ -12,16 +12,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 银行分类，以 Identifier 为主键。
+ * 银行分类，以 ResourceLocation 为主键。
  */
-public record BankType(Identifier id) implements StringRepresentable {
+public record BankType(ResourceLocation id) implements StringRepresentable {
 
     // ==============================================
     // 注册表
     // ==============================================
 
     /** 银行类型注册表：id -> BankType，按注册顺序保存。 */
-    private static final Map<Identifier, BankType> BANK_TYPE_MAP = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, BankType> BANK_TYPE_MAP = new LinkedHashMap<>();
 
     // ==============================================
     // 构造
@@ -42,7 +42,7 @@ public record BankType(Identifier id) implements StringRepresentable {
     public static void init() {}
 
     /** 注册银行类型，重复注册时返回已有类型。 */
-    public static BankType register(Identifier id) {
+    public static BankType register(ResourceLocation id) {
         if (BANK_TYPE_MAP.containsKey(id)) {
             MapleBankTrade.LOGGER.error("Bank type with id {} already exists", id);
             return BANK_TYPE_MAP.get(id);
@@ -67,7 +67,7 @@ public record BankType(Identifier id) implements StringRepresentable {
     // ==============================================
 
     /** 查询已注册类型；未知类型返回 null。 */
-    public static BankType requireById(Identifier id) {
+    public static BankType requireById(ResourceLocation id) {
         return BANK_TYPE_MAP.get(id);
     }
 

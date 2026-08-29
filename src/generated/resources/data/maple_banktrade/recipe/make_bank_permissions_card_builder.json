@@ -2,9 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "A": "minecraft:orange_dye",
-    "B": "minecraft:blue_dye",
-    "O": "minecraft:blue_stained_glass_pane"
+    "A": {
+      "item": "minecraft:orange_dye"
+    },
+    "B": {
+      "item": "minecraft:blue_dye"
+    },
+    "O": {
+      "item": "minecraft:blue_stained_glass_pane"
+    }
   },
   "pattern": [
     "BBB",
@@ -12,6 +18,7 @@
     "BAB"
   ],
   "result": {
+    "count": 1,
     "id": "maple_banktrade:bank_permissions_card_builder"
   }
 }

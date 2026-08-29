@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.bank.data;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * 银行卡名称索引对应的客户端 UI 与贴图信息。
  */
-public record CardInfo(Identifier nameIndex,
+public record CardInfo(ResourceLocation nameIndex,
                        IGuiTexture simplifiedButtonBackground,
                        IGuiTexture detailBackground,
                        CardUIFactory simplifiedUIFactory,
@@ -24,7 +24,7 @@ public record CardInfo(Identifier nameIndex,
     // ==============================================
 
     /** 名称索引到卡面显示信息的映射。 */
-    private static final Map<Identifier, CardInfo> REGISTRY = new HashMap<>();
+    private static final Map<ResourceLocation, CardInfo> REGISTRY = new HashMap<>();
 
     // ==============================================
     // 注册
@@ -34,7 +34,7 @@ public record CardInfo(Identifier nameIndex,
     public static void init() {}
 
     /** 注册银行卡的列表/详情背景与 UI 工厂。 */
-    public static void register(Identifier nameIndex,
+    public static void register(ResourceLocation nameIndex,
                                 IGuiTexture simplifiedButtonBackground,
                                 IGuiTexture detailBackground,
                                 CardUIFactory simplifiedUIFactory,
@@ -50,7 +50,7 @@ public record CardInfo(Identifier nameIndex,
     // ==============================================
 
     /** 根据名称索引查询卡面信息，未注册返回 null。 */
-    public static CardInfo of(Identifier nameIndex) {
+    public static CardInfo of(ResourceLocation nameIndex) {
         return REGISTRY.get(nameIndex);
     }
 

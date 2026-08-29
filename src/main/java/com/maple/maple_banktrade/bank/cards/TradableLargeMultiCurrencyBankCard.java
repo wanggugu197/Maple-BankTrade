@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
@@ -20,8 +20,8 @@ import java.util.Map;
 public class TradableLargeMultiCurrencyBankCard extends LargeMultiCurrencyBankCard
                                                 implements TradableWalletBankCard {
 
-    public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("tradable_large_multi_currency");
-    private static final Identifier NO_TRADE_TYPE_ID = MapleBankTrade.id("none");
+    public static final ResourceLocation CARD_TYPE_ID = MapleBankTrade.id("tradable_large_multi_currency");
+    private static final ResourceLocation NO_TRADE_TYPE_ID = MapleBankTrade.id("none");
 
     // ==============================================
     // Codec
@@ -37,7 +37,7 @@ public class TradableLargeMultiCurrencyBankCard extends LargeMultiCurrencyBankCa
     @Persisted
     @Getter
     @Setter
-    private Identifier tradeTypeId;
+    private ResourceLocation tradeTypeId;
 
     // ==============================================
     // 构造
@@ -49,26 +49,26 @@ public class TradableLargeMultiCurrencyBankCard extends LargeMultiCurrencyBankCa
 
     public TradableLargeMultiCurrencyBankCard(BankCardIdentity identity,
                                               Collection<CurrencyType> currencyTypes,
-                                              Identifier tradeTypeId) {
+                                              ResourceLocation tradeTypeId) {
         this(identity, CurrencyStorageBankCard.createInitialBalances(currencyTypes, BigInteger.ZERO), tradeTypeId);
     }
 
     public TradableLargeMultiCurrencyBankCard(BankCardIdentity identity,
-                                              Identifier tradeTypeId,
+                                              ResourceLocation tradeTypeId,
                                               CurrencyType... currencyTypes) {
         this(identity, CurrencyStorageBankCard.createInitialBalances(BigInteger.ZERO, currencyTypes), tradeTypeId);
     }
 
     public TradableLargeMultiCurrencyBankCard(BankCardIdentity identity,
-                                              Map<Identifier, BigInteger> balances,
-                                              Identifier tradeTypeId) {
+                                              Map<ResourceLocation, BigInteger> balances,
+                                              ResourceLocation tradeTypeId) {
         this(identity, CARD_TYPE_ID, balances, tradeTypeId);
     }
 
     protected TradableLargeMultiCurrencyBankCard(BankCardIdentity identity,
-                                                 Identifier cardTypeId,
-                                                 Map<Identifier, BigInteger> balances,
-                                                 Identifier tradeTypeId) {
+                                                 ResourceLocation cardTypeId,
+                                                 Map<ResourceLocation, BigInteger> balances,
+                                                 ResourceLocation tradeTypeId) {
         super(identity, cardTypeId, balances);
         this.tradeTypeId = tradeTypeId == null ? NO_TRADE_TYPE_ID : tradeTypeId;
     }

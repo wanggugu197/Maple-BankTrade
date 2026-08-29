@@ -8,7 +8,7 @@ spotless {
         trimTrailingWhitespace()  // 移除行尾空格
         leadingTabsToSpaces()     // 将制表符转换为空格
     }
-    
+
     // Java 代码格式化规则
     java {
         target 'src/main/java/**/*.java'  // 目标 Java 文件
@@ -23,3 +23,5 @@ spotless {
         eclipse('4.36').configFile(formatFile)  // 使用 Eclipse 格式化规则
     }
 }
+
+

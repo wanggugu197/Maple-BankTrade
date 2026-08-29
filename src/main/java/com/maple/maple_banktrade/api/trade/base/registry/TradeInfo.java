@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.base.registry;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 
@@ -9,7 +9,7 @@ import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
  */
 public interface TradeInfo extends IPersistedSerializable {
 
-    Identifier id();
+    ResourceLocation id();
 
     /** 条目数据是否有效。 */
     boolean isValid();

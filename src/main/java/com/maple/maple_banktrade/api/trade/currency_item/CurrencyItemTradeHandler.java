@@ -1,13 +1,14 @@
 package com.maple.maple_banktrade.api.trade.currency_item;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.transfer.item.ItemResource;
-import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 
 import com.maple.maple_banktrade.api.trade.base.definition.TradeRunner;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
+import com.mapleutillib.api.resource.ObservableItemResourceHandler;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -22,7 +23,7 @@ public final class CurrencyItemTradeHandler {
     // ==============================================
 
     /** 按槽位全部可交易次数卖出。 */
-    public static TradeExecuteResult<CurrencyItemTradeDetail> sellAll(ItemStacksResourceHandler sourceHandler,
+    public static TradeExecuteResult<CurrencyItemTradeDetail> sellAll(ObservableItemResourceHandler sourceHandler,
                                                                       int sourceSlot,
                                                                       UUID cardUuid,
                                                                       MinecraftServer server,
@@ -30,7 +31,8 @@ public final class CurrencyItemTradeHandler {
         if (storage == null || sourceHandler == null) {
             return TradeExecuteResult.failure(null);
         }
-        ItemResource resource = sourceHandler.getResource(sourceSlot);
+        ItemStack slotStack = sourceHandler.getStackInSlot(sourceSlot);
+        ItemResource resource = ItemResource.of(slotStack);
         if (resource.isEmpty()) {
             return TradeExecuteResult.failure(null);
         }
@@ -40,7 +42,7 @@ public final class CurrencyItemTradeHandler {
             return TradeExecuteResult.failure(null);
         }
 
-        int count = sourceHandler.getAmountAsInt(sourceSlot) / trade.itemAmountPerTrade();
+        int count = slotStack.getCount() / trade.itemAmountPerTrade();
         if (count <= 0) {
             return TradeExecuteResult.failure(null);
         }
@@ -48,7 +50,7 @@ public final class CurrencyItemTradeHandler {
     }
 
     /** 按指定次数卖出槽位物品。 */
-    public static TradeExecuteResult<CurrencyItemTradeDetail> sell(ItemStacksResourceHandler sourceHandler,
+    public static TradeExecuteResult<CurrencyItemTradeDetail> sell(ObservableItemResourceHandler sourceHandler,
                                                                    int sourceSlot,
                                                                    UUID cardUuid,
                                                                    MinecraftServer server,
@@ -76,7 +78,7 @@ public final class CurrencyItemTradeHandler {
                                                                                    UUID cardUuid,
                                                                                    MinecraftServer server,
                                                                                    CurrencyItemTradeStorage storage,
-                                                                                   Identifier tradeId,
+                                                                                   ResourceLocation tradeId,
                                                                                    int tradeCount) {
         Objects.requireNonNull(player, "player");
         Objects.requireNonNull(server, "server");

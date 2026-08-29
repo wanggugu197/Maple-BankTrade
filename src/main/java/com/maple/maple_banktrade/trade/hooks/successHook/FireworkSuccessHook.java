@@ -12,6 +12,7 @@ import net.minecraft.world.phys.Vec3;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.base.result.TradeExecuteResult;
 import com.maple.maple_banktrade.api.trade.machine.*;
+import org.joml.Vector3f;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,6 +37,15 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
     // ==============================================
     // 颜色工具：高饱和彩色为主，带完整 Alpha 通道
     // ==============================================
+
+    /** 将 ARGB 颜色整数转为粒子颜色向量。 */
+    private static Vector3f colorVec(int argb) {
+        float r = ((argb >> 16) & 0xFF) / 255.0f;
+        float g = ((argb >> 8) & 0xFF) / 255.0f;
+        float b = (argb & 0xFF) / 255.0f;
+        return new Vector3f(r, g, b);
+    }
+
     private static int randomBrightColor() {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
         int r = rand.nextInt(180, 256);
@@ -167,7 +177,7 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
                 double progress = (double) step / trailSteps;
                 double currentY = baseY + flyHeight * progress;
                 SCHEDULER.schedule(() -> serverLevel.getServer().execute(() -> {
-                    DustParticleOptions dustTrail = new DustParticleOptions(trailColor, 0.8f);
+                    DustParticleOptions dustTrail = new DustParticleOptions(colorVec(trailColor), 0.8f);
                     serverLevel.sendParticles(dustTrail, rocketX, currentY, rocketZ,
                             6, 0.15, 0.15, 0.15, 0.08);
                     serverLevel.sendParticles(ParticleTypes.FIREWORK, rocketX, currentY, rocketZ,
@@ -228,18 +238,18 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
             double blastSpeed = 0.25 + strength * 0.08; // 降低初速度，延长停留时间
 
             // 1. 主爆炸球：高饱和彩色 Dust，数量最多
-            DustParticleOptions mainDust = new DustParticleOptions(mainColor, 1.25f);
+            DustParticleOptions mainDust = new DustParticleOptions(colorVec(mainColor), 1.25f);
             level.sendParticles(mainDust, center.x(), center.y(), center.z(),
                     baseCount, 0, 0, 0, blastSpeed);
 
             // 2. 第二层彩色粉尘：异色叠加，提升色彩丰富度
-            DustParticleOptions secondaryDust = new DustParticleOptions(secondaryColor, 1.1f);
+            DustParticleOptions secondaryDust = new DustParticleOptions(colorVec(secondaryColor), 1.1f);
             level.sendParticles(secondaryDust, center.x(), center.y(), center.z(),
                     baseCount / 2, 0, 0, 0, blastSpeed * 0.9);
 
             // 3. 亮色点缀：仅占约 8%，不使用纯白
             int brightColor = randomBrightColor();
-            DustParticleOptions brightDust = new DustParticleOptions(brightColor, 1.5f);
+            DustParticleOptions brightDust = new DustParticleOptions(colorVec(brightColor), 1.5f);
             level.sendParticles(brightDust, center.x(), center.y(), center.z(),
                     Math.max(5, baseCount / 12), 0, 0, 0, blastSpeed * 1.1);
 
@@ -254,7 +264,7 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
                 int ringCount = 14 + strength * 5;
                 double ringRadius = 1.1 + strength * 0.35;
                 int ringColor = randomVividColor();
-                DustParticleOptions ringDust = new DustParticleOptions(ringColor, 0.9f);
+                DustParticleOptions ringDust = new DustParticleOptions(colorVec(ringColor), 0.9f);
                 for (int i = 0; i < ringCount; i++) {
                     double angle = 2 * Math.PI * i / ringCount;
                     double dx = Math.cos(angle) * ringRadius;
@@ -287,7 +297,7 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
             double progress = (double) step / ((double) grandFlyTime / 50);
             double currentY = baseY + grandHeight * progress;
             SCHEDULER.schedule(() -> level.getServer().execute(() -> {
-                DustParticleOptions dustTrail = new DustParticleOptions(0xFFFFCC66, 1.0f);
+                DustParticleOptions dustTrail = new DustParticleOptions(colorVec(0xFFFFCC66), 1.0f);
                 level.sendParticles(dustTrail, origin.x(), currentY, origin.z(),
                         8, 0.2, 0.2, 0.2, 0.1);
                 level.sendParticles(ParticleTypes.FIREWORK, origin.x(), currentY, origin.z(),
@@ -310,7 +320,7 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
                         randomVividColor()
                 };
                 for (int i = 0; i < layers.length; i++) {
-                    DustParticleOptions dust = new DustParticleOptions(colors[i], 1.3f - i * 0.2f);
+                    DustParticleOptions dust = new DustParticleOptions(colorVec(colors[i]), 1.3f - i * 0.2f);
                     level.sendParticles(dust, explodePos.x(), explodePos.y(), explodePos.z(),
                             layers[i], 0, 0, 0, speeds[i]);
                 }
@@ -323,7 +333,7 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
             int ringCount = 24;
             double ringRadius = 1.8;
             int ringColor = randomVividColor();
-            DustParticleOptions ringDust = new DustParticleOptions(ringColor, 1.0f);
+            DustParticleOptions ringDust = new DustParticleOptions(colorVec(ringColor), 1.0f);
             for (int i = 0; i < ringCount; i++) {
                 double angle = 2 * Math.PI * i / ringCount;
                 double dx = Math.cos(angle) * ringRadius;
@@ -341,7 +351,7 @@ public final class FireworkSuccessHook extends MachineTradeHooks.SuccessHook {
                 double dx = Math.cos(angle) * rayLength;
                 double dz = Math.sin(angle) * rayLength;
                 int rayColor = randomVividColor();
-                DustParticleOptions rayDust = new DustParticleOptions(rayColor, 1.1f);
+                DustParticleOptions rayDust = new DustParticleOptions(colorVec(rayColor), 1.1f);
                 for (int step = 0; step < 12; step++) {
                     double t = step / 11.0;
                     level.sendParticles(rayDust,

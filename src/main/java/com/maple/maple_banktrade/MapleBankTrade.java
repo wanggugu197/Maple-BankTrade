@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 
@@ -37,8 +37,8 @@ public class MapleBankTrade {
     // 工具
     // ==============================================
 
-    /** 创建本模组命名空间下的 Identifier。 */
-    public static Identifier id(String path) {
-        return Identifier.fromNamespaceAndPath(MODID, path);
+    /** 创建本模组命名空间下的 ResourceLocation。 */
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 }

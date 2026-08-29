@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 
@@ -28,18 +28,18 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
     private final boolean allowAutoTrade;
 
     /** 单物品输入 auto 条目索引；惰性构建。 */
-    private Map<ItemResource, Map.Entry<Identifier, MachineTrade>> itemAutoIndex = Map.of();
+    private Map<ItemResource, Map.Entry<ResourceLocation, MachineTrade>> itemAutoIndex = Map.of();
 
     /** 单流体输入 auto 条目索引；惰性构建。 */
-    private Map<FluidResource, Map.Entry<Identifier, MachineTrade>> fluidAutoIndex = Map.of();
+    private Map<FluidResource, Map.Entry<ResourceLocation, MachineTrade>> fluidAutoIndex = Map.of();
 
     private boolean autoIndexDirty = true;
 
-    public MachineTradeStorage(Identifier tradeTypeId) {
+    public MachineTradeStorage(ResourceLocation tradeTypeId) {
         this(tradeTypeId, false);
     }
 
-    public MachineTradeStorage(Identifier tradeTypeId, boolean allowAutoTrade) {
+    public MachineTradeStorage(ResourceLocation tradeTypeId, boolean allowAutoTrade) {
         super(tradeTypeId);
         this.allowAutoTrade = allowAutoTrade;
     }
@@ -67,12 +67,12 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
     }
 
     /** 返回当前上下文下可见的条目（保持注册顺序）。 */
-    public List<Map.Entry<Identifier, MachineTrade>> listVisible(MachineTradeContext context) {
+    public List<Map.Entry<ResourceLocation, MachineTrade>> listVisible(MachineTradeContext context) {
         if (context == null) {
             return List.of();
         }
-        List<Map.Entry<Identifier, MachineTrade>> visible = new ArrayList<>();
-        for (Map.Entry<Identifier, MachineTrade> entry : entries().entrySet()) {
+        List<Map.Entry<ResourceLocation, MachineTrade>> visible = new ArrayList<>();
+        for (Map.Entry<ResourceLocation, MachineTrade> entry : entries().entrySet()) {
             MachineTrade trade = entry.getValue();
             if (trade.stateHook().isVisible(context, trade)) {
                 visible.add(entry);
@@ -85,14 +85,14 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
      * 按物品资源查找自动交易条目（O(1) 索引 + visibility）。
      */
     @Nullable
-    public Map.Entry<Identifier, MachineTrade> findAutoTradeByItem(
-                                                                   ItemResource resource,
-                                                                   @Nullable MachineTradeContext context) {
+    public Map.Entry<ResourceLocation, MachineTrade> findAutoTradeByItem(
+                                                                         ItemResource resource,
+                                                                         @Nullable MachineTradeContext context) {
         if (!allowAutoTrade || resource == null || resource.isEmpty()) {
             return null;
         }
         ensureAutoIndex();
-        Map.Entry<Identifier, MachineTrade> match = itemAutoIndex.get(resource);
+        Map.Entry<ResourceLocation, MachineTrade> match = itemAutoIndex.get(resource);
         if (match == null) {
             return null;
         }
@@ -108,14 +108,14 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
      * 按流体资源查找自动交易条目（O(1) 索引 + visibility）。
      */
     @Nullable
-    public Map.Entry<Identifier, MachineTrade> findAutoTradeByFluid(
-                                                                    FluidResource resource,
-                                                                    @Nullable MachineTradeContext context) {
+    public Map.Entry<ResourceLocation, MachineTrade> findAutoTradeByFluid(
+                                                                          FluidResource resource,
+                                                                          @Nullable MachineTradeContext context) {
         if (!allowAutoTrade || resource == null || resource.isEmpty()) {
             return null;
         }
         ensureAutoIndex();
-        Map.Entry<Identifier, MachineTrade> match = fluidAutoIndex.get(resource);
+        Map.Entry<ResourceLocation, MachineTrade> match = fluidAutoIndex.get(resource);
         if (match == null) {
             return null;
         }
@@ -138,11 +138,11 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
         if (!autoIndexDirty) {
             return;
         }
-        Map<ItemResource, Map.Entry<Identifier, MachineTrade>> items = new HashMap<>();
-        Map<FluidResource, Map.Entry<Identifier, MachineTrade>> fluids = new HashMap<>();
+        Map<ItemResource, Map.Entry<ResourceLocation, MachineTrade>> items = new HashMap<>();
+        Map<FluidResource, Map.Entry<ResourceLocation, MachineTrade>> fluids = new HashMap<>();
 
         if (allowAutoTrade) {
-            for (Map.Entry<Identifier, MachineTrade> entry : entries().entrySet()) {
+            for (Map.Entry<ResourceLocation, MachineTrade> entry : entries().entrySet()) {
                 MachineTrade trade = entry.getValue();
                 if (!trade.autoTrade()) {
                     continue;
@@ -153,7 +153,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
                         continue;
                     }
                     ItemResource resource = ItemResource.of(io.toStack());
-                    Map.Entry<Identifier, MachineTrade> prev = items.putIfAbsent(resource, entry);
+                    Map.Entry<ResourceLocation, MachineTrade> prev = items.putIfAbsent(resource, entry);
                     if (prev != null) {
                         String msg = "Duplicate autoTrade item input in " + tradeTypeId() + ": " + prev.getKey() + " and " + entry.getKey() + " both match " + resource;
                         MapleBankTrade.LOGGER.error(msg);
@@ -165,7 +165,7 @@ public final class MachineTradeStorage extends AbstractTradeEntryStorage<Machine
                         continue;
                     }
                     FluidResource resource = FluidResource.of(io.toStack());
-                    Map.Entry<Identifier, MachineTrade> prev = fluids.putIfAbsent(resource, entry);
+                    Map.Entry<ResourceLocation, MachineTrade> prev = fluids.putIfAbsent(resource, entry);
                     if (prev != null) {
                         String msg = "Duplicate autoTrade fluid input in " + tradeTypeId() + ": " + prev.getKey() + " and " + entry.getKey() + " both match " + resource;
                         MapleBankTrade.LOGGER.error(msg);

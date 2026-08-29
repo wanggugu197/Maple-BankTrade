@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:make_bank_permissions_card_builder"
+        "recipe": "maple_banktrade:make_bank_permissions_card_builder"
       },
       "trigger": "minecraft:recipe_unlocked"
     },
@@ -19,7 +19,7 @@
   ],
   "rewards": {
     "recipes": [
-      "minecraft:make_bank_permissions_card_builder"
+      "maple_banktrade:make_bank_permissions_card_builder"
     ]
   }
 }

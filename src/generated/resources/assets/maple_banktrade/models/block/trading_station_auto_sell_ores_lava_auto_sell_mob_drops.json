@@ -1,6 +1,7 @@
 {
   "parent": "maple_banktrade:block/trading_station",
   "textures": {
+    "base": "minecraft:block/gold_block",
     "icon": "maple_banktrade:block/wallet"
   }
 }

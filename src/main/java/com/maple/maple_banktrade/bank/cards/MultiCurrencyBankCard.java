@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
@@ -17,7 +17,7 @@ import java.util.*;
 
 public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBankCard {
 
-    public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("multi_currency");
+    public static final ResourceLocation CARD_TYPE_ID = MapleBankTrade.id("multi_currency");
 
     // ==============================================
     // Codec
@@ -33,7 +33,7 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     @Persisted
     @Getter
     @Setter
-    private Map<Identifier, Long> balances;
+    private Map<ResourceLocation, Long> balances;
 
     // ==============================================
     // 构造
@@ -51,16 +51,16 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
         this(identity, CurrencyStorageBankCard.createInitialBalances(currencyTypes, 0L));
     }
 
-    public MultiCurrencyBankCard(BankCardIdentity identity, Map<Identifier, Long> balances) {
+    public MultiCurrencyBankCard(BankCardIdentity identity, Map<ResourceLocation, Long> balances) {
         this(identity, CARD_TYPE_ID, balances);
     }
 
-    protected MultiCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId,
-                                    Map<Identifier, Long> balances) {
+    protected MultiCurrencyBankCard(BankCardIdentity identity, ResourceLocation cardTypeId,
+                                    Map<ResourceLocation, Long> balances) {
         super(identity, cardTypeId);
         this.balances = new LinkedHashMap<>();
         balances.forEach((type, amount) -> {
-            Identifier currencyId = normalizeCurrencyId(type);
+            ResourceLocation currencyId = normalizeCurrencyId(type);
             if (currencyId != null) {
                 this.balances.put(currencyId, normalizeLongAmount(amount));
             }
@@ -72,19 +72,19 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     // ==============================================
 
     @Override
-    public Set<Identifier> getSupportedCurrencyIds() {
+    public Set<ResourceLocation> getSupportedCurrencyIds() {
         return Collections.unmodifiableSet(balances.keySet());
     }
 
     @Override
-    public long getCurrencyBalanceAsLong(Identifier currencyTypeId) {
-        Identifier currencyId = normalizeCurrencyId(currencyTypeId);
+    public long getCurrencyBalanceAsLong(ResourceLocation currencyTypeId) {
+        ResourceLocation currencyId = normalizeCurrencyId(currencyTypeId);
         return currencyId == null ? 0L : balances.getOrDefault(currencyId, 0L);
     }
 
     @Override
-    public boolean increaseCurrency(Identifier currencyTypeId, long amount) {
-        Identifier currencyId = normalizeCurrencyId(currencyTypeId);
+    public boolean increaseCurrency(ResourceLocation currencyTypeId, long amount) {
+        ResourceLocation currencyId = normalizeCurrencyId(currencyTypeId);
         if (amount <= 0 || currencyId == null || !balances.containsKey(currencyId)) return false;
         long current = balances.getOrDefault(currencyId, 0L);
         if (Long.MAX_VALUE - current < amount) return false;
@@ -93,8 +93,8 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     }
 
     @Override
-    public boolean decreaseCurrency(Identifier currencyTypeId, long amount) {
-        Identifier currencyId = normalizeCurrencyId(currencyTypeId);
+    public boolean decreaseCurrency(ResourceLocation currencyTypeId, long amount) {
+        ResourceLocation currencyId = normalizeCurrencyId(currencyTypeId);
         if (amount <= 0 || currencyId == null || !balances.containsKey(currencyId)) return false;
         long current = balances.getOrDefault(currencyId, 0L);
         if (current < amount) return false;
@@ -106,7 +106,7 @@ public class MultiCurrencyBankCard extends BankCard implements CurrencyStorageBa
     // 工具
     // ==============================================
 
-    protected static Identifier normalizeCurrencyId(Identifier typeId) {
+    protected static ResourceLocation normalizeCurrencyId(ResourceLocation typeId) {
         CurrencyType type = CurrencyType.requireById(typeId);
         return type == null ? null : type.id();
     }

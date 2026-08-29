@@ -1,0 +1,7 @@
+{
+  "parent": "maple_banktrade:block/trading_station",
+  "textures": {
+    "base": "minecraft:block/oak_planks",
+    "icon": "maple_banktrade:block/trading_station/icon"
+  }
+}

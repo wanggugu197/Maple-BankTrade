@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -22,11 +22,11 @@ import lombok.AllArgsConstructor;
 public final class SiblingTradeCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier siblingTradeId;
+    private ResourceLocation siblingTradeId;
     @Persisted
     private boolean flip;
 
-    public SiblingTradeCheckHook(Identifier siblingTradeId) {
+    public SiblingTradeCheckHook(ResourceLocation siblingTradeId) {
         this(siblingTradeId, false);
     }
 

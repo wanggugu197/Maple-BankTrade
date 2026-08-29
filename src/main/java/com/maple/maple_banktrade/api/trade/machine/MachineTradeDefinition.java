@@ -1,11 +1,11 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
-import net.neoforged.neoforge.transfer.fluid.FluidStacksResourceHandler;
 import net.neoforged.neoforge.transfer.item.ItemResource;
-import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 import net.neoforged.neoforge.transfer.transaction.Transaction;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * 机器多资源交易：check 用水桶法估算最大次数（必要时一次 dry-run 校验），execute 按 plan 提交。
+ * 机器多资源交易：check 用水桶法估算最大次数（必要时纯读模拟校验），execute 按 plan 提交。
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class MachineTradeDefinition implements TradeDefinition<TradeCheckInput.Basic<MachineTradeContext, MachineTradeRequest>, MachineTradePlan, TradeExecuteInput.Basic<MachineTradeContext, MachineTradeRequest, MachineTradePlan>, TradeExecuteResult<MachineTradeDetail>, TradeSuccessInput.Basic<MachineTradeContext, MachineTradeRequest, MachineTradePlan, TradeExecuteResult<MachineTradeDetail>>> {
@@ -47,7 +47,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
     // ==============================================
 
     /**
-     * 查表 → extraCheck → 水桶法 max 与 desired 取 min → 至多一次 dry-run 校验 → plan。
+     * 查表 → extraCheck → 水桶法 max 与 desired 取 min → 至多一次纯读模拟校验 → plan。
      */
     @Override
     public TradeCheckResult<MachineTradePlan> check(
@@ -111,6 +111,13 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
 
         MachineTradeContext context = input.context();
         MachineTradeRequest request = input.request();
+        // 写前纯读复检：check 与 execute 之间库存可能变化；先确认放得下/扣得了，
+        // 避免 tryTransfer 中途失败时靠兼容层回滚（回滚写回仍受输出槽过滤器限制）残留产物。
+        if (!simulateFeasible(context, plan.scaledIo())) {
+            return TradeExecuteResult.failure(
+                    null,
+                    List.of(Component.translatable("trade.maple_banktrade.fail.machine_insufficient")));
+        }
         try (Transaction tx = Transaction.openRoot()) {
             if (!tryTransfer(context, plan.scaledIo(), tx)) {
                 return TradeExecuteResult.failure(
@@ -147,14 +154,14 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
     }
 
     // ==============================================
-    // 次数：水桶法 + 可选一次 dry-run
+    // 次数：水桶法 + 纯读模拟
     // ==============================================
 
     /**
      * 最大可执行次数 = min(请求次数, 各资源允许次数的最小值)。
      * <p>
-     * 默认不再对 {@code [1..desired]} 做完整二分 dry-run；仅对估算结果做至多一次
-     * {@link #canRun} 校验，失败时再在 {@code [1, target)} 上二分回退。
+     * 先水桶估算，再对估算结果做一次纯读模拟 {@link #canRun} 校验；
+     * 失败时在 {@code [1, target)} 上二分回退。整个过程不修改任何库存。
      * </p>
      */
     static int maxFeasibleCount(MachineTradeContext context, MachineTrade trade, int desired) {
@@ -166,7 +173,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
             return 0;
         }
         int target = Math.min(desired, byBucket);
-        // 乐观路径：一次 dry-run 确认水桶估计
+        // 乐观路径：一次纯读模拟确认水桶估计
         if (canRun(context, trade, target)) {
             return target;
         }
@@ -249,7 +256,7 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
         return max == Integer.MAX_VALUE ? 0 : max;
     }
 
-    /** 在 {@code 1..hiInclusive} 上二分最大可 dry-run 次数（回退路径）。 */
+    /** 在 {@code 1..hiInclusive} 上二分最大可纯读模拟通过的次数（回退路径）。 */
     private static int binarySearchFeasible(MachineTradeContext context, MachineTrade trade, int hiInclusive) {
         if (hiInclusive <= 0) {
             return 0;
@@ -291,56 +298,58 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
         return q.intValue();
     }
 
-    private static int countItem(ItemStacksResourceHandler handler, ItemResource resource) {
+    private static int countItem(ObservableItemResourceHandler handler, ItemResource resource) {
         int total = 0;
         for (int i = 0; i < handler.size(); i++) {
-            if (resource.equals(handler.getResource(i))) {
-                total += handler.getAmountAsInt(i);
+            ItemStack stack = handler.getStackInSlot(i);
+            if (!stack.isEmpty() && resource.matches(stack)) {
+                total += stack.getCount();
             }
         }
         return total;
     }
 
-    private static int countFluid(FluidStacksResourceHandler handler, FluidResource resource) {
+    private static int countFluid(ObservableFluidResourceHandler handler, FluidResource resource) {
         int total = 0;
         for (int i = 0; i < handler.size(); i++) {
-            if (resource.equals(handler.getResource(i))) {
-                total += handler.getAmountAsInt(i);
+            FluidStack stack = handler.getFluidInSlot(i);
+            if (!stack.isEmpty() && resource.matches(stack)) {
+                total += stack.getAmount();
             }
         }
         return total;
     }
 
     /** 输出侧可再放入该资源的空位总量。 */
-    private static int freeItemSpace(ItemStacksResourceHandler handler, ItemResource resource) {
+    private static int freeItemSpace(ObservableItemResourceHandler handler, ItemResource resource) {
         int free = 0;
         for (int i = 0; i < handler.size(); i++) {
-            ItemResource slot = handler.getResource(i);
-            int cap = handler.getCapacityAsInt(i, resource);
+            ItemStack stack = handler.getStackInSlot(i);
+            int cap = handler.getSlotCapacity(i, resource.toStack(1));
             if (cap <= 0) {
                 continue;
             }
-            if (slot.isEmpty()) {
+            if (stack.isEmpty()) {
                 free += cap;
-            } else if (slot.equals(resource)) {
-                free += Math.max(0, cap - handler.getAmountAsInt(i));
+            } else if (resource.matches(stack)) {
+                free += Math.max(0, cap - stack.getCount());
             }
         }
         return free;
     }
 
-    private static int freeFluidSpace(FluidStacksResourceHandler handler, FluidResource resource) {
+    private static int freeFluidSpace(ObservableFluidResourceHandler handler, FluidResource resource) {
         int free = 0;
         for (int i = 0; i < handler.size(); i++) {
-            FluidResource slot = handler.getResource(i);
-            int cap = handler.getCapacityAsInt(i, resource);
+            FluidStack stack = handler.getFluidInSlot(i);
+            int cap = handler.getTankCapacity(i);
             if (cap <= 0) {
                 continue;
             }
-            if (slot.isEmpty()) {
+            if (stack.isEmpty()) {
                 free += cap;
-            } else if (slot.equals(resource)) {
-                free += Math.max(0, cap - handler.getAmountAsInt(i));
+            } else if (resource.matches(stack)) {
+                free += Math.max(0, cap - stack.getAmount());
             }
         }
         return free;
@@ -364,14 +373,245 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
         return total;
     }
 
-    /** dry-run：打开根事务执行转移且不 commit。 */
+    /**
+     * 纯读模拟：核对 scaled I/O 在当前状态下能否一次完成（check 阶段可行性校验）。
+     * <p>
+     * 旧实现用「真实 dry-run」——直接对输入/输出槽执行一遍转移再靠事务回滚还原。
+     * 1.21.1 兼容层里物品/流体回滚依赖 {@code setStackInSlot/setFluidInSlot}，
+     * 而这些写回仍会经过槽位 IO 过滤（例如贸易站输出侧挂的 NoInsertFilter），
+     * 导致回滚被吞、dry-run 插入的产物残留在输出槽里；随后 execute 再真实插入一次，
+     * 于是出现「原料只扣 1 份、产物却多出 1 层」的重复输出。
+     * 本方法只在内存模型上模拟转移顺序，不修改任何真实存储，因此 check 阶段零副作用。
+     * </p>
+     */
     static boolean canRun(MachineTradeContext context, MachineTrade trade, int count) {
         ScaledIO scaled = ScaledIO.scale(trade, count);
         if (scaled == null) {
             return false;
         }
-        try (Transaction tx = Transaction.openRoot()) {
-            return tryTransfer(context, scaled, tx);
+        return simulateFeasible(context, scaled);
+    }
+
+    /**
+     * 按 execute 的真实顺序（先提取全部输入、再插入全部输出）在纯内存槽位模型上
+     * 验证 scaled I/O 能否完整执行，全程只读，不产生任何库存副作用。
+     */
+    static boolean simulateFeasible(MachineTradeContext context, ScaledIO io) {
+        boolean sharedItems = context.itemOutput() == context.itemInput();
+        ItemModel itemInput = new ItemModel(context.itemInput());
+        ItemModel itemOutput = sharedItems ? itemInput : new ItemModel(context.itemOutput());
+        boolean sharedFluids = context.fluidOutput() == context.fluidInput();
+        FluidModel fluidInput = new FluidModel(context.fluidInput());
+        FluidModel fluidOutput = sharedFluids ? fluidInput : new FluidModel(context.fluidOutput());
+
+        // 1) 输入提取：可用量不足则整次不可行
+        for (ItemIO entry : io.itemInputs()) {
+            if (!itemInput.extract(entry.itemStack(), entry.amount())) {
+                return false;
+            }
+        }
+        for (FluidIO entry : io.fluidInputs()) {
+            if (!fluidInput.extract(entry.fluidStack(), entry.amount())) {
+                return false;
+            }
+        }
+        if (io.energyExtract() > 0 && context.energy().getAmountAsLong() < io.energyExtract()) {
+            return false;
+        }
+        if (!currencyExtractable(context.currencyHandlers(), io.currencyExtract())) {
+            return false;
+        }
+
+        // 2) 输出插入：按槽位逐格模拟分配（与 execute 的 insert 语义一致）
+        for (ItemIO entry : io.itemOutputs()) {
+            if (!itemOutput.insert(entry.itemStack(), entry.amount())) {
+                return false;
+            }
+        }
+        for (FluidIO entry : io.fluidOutputs()) {
+            if (!fluidOutput.insert(entry.fluidStack(), entry.amount())) {
+                return false;
+            }
+        }
+        if (io.energyInsert() > 0) {
+            long free = context.energy().getCapacityAsLong() - context.energy().getAmountAsLong();
+            if (free < io.energyInsert()) {
+                return false;
+            }
+        }
+        // 货币入账容量通常极大，不作为硬约束（execute 事务内失败会整体回滚兜底）
+        return true;
+    }
+
+    /** 各绑定卡上该货币余额总和是否满足扣款要求（与 execute 的跨卡分摊一致）。 */
+    private static boolean currencyExtractable(Set<BankCurrencyResourceHandler> handlers, List<CurrencyIO> list) {
+        if (list == null || list.isEmpty()) {
+            return true;
+        }
+        for (CurrencyIO io : list) {
+            if (!io.isValid() || sumCurrency(handlers, io.resource()).compareTo(io.amount()) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** 纯内存物品槽位模型：不写回 {@code live}，仅按 {@code live} 的容量/锁定规则模拟。 */
+    private static final class ItemModel {
+
+        private final ObservableItemResourceHandler live;
+        private final ItemStack[] slots;
+
+        private ItemModel(ObservableItemResourceHandler live) {
+            this.live = live;
+            int size = live.size();
+            this.slots = new ItemStack[size];
+            for (int i = 0; i < size; i++) {
+                slots[i] = live.getStackInSlot(i).copy();
+            }
+        }
+
+        /** 模拟提取：从各可写槽位凑齐 amount 个 template（语义同 {@link #extractItemBypass}）。 */
+        private boolean extract(ItemStack template, int amount) {
+            if (amount <= 0) {
+                return true;
+            }
+            if (template == null || template.isEmpty()) {
+                return false;
+            }
+            int need = amount;
+            for (int i = 0; i < slots.length && need > 0; i++) {
+                if (live.isSlotLocked(i)) {
+                    continue;
+                }
+                ItemStack stack = slots[i];
+                if (stack.isEmpty() || !ItemStack.isSameItemSameComponents(stack, template)) {
+                    continue;
+                }
+                int take = Math.min(need, stack.getCount());
+                if (take >= stack.getCount()) {
+                    slots[i] = ItemStack.EMPTY;
+                } else {
+                    stack.shrink(take);
+                }
+                need -= take;
+            }
+            return need == 0;
+        }
+
+        /** 模拟插入：按槽位顺序放入 amount 个 template（语义同 {@link #insertItemBypass}）。 */
+        private boolean insert(ItemStack template, int amount) {
+            if (amount <= 0) {
+                return true;
+            }
+            if (template == null || template.isEmpty()) {
+                return false;
+            }
+            ItemStack probe = template.copyWithCount(1);
+            int need = amount;
+            for (int i = 0; i < slots.length && need > 0; i++) {
+                if (live.isSlotLocked(i)) {
+                    continue;
+                }
+                ItemStack stack = slots[i];
+                if (!stack.isEmpty() && !ItemStack.isSameItemSameComponents(stack, probe)) {
+                    continue;
+                }
+                int cap = live.getSlotCapacity(i, probe);
+                int used = stack.isEmpty() ? 0 : stack.getCount();
+                int space = cap - used;
+                if (space <= 0) {
+                    continue;
+                }
+                int put = Math.min(need, space);
+                if (stack.isEmpty()) {
+                    slots[i] = probe.copyWithCount(put);
+                } else {
+                    stack.grow(put);
+                }
+                need -= put;
+            }
+            return need == 0;
+        }
+    }
+
+    /** 纯内存流体槽位模型：不写回 {@code live}，仅按 {@code live} 的容量/锁定规则模拟。 */
+    private static final class FluidModel {
+
+        private final ObservableFluidResourceHandler live;
+        private final FluidStack[] slots;
+
+        private FluidModel(ObservableFluidResourceHandler live) {
+            this.live = live;
+            int size = live.size();
+            this.slots = new FluidStack[size];
+            for (int i = 0; i < size; i++) {
+                FluidStack stack = live.getFluidInSlot(i);
+                slots[i] = stack.isEmpty() ? FluidStack.EMPTY : stack.copy();
+            }
+        }
+
+        /** 模拟提取：从各可写槽位凑齐 amount mB（语义同 {@link #extractFluidBypass}）。 */
+        private boolean extract(FluidStack template, int amount) {
+            if (amount <= 0) {
+                return true;
+            }
+            if (template == null || template.isEmpty()) {
+                return false;
+            }
+            int need = amount;
+            for (int i = 0; i < slots.length && need > 0; i++) {
+                if (live.isSlotLocked(i)) {
+                    continue;
+                }
+                FluidStack stack = slots[i];
+                if (stack.isEmpty() || !FluidStack.isSameFluidSameComponents(stack, template)) {
+                    continue;
+                }
+                int take = Math.min(need, stack.getAmount());
+                if (take >= stack.getAmount()) {
+                    slots[i] = FluidStack.EMPTY;
+                } else {
+                    slots[i] = stack.copyWithAmount(stack.getAmount() - take);
+                }
+                need -= take;
+            }
+            return need == 0;
+        }
+
+        /** 模拟插入：按槽位顺序放入 amount mB（语义同 {@link #insertFluidBypass}）。 */
+        private boolean insert(FluidStack template, int amount) {
+            if (amount <= 0) {
+                return true;
+            }
+            if (template == null || template.isEmpty()) {
+                return false;
+            }
+            FluidStack probe = template.copyWithAmount(1);
+            int need = amount;
+            for (int i = 0; i < slots.length && need > 0; i++) {
+                if (live.isSlotLocked(i)) {
+                    continue;
+                }
+                FluidStack stack = slots[i];
+                if (!stack.isEmpty() && !FluidStack.isSameFluidSameComponents(stack, probe)) {
+                    continue;
+                }
+                int cap = live.getTankCapacity(i);
+                int used = stack.isEmpty() ? 0 : stack.getAmount();
+                int space = cap - used;
+                if (space <= 0) {
+                    continue;
+                }
+                int put = Math.min(need, space);
+                if (stack.isEmpty()) {
+                    slots[i] = probe.copyWithAmount(put);
+                } else {
+                    slots[i] = stack.copyWithAmount(stack.getAmount() + put);
+                }
+                need -= put;
+            }
+            return need == 0;
         }
     }
 
@@ -406,9 +646,9 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
         return MultiCardCurrencyHelper.insertAll(currencyHandlers, io.currencyInsert(), tx);
     }
 
-    private static boolean extractItems(ItemStacksResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
+    private static boolean extractItems(ObservableItemResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
         for (ItemIO io : list) {
-            int got = handler instanceof ObservableItemResourceHandler obs ? obs.extractBypassFilter(ItemResource.of(io.itemStack()), io.amount(), tx) : handler.extract(ItemResource.of(io.itemStack()), io.amount(), tx);
+            int got = extractItemBypass(handler, io.itemStack(), io.amount(), tx);
             if (got != io.amount()) {
                 return false;
             }
@@ -416,9 +656,9 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
         return true;
     }
 
-    private static boolean insertItems(ItemStacksResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
+    private static boolean insertItems(ObservableItemResourceHandler handler, List<ItemIO> list, TransactionContext tx) {
         for (ItemIO io : list) {
-            int put = handler instanceof ObservableItemResourceHandler obs ? obs.insertBypassFilter(ItemResource.of(io.itemStack()), io.amount(), tx) : handler.insert(ItemResource.of(io.itemStack()), io.amount(), tx);
+            int put = insertItemBypass(handler, io.itemStack(), io.amount(), tx);
             if (put != io.amount()) {
                 return false;
             }
@@ -426,9 +666,9 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
         return true;
     }
 
-    private static boolean extractFluids(FluidStacksResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
+    private static boolean extractFluids(ObservableFluidResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
         for (FluidIO io : list) {
-            int got = handler instanceof ObservableFluidResourceHandler obs ? obs.extractBypassFilter(FluidResource.of(io.fluidStack()), io.amount(), tx) : handler.extract(FluidResource.of(io.fluidStack()), io.amount(), tx);
+            int got = extractFluidBypass(handler, io.fluidStack(), io.amount(), tx);
             if (got != io.amount()) {
                 return false;
             }
@@ -436,14 +676,123 @@ public final class MachineTradeDefinition implements TradeDefinition<TradeCheckI
         return true;
     }
 
-    private static boolean insertFluids(FluidStacksResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
+    private static boolean insertFluids(ObservableFluidResourceHandler handler, List<FluidIO> list, TransactionContext tx) {
         for (FluidIO io : list) {
-            int put = handler instanceof ObservableFluidResourceHandler obs ? obs.insertBypassFilter(FluidResource.of(io.fluidStack()), io.amount(), tx) : handler.insert(FluidResource.of(io.fluidStack()), io.amount(), tx);
+            int put = insertFluidBypass(handler, io.fluidStack(), io.amount(), tx);
             if (put != io.amount()) {
                 return false;
             }
         }
         return true;
+    }
+
+    // ── 跳过过滤器的资源 I/O（1.21.1 无事务 API，借助兼容层 Transaction 记录回滚） ──
+
+    /** 跨槽位提取指定物品（跳过过滤器，尊重槽位锁定），并在事务中登记回滚。 */
+    private static int extractItemBypass(ObservableItemResourceHandler handler, ItemStack template, int amount, TransactionContext tx) {
+        if (amount <= 0 || template == null || template.isEmpty()) {
+            return 0;
+        }
+        int got = 0;
+        for (int i = 0; i < handler.size() && got < amount; i++) {
+            ItemStack current = handler.getStackInSlot(i);
+            if (current.isEmpty() || !ItemStack.isSameItemSameComponents(current, template)) {
+                continue;
+            }
+            int take = Math.min(amount - got, current.getCount());
+            ItemStack out = handler.extractBypassFilter(i, take, false);
+            got += out.getCount();
+            if (tx instanceof Transaction t && out.getCount() > 0) {
+                int slotIndex = i;
+                ItemStack rolled = out;
+                // 反向 bypass 还原：直接塞回被取走的数量。
+                // 不能用 setStackInSlot 还原：该写回仍受 IO 过滤（如输出侧 NoInsertFilter）拦截。
+                t.addRollback(() -> handler.insertBypassFilter(slotIndex, rolled, false));
+            }
+        }
+        return got;
+    }
+
+    /** 跨槽位插入指定物品（跳过过滤器，尊重槽位锁定），并在事务中登记回滚。 */
+    private static int insertItemBypass(ObservableItemResourceHandler handler, ItemStack template, int amount, TransactionContext tx) {
+        if (amount <= 0 || template == null || template.isEmpty()) {
+            return 0;
+        }
+        ItemStack probe = template.copyWithCount(1);
+        int inserted = 0;
+        for (int i = 0; i < handler.size() && inserted < amount; i++) {
+            ItemStack current = handler.getStackInSlot(i);
+            if (!current.isEmpty() && !ItemStack.isSameItemSameComponents(current, probe)) {
+                continue;
+            }
+            int cap = handler.getSlotCapacity(i, probe);
+            int space = cap - current.getCount();
+            if (space <= 0) {
+                continue;
+            }
+            int put = Math.min(amount - inserted, space);
+            ItemStack rem = handler.insertBypassFilter(i, template.copyWithCount(put), false);
+            int done = put - rem.getCount();
+            inserted += done;
+            if (tx instanceof Transaction t && done > 0) {
+                int slotIndex = i;
+                // 反向 bypass 还原：直接取回刚插入的数量（输出侧 NoInsertFilter 不会放行 setStackInSlot 还原）。
+                t.addRollback(() -> handler.extractBypassFilter(slotIndex, done, false));
+            }
+        }
+        return inserted;
+    }
+
+    /** 跨槽位提取指定流体（跳过过滤器，尊重槽位锁定），并在事务中登记回滚。 */
+    private static int extractFluidBypass(ObservableFluidResourceHandler handler, FluidStack template, int amount, TransactionContext tx) {
+        if (amount <= 0 || template == null || template.isEmpty()) {
+            return 0;
+        }
+        int got = 0;
+        for (int i = 0; i < handler.size() && got < amount; i++) {
+            FluidStack current = handler.getFluidInSlot(i);
+            if (current.isEmpty() || !FluidStack.isSameFluidSameComponents(current, template)) {
+                continue;
+            }
+            int take = Math.min(amount - got, current.getAmount());
+            FluidStack out = handler.extractBypassFilter(i, take);
+            got += out.getAmount();
+            if (tx instanceof Transaction t && out.getAmount() > 0) {
+                int slotIndex = i;
+                FluidStack rolled = out;
+                // 反向 bypass 还原（见物品注释；不能用 setFluidInSlot 还原）。
+                t.addRollback(() -> handler.insertBypassFilter(slotIndex, rolled, rolled.getAmount()));
+            }
+        }
+        return got;
+    }
+
+    /** 跨槽位插入指定流体（跳过过滤器，尊重槽位锁定），并在事务中登记回滚。 */
+    private static int insertFluidBypass(ObservableFluidResourceHandler handler, FluidStack template, int amount, TransactionContext tx) {
+        if (amount <= 0 || template == null || template.isEmpty()) {
+            return 0;
+        }
+        FluidStack probe = template.copyWithAmount(1);
+        int inserted = 0;
+        for (int i = 0; i < handler.size() && inserted < amount; i++) {
+            FluidStack current = handler.getFluidInSlot(i);
+            if (!current.isEmpty() && !FluidStack.isSameFluidSameComponents(current, probe)) {
+                continue;
+            }
+            int space = handler.getTankCapacity(i) - current.getAmount();
+            if (space <= 0) {
+                continue;
+            }
+            int put = Math.min(amount - inserted, space);
+            int done = handler.insertBypassFilter(i, probe.copyWithAmount(put), put);
+            inserted += done;
+            if (tx instanceof Transaction t && done > 0) {
+                int slotIndex = i;
+                // 反向 bypass 还原（见物品注释）。
+                t.addRollback(() -> handler.extractBypassFilter(slotIndex, done));
+            }
+        }
+        return inserted;
     }
 
     private static boolean extractEnergy(EnergyHandler energy, int amount, TransactionContext tx) {

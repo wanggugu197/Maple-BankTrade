@@ -1,12 +1,10 @@
 package com.maple.maple_banktrade.api.machineTrade.ui;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.neoforged.neoforge.transfer.energy.EnergyHandler;
-import net.neoforged.neoforge.transfer.fluid.FluidStacksResourceHandler;
-import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 
 import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder;
@@ -31,6 +29,8 @@ import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.data.BankInfo;
 import com.maple.maple_banktrade.api.bank.data.TradableType;
+import com.mapleutillib.api.resource.ObservableFluidResourceHandler;
+import com.mapleutillib.api.resource.ObservableItemResourceHandler;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
@@ -80,7 +80,7 @@ public final class TradingStationUi {
         tabView.addTab(
                 new Tab().setText(Component.translatable("ui.maple_banktrade.trading_station.tab.inventory")),
                 inventoryTab);
-        for (Identifier typeId : host.tradeTypeIds()) {
+        for (ResourceLocation typeId : host.tradeTypeIds()) {
             tabView.addTab(buildTradeTypeTab(typeId), MachineTradeUIHelper.buildTradesTab(host, typeId));
         }
         root.addChild(tabView);
@@ -175,10 +175,10 @@ public final class TradingStationUi {
     // ── 库存页 ────────────────────────────────────────
 
     public static UIElement fullIoInventoryTab(
-                                               ItemStacksResourceHandler itemInput,
-                                               ItemStacksResourceHandler itemOutput,
-                                               FluidStacksResourceHandler fluidInput,
-                                               FluidStacksResourceHandler fluidOutput,
+                                               ObservableItemResourceHandler itemInput,
+                                               ObservableItemResourceHandler itemOutput,
+                                               ObservableFluidResourceHandler fluidInput,
+                                               ObservableFluidResourceHandler fluidOutput,
                                                @Nullable EnergyHandler energy,
                                                @Nullable MachineTradeUiHost host) {
         Objects.requireNonNull(itemInput, "itemInput");
@@ -308,8 +308,8 @@ public final class TradingStationUi {
     // ── 槽位 / 能量 ───────────────────────────────────
     public static UIElement ioColumn(
                                      Component title,
-                                     ItemStacksResourceHandler items,
-                                     FluidStacksResourceHandler fluids) {
+                                     ObservableItemResourceHandler items,
+                                     ObservableFluidResourceHandler fluids) {
         return new UIElement()
                 .layout(l -> l.width(130).alignItems(AlignItems.CENTER))
                 .addChildren(
@@ -354,7 +354,7 @@ public final class TradingStationUi {
 
     // ── 配方页 ────────────────────────────────────────
 
-    public static Tab buildTradeTypeTab(Identifier tradeTypeId) {
+    public static Tab buildTradeTypeTab(ResourceLocation tradeTypeId) {
         TradableType type = TradableType.requireById(tradeTypeId);
         Component title = type != null ? type.getDisplayName() : TradableType.getDisplayName(tradeTypeId);
         Tab tab = new Tab().setText(title);

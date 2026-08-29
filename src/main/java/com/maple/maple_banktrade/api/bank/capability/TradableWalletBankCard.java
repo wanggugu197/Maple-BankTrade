@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.bank.capability;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * 可在钱包 UI 中进行货币-物品交易的银行卡标记接口。
@@ -8,5 +8,5 @@ import net.minecraft.resources.Identifier;
 public interface TradableWalletBankCard {
 
     /** 绑定的货币-物品交易类型 ID。 */
-    Identifier getTradeTypeId();
+    ResourceLocation getTradeTypeId();
 }

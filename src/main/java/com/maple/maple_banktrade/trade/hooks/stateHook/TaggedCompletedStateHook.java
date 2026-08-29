@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.stateHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -21,13 +21,13 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class TaggedCompletedStateHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private String id;
     @Persisted
     private boolean flip; // 反转逻辑（可选）
 
-    public TaggedCompletedStateHook(Identifier nameIndex, String id) {
+    public TaggedCompletedStateHook(ResourceLocation nameIndex, String id) {
         this(nameIndex, id, false);
     }
 

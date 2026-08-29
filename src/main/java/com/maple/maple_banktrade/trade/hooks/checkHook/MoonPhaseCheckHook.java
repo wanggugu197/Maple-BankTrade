@@ -29,7 +29,7 @@ public final class MoonPhaseCheckHook extends MachineTradeHooks.CheckHook {
 
     @Override
     public boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade) {
-        long dayTime = context.level().getDefaultClockTime();
+        long dayTime = context.level().getDayTime();
         int current = (int) ((dayTime / 24000L) % 8);
         return flip != (current == phase);
     }

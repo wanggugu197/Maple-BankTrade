@@ -3,7 +3,7 @@ package com.maple.maple_banktrade.api.bank.base;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -37,17 +37,17 @@ public abstract class BankCard implements IPersistedSerializable {
     @Persisted
     @Getter
     @Setter
-    private Identifier bankTypeId;
+    private ResourceLocation bankTypeId;
 
     @Persisted
     @Getter
     @Setter
-    private Identifier cardTypeId;
+    private ResourceLocation cardTypeId;
 
     @Persisted
     @Getter
     @Setter
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
 
     @Getter
     private BankCardPermission clientPermission = BankCardPermission.UNUSABLE;
@@ -60,11 +60,11 @@ public abstract class BankCard implements IPersistedSerializable {
     protected BankCard() {}
 
     /** 业务构造（赋值字段） */
-    protected BankCard(BankCardIdentity identity, Identifier cardTypeId) {
+    protected BankCard(BankCardIdentity identity, ResourceLocation cardTypeId) {
         this(identity.cardUuid(), identity.bankTypeId(), cardTypeId, identity.nameIndex());
     }
 
-    protected BankCard(UUID cardUuid, Identifier bankTypeId, Identifier cardTypeId, Identifier nameIndex) {
+    protected BankCard(UUID cardUuid, ResourceLocation bankTypeId, ResourceLocation cardTypeId, ResourceLocation nameIndex) {
         BankType bankType = BankType.requireById(bankTypeId);
         this.cardUuid = Objects.requireNonNull(cardUuid, "cardUuid");
         this.bankTypeId = bankType == null ? Objects.requireNonNull(bankTypeId, "bankTypeId") : bankType.id();
@@ -97,8 +97,7 @@ public abstract class BankCard implements IPersistedSerializable {
         if (!(tag instanceof CompoundTag compoundTag) || compoundTag.isEmpty()) return null;
         BankCard card = BankCard.CODEC.parse(NbtOps.INSTANCE, compoundTag).result().orElse(null);
         if (card != null) {
-            card.clientPermission = BankCardPermission.bySerializedName(compoundTag.getStringOr(CLIENT_PERMISSION_KEY,
-                    BankCardPermission.UNUSABLE.getSerializedName()));
+            card.clientPermission = BankCardPermission.bySerializedName(compoundTag.contains(CLIENT_PERMISSION_KEY) ? compoundTag.getString(CLIENT_PERMISSION_KEY) : BankCardPermission.UNUSABLE.getSerializedName());
         }
         return card;
     }
@@ -107,19 +106,19 @@ public abstract class BankCard implements IPersistedSerializable {
     // Codec（多态分发，仍使用原方式）
     // ==============================================
 
-    public static final Codec<BankCard> CODEC = Identifier.CODEC.partialDispatch(
+    public static final Codec<BankCard> CODEC = ResourceLocation.CODEC.partialDispatch(
             "cardTypeId",
             card -> DataResult.success(card.getCardTypeId()),
             BankCardType::getCodecResult);
 
     // 辅助记录（保留，不再用于序列化）
-    public record BankCardIdentity(UUID cardUuid, Identifier bankTypeId, Identifier nameIndex) {
+    public record BankCardIdentity(UUID cardUuid, ResourceLocation bankTypeId, ResourceLocation nameIndex) {
 
         public static BankCardIdentity of(BankCard card) {
             return new BankCardIdentity(card.getCardUuid(), card.getBankTypeId(), card.getNameIndex());
         }
 
-        public static BankCardIdentity of(UUID cardUuid, BankType bankType, Identifier nameIndex) {
+        public static BankCardIdentity of(UUID cardUuid, BankType bankType, ResourceLocation nameIndex) {
             return new BankCardIdentity(cardUuid, bankType.id(), nameIndex);
         }
     }

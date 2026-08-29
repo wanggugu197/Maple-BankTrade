@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.currency_item;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.MapleBankTrade;
@@ -18,18 +18,18 @@ import java.util.Objects;
 public final class CurrencyItemTradeType implements TradeType<CurrencyItemTradeStorage> {
 
     @Persisted
-    private Identifier id;
+    private ResourceLocation id;
 
     // 无参构造器（反序列化必需）
     public CurrencyItemTradeType() {
         this.id = MapleBankTrade.id("default_currency_item");
     }
 
-    public CurrencyItemTradeType(Identifier id) {
+    public CurrencyItemTradeType(ResourceLocation id) {
         this.id = Objects.requireNonNull(id, "id");
     }
 
-    public static CurrencyItemTradeType of(Identifier id) {
+    public static CurrencyItemTradeType of(ResourceLocation id) {
         return new CurrencyItemTradeType(id);
     }
 

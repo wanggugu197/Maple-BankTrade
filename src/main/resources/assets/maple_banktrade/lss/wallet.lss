@@ -50,7 +50,6 @@
   horizontal-align: center;
   vertical-align: center;
   text-shadow: false;
-  opacity: 0;
 }
 
 /* 左页银行卡列表：内容区 = 页宽高 - 2*padding */

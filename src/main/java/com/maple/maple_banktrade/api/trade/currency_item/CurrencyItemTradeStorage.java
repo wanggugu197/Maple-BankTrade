@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.currency_item;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 
@@ -12,7 +12,7 @@ import com.maple.maple_banktrade.api.trade.base.registry.AbstractTradeEntryStora
 public final class CurrencyItemTradeStorage extends AbstractTradeEntryStorage<CurrencyItemTrade> {
 
     /** 绑定交易类型 ID 创建空存储器。 */
-    public CurrencyItemTradeStorage(Identifier tradeTypeId) {
+    public CurrencyItemTradeStorage(ResourceLocation tradeTypeId) {
         super(tradeTypeId);
     }
 

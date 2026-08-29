@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.machineTrade.itemAttachment;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,11 +40,11 @@ import java.util.stream.Collectors;
 
 public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> implements MachineTradeUiHost {
 
-    private final Identifier tradeType;
+    private final ResourceLocation tradeType;
 
     private ServerPlayer player;
 
-    public MachineTradeItemAttachment(Identifier tradeType) {
+    public MachineTradeItemAttachment(ResourceLocation tradeType) {
         this.tradeType = tradeType;
     }
 
@@ -84,7 +84,7 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
      * 本站绑定的交易类型 ID（决定配方标签页顺序）。
      */
     @Override
-    public List<Identifier> tradeTypeIds() {
+    public List<ResourceLocation> tradeTypeIds() {
         return List.of(tradeType);
     }
 
@@ -92,7 +92,7 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
      * UI 点击配方后在服务端执行。
      */
     @Override
-    public void runTradeFromUi(Identifier tradeTypeId, Identifier tradeId, int desiredCount) {
+    public void runTradeFromUi(ResourceLocation tradeTypeId, ResourceLocation tradeId, int desiredCount) {
         Objects.requireNonNull(tradeTypeId, "tradeTypeId");
         Objects.requireNonNull(tradeId, "tradeId");
         if (desiredCount <= 0) return;
@@ -123,7 +123,7 @@ public class MachineTradeItemAttachment extends UIItemAttachment<ComponentItem> 
     }
 
     @Override
-    public MachineTradeContext createTradeContext(Identifier tradeTypeId) {
+    public MachineTradeContext createTradeContext(ResourceLocation tradeTypeId) {
         if (player == null) return null;
         ServerLevel level = (ServerLevel) player.level();
         MinecraftServer server = level.getServer();

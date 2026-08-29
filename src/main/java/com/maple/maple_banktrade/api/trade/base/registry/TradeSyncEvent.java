@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.base.registry;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.Event;
 
 import lombok.Getter;
@@ -12,9 +12,9 @@ import lombok.Getter;
 @Getter
 public class TradeSyncEvent extends Event {
 
-    private final Identifier tradeTypeId;
+    private final ResourceLocation tradeTypeId;
 
-    public TradeSyncEvent(Identifier tradeTypeId) {
+    public TradeSyncEvent(ResourceLocation tradeTypeId) {
         this.tradeTypeId = tradeTypeId;
     }
 }

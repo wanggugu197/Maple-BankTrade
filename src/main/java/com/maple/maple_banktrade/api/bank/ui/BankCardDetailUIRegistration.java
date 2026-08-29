@@ -3,7 +3,7 @@ package com.maple.maple_banktrade.api.bank.ui;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -35,7 +35,7 @@ public final class BankCardDetailUIRegistration {
     // ==============================================
 
     /** 银行卡详情 UI 标识。 */
-    public static final Identifier BANK_CARD_DETAIL_UI = MapleBankTrade.id("bank_card_detail_ui");
+    public static final ResourceLocation BANK_CARD_DETAIL_UI = MapleBankTrade.id("bank_card_detail_ui");
     /** 详情打开参数的网络编解码器。 */
     private static final StreamCodec<RegistryFriendlyByteBuf, DetailPayload> DETAIL_PAYLOAD_CODEC = StreamCodec.of(
             (buffer, payload) -> {
@@ -90,8 +90,8 @@ public final class BankCardDetailUIRegistration {
 
         Button closeButton = new Button().setText("×", false);
         closeButton.addClass("mbt-wallet-close-button");
-        closeButton.setOnClick(_ -> player.closeContainer());
-        closeButton.setOnServerClick(_ -> player.closeContainer());
+        closeButton.setOnClick(ignored -> player.closeContainer());
+        closeButton.setOnServerClick(ignored -> player.closeContainer());
 
         root.addChildren(scroller, inventory, closeButton);
         return UI.of(root, WalletUIStylesheets.createWalletStylesheets());

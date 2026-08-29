@@ -1,7 +1,7 @@
 {
   "values": [
     "maple_banktrade:trading_station_machine_item_desk",
-    "maple_banktrade:trading_station_auto_sell_ores_lava_auto_sell_mob_drops",
-    "maple_banktrade:trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power"
+    "maple_banktrade:trading_station_machine_bench_machine_washer_machine_forge_machine_bank_machine_power",
+    "maple_banktrade:trading_station_auto_sell_ores_lava_auto_sell_mob_drops"
   ]
 }

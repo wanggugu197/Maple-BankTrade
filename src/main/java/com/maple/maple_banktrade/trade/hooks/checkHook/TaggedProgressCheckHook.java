@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.base.BankCard;
@@ -20,7 +20,7 @@ import lombok.AllArgsConstructor;
 public final class TaggedProgressCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private String id;
     @Persisted
@@ -28,7 +28,7 @@ public final class TaggedProgressCheckHook extends MachineTradeHooks.CheckHook {
     @Persisted
     private boolean flip;
 
-    public TaggedProgressCheckHook(Identifier nameIndex, String id, int progress) {
+    public TaggedProgressCheckHook(ResourceLocation nameIndex, String id, int progress) {
         this.nameIndex = nameIndex;
         this.id = id;
         this.progress = progress;

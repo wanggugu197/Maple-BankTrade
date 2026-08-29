@@ -1,10 +1,11 @@
 package com.maple.maple_banktrade.api.machineTrade.station;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.Identifier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -16,13 +17,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 
-import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.gui.factory.BlockUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.syncdata.holder.IPersistManagedHolder;
@@ -47,7 +45,7 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
                                               implements BlockUIMenuType.BlockUI, MachineTradeType {
 
     /** 本站绑定的机器交易类型（UI 标签页顺序）。 */
-    public final List<Identifier> trade_type;
+    public final List<ResourceLocation> trade_type;
 
     /**
      * 是否运行自动交易调度（挂 server ticker）。
@@ -60,7 +58,7 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
 
     protected BaseTradingStationBlock(
                                       Properties properties,
-                                      List<Identifier> trade_type,
+                                      List<ResourceLocation> trade_type,
                                       boolean runsAutoTrade) {
         super(properties);
         this.trade_type = trade_type;
@@ -68,7 +66,7 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
     }
 
     @Override
-    public List<Identifier> machineTradeTypes() {
+    public List<ResourceLocation> machineTradeTypes() {
         return trade_type == null ? List.of() : trade_type;
     }
 
@@ -132,12 +130,12 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
     public void setPlacedBy(Level level, @NonNull BlockPos pos, @NonNull BlockState state, @Nullable LivingEntity placer, @NonNull ItemStack stack) {
         if (!level.isClientSide()) {
             if (level.getBlockEntity(pos) instanceof IPersistManagedHolder persistManagedHolder) {
-                Optional.ofNullable(stack.get(DataComponents.CUSTOM_DATA)).ifPresent(customData -> {
-                    try (var reporter = new ProblemReporter.ScopedCollector(LDLib2.LOGGER)) {
-                        var input = TagValueInput.create(reporter, level.registryAccess(), customData.copyTag());
-                        persistManagedHolder.loadManagedPersistentData(input);
+                if (stack.has(DataComponents.CUSTOM_DATA)) {
+                    CompoundTag tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+                    if (tag != null && !tag.isEmpty()) {
+                        persistManagedHolder.loadManagedPersistentData(level.registryAccess(), tag);
                     }
-                });
+                }
             }
         }
     }
@@ -147,10 +145,10 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
         var opt = Optional.ofNullable(params.getOptionalParameter(LootContextParams.BLOCK_ENTITY));
         if (opt.isPresent() && opt.get() instanceof IPersistManagedHolder persistManagedHolder && opt.get().getLevel() instanceof Level level) {
             var drop = new ItemStack(this);
-            try (var reporter = new ProblemReporter.ScopedCollector(LDLib2.LOGGER)) {
-                var output = TagValueOutput.createWithContext(reporter, level.registryAccess());
-                persistManagedHolder.saveManagedPersistentData(output, true);
-                drop.set(DataComponents.CUSTOM_DATA, CustomData.of(output.buildResult()));
+            CompoundTag tag = new CompoundTag();
+            persistManagedHolder.saveManagedPersistentData(level.registryAccess(), tag, true);
+            if (!tag.isEmpty()) {
+                drop.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
             }
             return List.of(drop);
         }
@@ -158,18 +156,22 @@ public abstract class BaseTradingStationBlock extends BaseRotatedBlock
     }
 
     @Override
-    public @NonNull ItemStack getCloneItemStack(LevelReader level, @NonNull BlockPos pos, @NonNull BlockState state, boolean includeData, @NonNull Player player) {
+    public @NonNull ItemStack getCloneItemStack(LevelReader level, @NonNull BlockPos pos, @NonNull BlockState state) {
         if (level.getBlockEntity(pos) instanceof IPersistManagedHolder persistManagedHolder) {
             var clone = new ItemStack(this);
-            if (includeData) {
-                try (var reporter = new ProblemReporter.ScopedCollector(LDLib2.LOGGER)) {
-                    var output = TagValueOutput.createWithContext(reporter, level.registryAccess());
-                    persistManagedHolder.saveManagedPersistentData(output, true);
-                    clone.set(DataComponents.CUSTOM_DATA, CustomData.of(output.buildResult()));
-                }
+            HolderLookup.Provider provider = null;
+            if (level instanceof Level lvl) {
+                provider = lvl.registryAccess();
+            }
+            CompoundTag tag = new CompoundTag();
+            if (provider != null) {
+                persistManagedHolder.saveManagedPersistentData(provider, tag, true);
+            }
+            if (!tag.isEmpty()) {
+                clone.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
             }
             return clone;
         }
-        return super.getCloneItemStack(level, pos, state, includeData, player);
+        return super.getCloneItemStack(level, pos, state);
     }
 }

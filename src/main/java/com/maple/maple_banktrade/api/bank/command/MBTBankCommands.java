@@ -3,19 +3,15 @@ package com.maple.maple_banktrade.api.bank.command;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.UuidArgument;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
-import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.maple.maple_banktrade.api.bank.BankHelper;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
@@ -23,10 +19,8 @@ import com.maple.maple_banktrade.api.bank.base.BankCard;
 import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
 import com.maple.maple_banktrade.api.bank.base.BankCardPermission;
 import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
-import com.maple.maple_banktrade.api.bank.capability.CurrencyStorageBankCard;
 import com.maple.maple_banktrade.api.bank.ui.BankPermissionsCardUIRegistration;
 import com.maple.maple_banktrade.api.bank.ui.WalletUIRegistration;
-import com.maple.maple_banktrade.bank.cards.TaggedBankCard;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -37,7 +31,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * 银行系统命令 {@code /mbt_bank}。
@@ -74,10 +67,10 @@ public final class MBTBankCommands {
                 .then(Commands.literal("list").executes(MBTBankCommands::listCards))
                 .then(Commands.literal("factories").executes(MBTBankCommands::listFactories))
                 .then(Commands.literal("create")
-                        // MC 26：等级 4 = OWNERS（旧 hasPermission(4)）
-                        .requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_OWNER))
-                        .then(Commands.argument("factory", IdentifierArgument.id())
-                                .suggests((_, b) -> SharedSuggestionProvider.suggestResource(
+                        // 1.21.1：权限等级 4（旧 hasPermission(4)）
+                        .requires(s -> s.hasPermission(4))
+                        .then(Commands.argument("factory", ResourceLocationArgument.id())
+                                .suggests((ignored, b) -> SharedSuggestionProvider.suggestResource(
                                         BankCardFactory.values().stream().map(BankCardFactory::nameIndex), b))
                                 .executes(MBTBankCommands::createCard)))
                 .then(Commands.literal("wallet").executes(MBTBankCommands::openWallet))
@@ -113,7 +106,7 @@ public final class MBTBankCommands {
     private static int createCard(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayerOrException();
-        Identifier nameIndex = IdentifierArgument.getId(ctx, "factory");
+        ResourceLocation nameIndex = ResourceLocationArgument.getId(ctx, "factory");
         BankCardFactory factory = BankCardFactory.requireByNameIndex(nameIndex);
         if (factory == null) {
             source.sendFailure(Component.translatable("command.mbt_bank.create.unknown_factory", nameIndex.toString()));
@@ -163,7 +156,7 @@ public final class MBTBankCommands {
         return openUi(ctx, BankPermissionsCardUIRegistration.BANK_PERMISSIONS_CARD_UI);
     }
 
-    private static int openUi(CommandContext<CommandSourceStack> ctx, Identifier uiId) throws CommandSyntaxException {
+    private static int openUi(CommandContext<CommandSourceStack> ctx, ResourceLocation uiId) throws CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
         PlayerUIMenuType.openUI(player, uiId);
         return 1;
@@ -210,7 +203,7 @@ public final class MBTBankCommands {
                 Component.translatable(permission.getTranslationKey()));
     }
 
-    private static Component nameOf(Identifier nameIndex) {
+    private static Component nameOf(ResourceLocation nameIndex) {
         return Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(nameIndex));
     }
 

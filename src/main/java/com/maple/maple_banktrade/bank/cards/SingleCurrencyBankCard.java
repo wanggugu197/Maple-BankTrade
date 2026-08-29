@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.bank.cards;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class SingleCurrencyBankCard extends BankCard implements CurrencyStorageBankCard {
 
-    public static final Identifier CARD_TYPE_ID = MapleBankTrade.id("single_currency");
+    public static final ResourceLocation CARD_TYPE_ID = MapleBankTrade.id("single_currency");
 
     // ==============================================
     // Codec（由 PersistedParser 生成）
@@ -37,7 +37,7 @@ public class SingleCurrencyBankCard extends BankCard implements CurrencyStorageB
     @Persisted
     @Getter
     @Setter
-    private Identifier currencyTypeId;
+    private ResourceLocation currencyTypeId;
 
     @Persisted
     @Getter
@@ -63,7 +63,7 @@ public class SingleCurrencyBankCard extends BankCard implements CurrencyStorageB
         this(identity, CARD_TYPE_ID, currencyType, balance);
     }
 
-    protected SingleCurrencyBankCard(BankCardIdentity identity, Identifier cardTypeId,
+    protected SingleCurrencyBankCard(BankCardIdentity identity, ResourceLocation cardTypeId,
                                      CurrencyType currencyType, long balance) {
         super(identity, cardTypeId);
         this.currencyTypeId = Objects.requireNonNull(currencyType, "currencyType").id();
@@ -75,17 +75,17 @@ public class SingleCurrencyBankCard extends BankCard implements CurrencyStorageB
     // ==============================================
 
     @Override
-    public Set<Identifier> getSupportedCurrencyIds() {
+    public Set<ResourceLocation> getSupportedCurrencyIds() {
         return Set.of(currencyTypeId);
     }
 
     @Override
-    public long getCurrencyBalanceAsLong(Identifier currencyTypeId) {
+    public long getCurrencyBalanceAsLong(ResourceLocation currencyTypeId) {
         return supportsCurrency(currencyTypeId) ? balance : 0L;
     }
 
     @Override
-    public boolean increaseCurrency(Identifier currencyTypeId, long amount) {
+    public boolean increaseCurrency(ResourceLocation currencyTypeId, long amount) {
         if (amount <= 0 || !supportsCurrency(currencyTypeId)) return false;
         if (Long.MAX_VALUE - balance < amount) return false;
         balance += amount;
@@ -93,7 +93,7 @@ public class SingleCurrencyBankCard extends BankCard implements CurrencyStorageB
     }
 
     @Override
-    public boolean decreaseCurrency(Identifier currencyTypeId, long amount) {
+    public boolean decreaseCurrency(ResourceLocation currencyTypeId, long amount) {
         if (amount <= 0 || !supportsCurrency(currencyTypeId)) return false;
         if (balance < amount) return false;
         balance -= amount;

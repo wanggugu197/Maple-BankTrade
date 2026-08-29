@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.machineTrade.ui;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.google.common.reflect.TypeToken;
 import com.lowdragmc.lowdraglib2.gui.sync.bindings.SyncStrategy;
@@ -17,7 +17,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.bank.data.TradableType;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
 import com.maple.maple_banktrade.api.trade.machine.MachineTradeContext;
@@ -35,7 +34,7 @@ public class MachineTradeUIHelper {
     public static final int CTRL_TRADE_COUNT = 8;
     public static final int ALT_TRADE_COUNT = 64;
 
-    public static UIElement buildTradesTab(MachineTradeUiHost host, Identifier tradeTypeId) {
+    public static UIElement buildTradesTab(MachineTradeUiHost host, ResourceLocation tradeTypeId) {
         var scroller = createScrollerView();
         TradableType type = TradableType.requireById(tradeTypeId);
         if (type != null) scroller.addScrollViewChild(buildTradeTypeHeader(type));
@@ -43,7 +42,7 @@ public class MachineTradeUIHelper {
         var grid = new UIElement().layout(l -> l.width(260).flexDirection(FlexDirection.ROW).flexWrap(FlexWrap.WRAP));
 
         // 获取全部交易条目（用于 UI 显示）
-        Map<Identifier, MachineTrade> trades = host.listAllTrades(tradeTypeId);
+        Map<ResourceLocation, MachineTrade> trades = host.listAllTrades(tradeTypeId);
 
         // 添加所有交易按钮（可见/不可见由后续状态控制）
         addTrades(host, trades, tradeTypeId, grid);
@@ -58,13 +57,13 @@ public class MachineTradeUIHelper {
                         MachineTradeContext context = host.createTradeContext(tradeTypeId);
                         if (context != null) {
                             map.clear();
-                            for (Map.Entry<Identifier, MachineTrade> entry : trades.entrySet())
+                            for (Map.Entry<ResourceLocation, MachineTrade> entry : trades.entrySet())
                                 map.put(entry.getKey().toString(), entry.getValue().stateHook().getState(context, entry.getValue()));
                         }
                     }
                     return Map.copyOf(map);
                 },
-                _ -> {})
+                ignored -> {})
                 .syncType(new TypeToken<Map<String, Integer>>() {}.getType())
                 .initialValue(map)
                 .c2sStrategy(SyncStrategy.NONE)
@@ -109,11 +108,11 @@ public class MachineTradeUIHelper {
     }
 
     /** 添加配方按钮：客户端把批量次数写入 {@code modifiers}，服务端执行 */
-    public static void addTrades(MachineTradeUiHost host, Map<Identifier, MachineTrade> trades, Identifier tradeTypeId, UIElement grid) {
+    public static void addTrades(MachineTradeUiHost host, Map<ResourceLocation, MachineTrade> trades, ResourceLocation tradeTypeId, UIElement grid) {
         if (trades.isEmpty()) {
             grid.addChild(new Label().setText(Component.translatable("ui.maple_banktrade.trading_station.no_recipes")));
         } else {
-            trades.forEach((_, entry) -> {
+            trades.forEach((ignored, entry) -> {
                 UIElement tradeUI = MachineTradeUI.getMachineTradeIcon(entry);
                 tradeUI.addEventListener(UIEvents.MOUSE_DOWN, e -> {
                     if (e.button == 0) e.modifiers = tradeCountFromKeyboard(e);

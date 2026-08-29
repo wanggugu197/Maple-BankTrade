@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.machine;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -19,7 +19,7 @@ import java.util.Objects;
 public final class MachineTradeType implements TradeType<MachineTradeStorage>, IPersistedSerializable {
 
     @Persisted
-    private Identifier id;
+    private ResourceLocation id;
 
     @Persisted
     private boolean allowAutoTrade;
@@ -30,16 +30,16 @@ public final class MachineTradeType implements TradeType<MachineTradeStorage>, I
         this.allowAutoTrade = false;
     }
 
-    public MachineTradeType(Identifier id, boolean allowAutoTrade) {
+    public MachineTradeType(ResourceLocation id, boolean allowAutoTrade) {
         this.id = Objects.requireNonNull(id, "id");
         this.allowAutoTrade = allowAutoTrade;
     }
 
-    public static MachineTradeType of(Identifier id) {
+    public static MachineTradeType of(ResourceLocation id) {
         return of(id, false);
     }
 
-    public static MachineTradeType of(Identifier id, boolean allowAutoTrade) {
+    public static MachineTradeType of(ResourceLocation id, boolean allowAutoTrade) {
         return new MachineTradeType(id, allowAutoTrade);
     }
 

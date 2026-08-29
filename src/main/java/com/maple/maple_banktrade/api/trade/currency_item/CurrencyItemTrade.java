@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.currency_item;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -27,7 +27,7 @@ public final class CurrencyItemTrade implements TradeInfo {
     // ==============================================
 
     @Persisted
-    private Identifier id;
+    private ResourceLocation id;
 
     @Persisted
     private ItemStack item;
@@ -55,7 +55,7 @@ public final class CurrencyItemTrade implements TradeInfo {
     }
 
     /** 全参构造器 */
-    public CurrencyItemTrade(Identifier id, ItemStack item, int itemAmountPerTrade,
+    public CurrencyItemTrade(ResourceLocation id, ItemStack item, int itemAmountPerTrade,
                              CurrencyResource currency, BigInteger pricePerTrade,
                              Mode mode) {
         this.id = id;
@@ -70,12 +70,12 @@ public final class CurrencyItemTrade implements TradeInfo {
     // 静态工厂
     // ==============================================
 
-    public static CurrencyItemTrade of(Identifier id, Item item, Identifier currencyTypeId, long price, Mode mode) {
+    public static CurrencyItemTrade of(ResourceLocation id, Item item, ResourceLocation currencyTypeId, long price, Mode mode) {
         return of(id, item, 1, currencyTypeId, BigInteger.valueOf(price), mode);
     }
 
-    public static CurrencyItemTrade of(Identifier id, Item item, int itemAmountPerTrade,
-                                       Identifier currencyTypeId, BigInteger pricePerTrade,
+    public static CurrencyItemTrade of(ResourceLocation id, Item item, int itemAmountPerTrade,
+                                       ResourceLocation currencyTypeId, BigInteger pricePerTrade,
                                        Mode mode) {
         return new CurrencyItemTrade(
                 id,

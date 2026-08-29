@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.capability.CurrencyStorageBankCard;
@@ -21,13 +21,13 @@ import java.math.BigInteger;
 public final class CurrencyAmountCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    private Identifier currencyTypeId;
+    private ResourceLocation currencyTypeId;
     @Persisted
     private BigInteger amount;
     @Persisted
     private boolean flip;
 
-    public CurrencyAmountCheckHook(Identifier currencyTypeId, BigInteger amount) {
+    public CurrencyAmountCheckHook(ResourceLocation currencyTypeId, BigInteger amount) {
         this.currencyTypeId = currencyTypeId;
         this.amount = amount;
         this.flip = false;

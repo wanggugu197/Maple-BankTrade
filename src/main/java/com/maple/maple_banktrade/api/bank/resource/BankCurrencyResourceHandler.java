@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.bank.resource;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.TransferPreconditions;
 import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
@@ -169,7 +169,7 @@ public final class BankCurrencyResourceHandler extends SnapshotJournal<BankCurre
         if (amount.signum() == 0 || !isValid(index, resource)) return ZERO;
 
         updateSnapshots(transaction);
-        Identifier currencyId = resource.currencyTypeId();
+        ResourceLocation currencyId = resource.currencyTypeId();
         if (card.increaseCurrency(currencyId, amount)) {
             return amount;
         }
@@ -195,7 +195,7 @@ public final class BankCurrencyResourceHandler extends SnapshotJournal<BankCurre
         Objects.checkIndex(index, size());
         if (amount.signum() == 0 || !isValid(index, resource)) return ZERO;
 
-        Identifier currencyId = resource.currencyTypeId();
+        ResourceLocation currencyId = resource.currencyTypeId();
         BigInteger extracted = card.getCurrencyBalance(currencyId).min(amount);
         if (extracted.signum() <= 0) return ZERO;
 
@@ -216,7 +216,7 @@ public final class BankCurrencyResourceHandler extends SnapshotJournal<BankCurre
     // ==============================================
 
     /** 计算在 long 范围内仍可增加的空间。 */
-    private BigInteger finiteLongRoom(Identifier currencyId) {
+    private BigInteger finiteLongRoom(ResourceLocation currencyId) {
         BigInteger current = card.getCurrencyBalance(currencyId);
         if (current.compareTo(LONG_MAX) >= 0) return ZERO;
         return LONG_MAX.subtract(current);
@@ -225,7 +225,7 @@ public final class BankCurrencyResourceHandler extends SnapshotJournal<BankCurre
     /** 创建当前余额快照。 */
     @Override
     protected CurrencySnapshot createSnapshot() {
-        Map<Identifier, BigInteger> balances = new LinkedHashMap<>();
+        Map<ResourceLocation, BigInteger> balances = new LinkedHashMap<>();
         for (CurrencyResource resource : currencies) {
             balances.put(resource.currencyTypeId(), card.getCurrencyBalance(resource.currencyTypeId()));
         }
@@ -248,7 +248,7 @@ public final class BankCurrencyResourceHandler extends SnapshotJournal<BankCurre
 
     /** 判断快照是否与当前余额一致。 */
     private boolean matchesCurrentBalances(CurrencySnapshot snapshot) {
-        for (Map.Entry<Identifier, BigInteger> entry : snapshot.balances().entrySet()) {
+        for (Map.Entry<ResourceLocation, BigInteger> entry : snapshot.balances().entrySet()) {
             if (!card.getCurrencyBalance(entry.getKey()).equals(entry.getValue())) {
                 return false;
             }
@@ -257,7 +257,7 @@ public final class BankCurrencyResourceHandler extends SnapshotJournal<BankCurre
     }
 
     /** 将单币种余额恢复到目标值。 */
-    private void restoreBalance(Identifier currencyId, BigInteger target) {
+    private void restoreBalance(ResourceLocation currencyId, BigInteger target) {
         BigInteger current = card.getCurrencyBalance(currencyId);
         int comparison = current.compareTo(target);
         if (comparison < 0) {
@@ -296,5 +296,5 @@ public final class BankCurrencyResourceHandler extends SnapshotJournal<BankCurre
     }
 
     /** 余额快照。 */
-    protected record CurrencySnapshot(Map<Identifier, BigInteger> balances) {}
+    protected record CurrencySnapshot(Map<ResourceLocation, BigInteger> balances) {}
 }

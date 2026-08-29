@@ -4,7 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
@@ -30,6 +30,7 @@ import com.maple.maple_banktrade.api.bank.base.BankCardsWorldData;
 import com.maple.maple_banktrade.api.bank.base.BankType;
 import com.maple.maple_banktrade.api.bank.data.BankInfo;
 import com.maple.maple_banktrade.api.bank.data.CardInfo;
+import dev.vfyjxf.taffy.style.AlignContent;
 import it.unimi.dsi.fastutil.floats.FloatObjectPair;
 
 import java.util.List;
@@ -48,7 +49,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
     // ==============================================
 
     /** 钱包 UI 标识。 */
-    public static final Identifier WALLET_UI = MapleBankTrade.id("wallet_ui");
+    public static final ResourceLocation WALLET_UI = MapleBankTrade.id("wallet_ui");
 
     /** 页宽；变换动画 translate 依赖此常量，布局与 wallet.lss 对齐。 */
     public static final int WALLET_PAGE_WIDTH = 135;
@@ -125,7 +126,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         var prompt = new TextElement()
                 .setText(Component.translatable("ui.maple_banktrade.wallet.open"))
                 .addClass("mbt-wallet-cover-prompt");
-        startCoverPromptBreathing(prompt, true);
+        // startCoverPromptBreathing(prompt, true);
 
         return new UIElement()
                 .addClass("mbt-wallet-cover")
@@ -144,7 +145,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         BankCardListPage bankCardListPage = new BankCardListPage(
                 page,
                 list,
-                new Identifier[] { initialBankType == null ? null : initialBankType.id() },
+                new ResourceLocation[] { initialBankType == null ? null : initialBankType.id() },
                 new int[] { 0 });
         list.onMessage("select_card", payload -> selectCard(player, bankCardListPage, payload));
         page.addChild(list);
@@ -168,6 +169,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         });
 
         var bankInfos = new UIElement().addClass("mbt-bank-list");
+        bankInfos.layout(l -> l.alignContent(AlignContent.SPACE_BETWEEN).justifyContent(AlignContent.SPACE_AROUND));
 
         IntSupplier startIndexSupplier = () -> {
             currentPage[0] = clampPage(currentPage[0], getPageCount(player));
@@ -196,7 +198,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         UIElement bank = new UIElement().addClass("mbt-bank-slot");
         applyBankSlotState(bank, initialSlotInfo);
         bank.addChild(BankInfo.createTransparentButton(
-                button -> button.setOnServerClick(_ -> showBankCardList(getSlotInfo(player, startIndexSupplier.getAsInt() + slotIndex).bankType(), bankCardListPage))));
+                button -> button.setOnServerClick(ignored -> showBankCardList(getSlotInfo(player, startIndexSupplier.getAsInt() + slotIndex).bankType(), bankCardListPage))));
 
         BindableValue<String> slotSync = new BindableValue<>(initialSlotInfo.toSyncValue());
         slotSync.addClass("mbt-ui-sync-hidden");
@@ -275,7 +277,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
     // ==============================================
 
     /** 在服务端构建指定银行下可用银行卡的客户端只读快照。 */
-    private static Tag getBankCardListTag(Player player, Identifier bankTypeId, int revision) {
+    private static Tag getBankCardListTag(Player player, ResourceLocation bankTypeId, int revision) {
         CompoundTag root = new CompoundTag();
         ListTag cards = new ListTag();
         root.put(BANK_CARD_LIST_KEY, cards);
@@ -329,7 +331,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         });
         button.noText();
         button.addChild(info.simplifiedUIFactory().create(player, card));
-        button.setOnClick(_ -> {
+        button.setOnClick(ignored -> {
             CompoundTag payload = new CompoundTag();
             payload.putString("card_uuid", card.getCardUuid().toString());
             bankCardListPage.list().sendMessage("select_card", payload);
@@ -343,13 +345,13 @@ public class WalletUIRegistration extends PlayerUIMenuType {
 
     /** 处理点击银行卡；权限由 {@link BankCardDetailUIRegistration#openUI} 统一校验。 */
     private static void selectCard(Player player, BankCardListPage bankCardListPage, CompoundTag payload) {
-        String cardUuid = payload.getStringOr("card_uuid", "");
+        String cardUuid = (payload.contains("card_uuid") ? payload.getString("card_uuid") : "");
         try {
             UUID uuid = UUID.fromString(cardUuid);
             BankCardsWorldData data = getServerBankCards(player);
             if (data == null || !(player instanceof ServerPlayer serverPlayer)) return;
             BankCard card = data.getCard(uuid);
-            Identifier selectedBankTypeId = bankCardListPage.selectedBankTypeId()[0];
+            ResourceLocation selectedBankTypeId = bankCardListPage.selectedBankTypeId()[0];
             if (card == null || selectedBankTypeId == null || !selectedBankTypeId.equals(card.getBankTypeId())) {
                 return;
             }
@@ -365,7 +367,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
     private static Button createPageButton(String text, int delta, Player player, int[] currentPage) {
         Button button = new Button().setText(text, false);
         button.addClass("mbt-bank-page-button");
-        button.setOnServerClick(_ -> updatePage(delta, player, currentPage));
+        button.setOnServerClick(ignored -> updatePage(delta, player, currentPage));
         return button;
     }
 
@@ -398,7 +400,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
     private static BankType getBankTypeForIndex(Player player, int bankIndex) {
         BankCardsWorldData data = getServerBankCards(player);
         if (bankIndex < 0 || data == null) return null;
-        List<Identifier> bankTypeIds = data.getBankTypesForPlayer(BankHelper.getUuid(player));
+        List<ResourceLocation> bankTypeIds = data.getBankTypesForPlayer(BankHelper.getUuid(player));
         return bankIndex < bankTypeIds.size() ? BankType.requireById(bankTypeIds.get(bankIndex)) : null;
     }
 
@@ -434,7 +436,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
 
     /** 左页银行卡列表运行状态；数组字段用于在 lambda 中持有可变值。 */
     private record BankCardListPage(UIElement page, ScrollerView list,
-                                    Identifier[] selectedBankTypeId, int[] listRevision) {}
+                                    ResourceLocation[] selectedBankTypeId, int[] listRevision) {}
 
     /** 右页银行槽位的轻量同步数据。 */
     private record SlotInfo(BankType bankType, int cardCount) {
@@ -461,7 +463,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
         /** 解析银行类型 ID。 */
         private static BankType resolveBankType(String bankTypeId) {
             try {
-                return bankTypeId == null || bankTypeId.isEmpty() ? null : BankType.requireById(Identifier.parse(bankTypeId));
+                return bankTypeId == null || bankTypeId.isEmpty() ? null : BankType.requireById(ResourceLocation.parse(bankTypeId));
             } catch (RuntimeException ignored) {
                 return null;
             }
@@ -498,7 +500,7 @@ public class WalletUIRegistration extends PlayerUIMenuType {
                 .duration(WALLET_FLIP_HALF_DURATION)
                 .ease(Eases.SINE_IN_OUT)
                 .style(PropertyRegistry.TRANSFORM_2D, FloatObjectPair.of(1f, turningCoverTransform()))
-                .onFinished(_ -> {
+                .onFinished(ignored -> {
                     cover.setDisplay(false);
                     leftPage.animation()
                             .duration(WALLET_FLIP_HALF_DURATION)

@@ -2,8 +2,8 @@ package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -23,11 +23,11 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class BiomeVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    private Identifier biomeId;
+    private ResourceLocation biomeId;
     @Persisted
     private boolean flip;
 
-    public BiomeVisibleHook(Identifier biomeId) {
+    public BiomeVisibleHook(ResourceLocation biomeId) {
         this(biomeId, false);
     }
 

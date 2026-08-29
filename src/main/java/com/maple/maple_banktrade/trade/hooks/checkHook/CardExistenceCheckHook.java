@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.checkHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.trade.machine.MachineTrade;
@@ -17,7 +17,7 @@ import lombok.AllArgsConstructor;
 public final class CardExistenceCheckHook extends MachineTradeHooks.CheckHook {
 
     @Persisted
-    Identifier cardNameIndex;
+    ResourceLocation cardNameIndex;
 
     @Override
     public boolean check(MachineTradeContext context, MachineTradeRequest request, MachineTrade trade) {

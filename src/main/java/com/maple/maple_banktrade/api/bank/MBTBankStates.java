@@ -23,10 +23,10 @@ public final class MBTBankStates {
         return getBankCards(level.getServer());
     }
 
-    /** 获取全服银行数据（MinecraftServer 全局 SavedDataStorage）。 */
+    /** 获取全服银行数据（MinecraftServer 全局 SavedDataStorage，1.21.1 使用主世界存储）。 */
     public static BankCardsWorldData getBankCards(MinecraftServer server) {
         Objects.requireNonNull(server, "server");
-        return server.getDataStorage().computeIfAbsent(BankCardsWorldData.TYPE);
+        return server.overworld().getDataStorage().computeIfAbsent(BankCardsWorldData.FACTORY, BankCardsWorldData.DATA_NAME);
     }
 
     // ==============================================

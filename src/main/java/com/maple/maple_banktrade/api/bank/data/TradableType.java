@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.bank.data;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
@@ -17,7 +17,7 @@ import java.util.*;
  * {@code ItemStackTexture(Items.*)}，避免加载期 components 未绑定。
  * </p>
  */
-public record TradableType(Identifier id,
+public record TradableType(ResourceLocation id,
                            List<Component> description,
                            IGuiTexture tradableIcon,
                            IGuiTexture backgroundTexture)
@@ -30,7 +30,7 @@ public record TradableType(Identifier id,
     // 注册表
     // ==============================================
 
-    private static final Map<Identifier, TradableType> REGISTRY = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, TradableType> REGISTRY = new LinkedHashMap<>();
 
     // ==============================================
     // 构造方法
@@ -47,7 +47,7 @@ public record TradableType(Identifier id,
     }
 
     /** 生成可交易类型翻译键。 */
-    public static String getTradableTypeTranslationKey(Identifier id) {
+    public static String getTradableTypeTranslationKey(ResourceLocation id) {
         return "tradable." + id.getNamespace() + "." + id.getPath().replace('/', '.');
     }
 
@@ -57,7 +57,7 @@ public record TradableType(Identifier id,
     }
 
     /** 按 ID 取显示名；未注册时回退为 path 末段的字面量。 */
-    public static Component getDisplayName(Identifier id) {
+    public static Component getDisplayName(ResourceLocation id) {
         TradableType type = requireById(id);
         if (type != null) {
             return type.getDisplayName();
@@ -76,7 +76,7 @@ public record TradableType(Identifier id,
     // ==============================================
 
     /** 注册交易类型显示信息；重复注册时返回已有实例。 */
-    public static TradableType TradableTypeRegister(Identifier id,
+    public static TradableType TradableTypeRegister(ResourceLocation id,
                                                     List<Component> description,
                                                     IGuiTexture tradableIcon,
                                                     IGuiTexture backgroundTexture) {
@@ -88,7 +88,7 @@ public record TradableType(Identifier id,
     }
 
     /** 写入注册表。 */
-    private static TradableType register(Identifier id,
+    private static TradableType register(ResourceLocation id,
                                          List<Component> description,
                                          IGuiTexture tradableIcon,
                                          IGuiTexture backgroundTexture) {
@@ -112,7 +112,7 @@ public record TradableType(Identifier id,
     // ==============================================
 
     /** 查询已注册类型；未知类型返回 null。 */
-    public static TradableType requireById(Identifier id) {
+    public static TradableType requireById(ResourceLocation id) {
         return id == null ? null : REGISTRY.get(id);
     }
 

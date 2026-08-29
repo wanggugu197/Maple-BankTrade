@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.base.registry;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
 import java.util.Optional;
@@ -16,13 +16,13 @@ public interface TradeEntryStorage<E> extends TradeStorage {
     E register(E entry);
 
     /** 按 ID 查找条目。 */
-    Optional<E> find(Identifier tradeId);
+    Optional<E> find(ResourceLocation tradeId);
 
     /** 按 ID 查找条目，不存在时返回 null。 */
-    E require(Identifier tradeId);
+    E require(ResourceLocation tradeId);
 
     /** 返回全部条目的只读视图。 */
-    Map<Identifier, E> entries();
+    Map<ResourceLocation, E> entries();
 
     /** 返回已注册条目数量。 */
     default int size() {

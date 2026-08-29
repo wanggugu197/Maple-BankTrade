@@ -1,13 +1,11 @@
 package com.maple.maple_banktrade.api.bank.ui.capability;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.transfer.item.ItemResource;
-import net.neoforged.neoforge.transfer.transaction.Transaction;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
-import com.lowdragmc.lowdraglib2.gui.slot.ItemResourceHandlerSlot;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
@@ -56,7 +54,7 @@ public class TradableUI {
     public static void addTradePanel(UIElement ui, Player player, BankCard card) {
         if (!(card instanceof TradableWalletBankCard tradableBankCard)) return;
 
-        Identifier tradeTypeId = tradableBankCard.getTradeTypeId();
+        ResourceLocation tradeTypeId = tradableBankCard.getTradeTypeId();
         CurrencyItemTradeStorage storage = TradeRegistry.requireStorage(tradeTypeId, CurrencyItemTradeStorage.class);
         if (storage == null || storage.isEmpty()) return;
 
@@ -94,11 +92,11 @@ public class TradableUI {
                         .paddingHorizontal(6));
 
         ObservableItemResourceHandler sellHandler = getObservableItemResourceHandler(player, card, storage);
-        head.addChild(new ItemSlot().bind(new ItemResourceHandlerSlot(sellHandler, 0))
+        head.addChild(new ItemSlot().bind(new SlotItemHandler(sellHandler, 0, 0, 0))
                 .layout(l -> l.width(0).height(0))
                 .style(s -> s.backgroundTexture(IGuiTexture.EMPTY)));
 
-        for (Map.Entry<Identifier, CurrencyItemTrade> entry : storage.entries().entrySet()) {
+        for (Map.Entry<ResourceLocation, CurrencyItemTrade> entry : storage.entries().entrySet()) {
             CurrencyItemTrade trade = entry.getValue();
             ItemSlot item = new ItemSlot().setItem(trade.item().copyWithCount(trade.itemAmountPerTrade()));
             item.layout(l -> l.width(BUY_BUTTON_SIZE).height(BUY_BUTTON_SIZE));
@@ -134,7 +132,7 @@ public class TradableUI {
     public static UIElement createTradeHead(BankCard card, float scale) {
         if (!(card instanceof TradableWalletBankCard tradableBankCard)) return null;
 
-        Identifier tradeTypeId = tradableBankCard.getTradeTypeId();
+        ResourceLocation tradeTypeId = tradableBankCard.getTradeTypeId();
         CurrencyItemTradeStorage storage = TradeRegistry.requireStorage(tradeTypeId, CurrencyItemTradeStorage.class);
         if (storage == null || storage.isEmpty()) return null;
 
@@ -160,7 +158,7 @@ public class TradableUI {
     private static @NonNull ObservableItemResourceHandler getObservableItemResourceHandler(Player player, BankCard card, CurrencyItemTradeStorage storage) {
         ObservableItemResourceHandler sellHandler = new ObservableItemResourceHandler(1);
         boolean[] trading = { false };
-        sellHandler.setOnChanged((index, _) -> {
+        sellHandler.setOnChanged((index, ignored) -> {
             if (index != 0 || trading[0]) return;
             trading[0] = true;
             try {
@@ -184,16 +182,11 @@ public class TradableUI {
 
     /** 取出卖出槽残留物品。 */
     private static ItemStack drainInput(ObservableItemResourceHandler handler) {
-        ItemResource resource = handler.getResource(0);
-        if (resource.isEmpty()) return ItemStack.EMPTY;
-        int amount = handler.getAmountAsInt(0);
+        ItemStack current = handler.getStackInSlot(0);
+        if (current.isEmpty()) return ItemStack.EMPTY;
+        int amount = current.getCount();
         if (amount <= 0) return ItemStack.EMPTY;
-        try (Transaction transaction = Transaction.openRoot()) {
-            int extracted = handler.extract(0, resource, amount, transaction);
-            if (extracted <= 0) return ItemStack.EMPTY;
-            transaction.commit();
-            return resource.toStack(extracted);
-        }
+        return handler.extractBypassFilter(0, amount, false);
     }
 
     /** 校验玩家是否可用该可交易卡。 */

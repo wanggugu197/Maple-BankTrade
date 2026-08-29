@@ -1,7 +1,7 @@
 package com.maple.maple_banktrade.api.bank.base;
 
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 
@@ -16,14 +16,14 @@ import static com.maple.maple_banktrade.api.bank.WalletApiRegistration.BANK_CARD
 /**
  * 银行卡名称索引对应的创建定义；nameIndex 不等同于 card_type。
  */
-public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory factory) {
+public record BankCardFactory(ResourceLocation nameIndex, BankType bankType, Factory factory) {
 
     // ==============================================
     // 注册表
     // ==============================================
 
     /** 银行卡创建定义注册表：nameIndex -> BankCardFactory，按注册顺序保存。 */
-    private static final Map<Identifier, BankCardFactory> BANK_CARD_FACTORY_MAP = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, BankCardFactory> BANK_CARD_FACTORY_MAP = new LinkedHashMap<>();
 
     // ==============================================
     // 构造
@@ -41,7 +41,7 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     // ==============================================
 
     /** 注册银行卡创建定义，重复注册时返回已有定义。 */
-    public static BankCardFactory register(Identifier nameIndex, BankType bankType, Factory factory, ResourceKey<CreativeModeTab> tabResourceKey) {
+    public static BankCardFactory register(ResourceLocation nameIndex, BankType bankType, Factory factory, ResourceKey<CreativeModeTab> tabResourceKey) {
         if (nameIndex == null || bankType == null || factory == null || tabResourceKey == null) return null;
         if (BANK_CARD_FACTORY_MAP.containsKey(nameIndex)) {
             MapleBankTrade.LOGGER.error("Bank card factory with name index {} already exists", nameIndex);
@@ -54,7 +54,7 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     }
 
     /** 获取银行卡名称索引对应的翻译键。 */
-    public static String getBankCardFactoryTranslationKey(Identifier nameIndex) {
+    public static String getBankCardFactoryTranslationKey(ResourceLocation nameIndex) {
         return "bank_card." + nameIndex.getNamespace() + "." + nameIndex.getPath();
     }
 
@@ -63,7 +63,7 @@ public record BankCardFactory(Identifier nameIndex, BankType bankType, Factory f
     // ==============================================
 
     /** 查询已注册银行卡创建定义；未知名称索引返回 null。 */
-    public static BankCardFactory requireByNameIndex(Identifier nameIndex) {
+    public static BankCardFactory requireByNameIndex(ResourceLocation nameIndex) {
         return BANK_CARD_FACTORY_MAP.get(nameIndex);
     }
 

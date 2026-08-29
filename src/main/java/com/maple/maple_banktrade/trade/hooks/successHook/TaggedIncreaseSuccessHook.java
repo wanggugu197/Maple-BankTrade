@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.trade.hooks.successHook;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.maple.maple_banktrade.api.bank.MBTBankStates;
@@ -20,7 +20,7 @@ import java.util.UUID;
 public final class TaggedIncreaseSuccessHook extends MachineTradeHooks.SuccessHook {
 
     @Persisted
-    private Identifier nameIndex;
+    private ResourceLocation nameIndex;
     @Persisted
     private String id;
 

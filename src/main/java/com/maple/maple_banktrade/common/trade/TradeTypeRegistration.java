@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.common.trade;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.maple.maple_banktrade.MapleBankTrade;
 import com.maple.maple_banktrade.api.trade.currency_item.CurrencyItemTradeStorage;
@@ -45,7 +45,7 @@ public class TradeTypeRegistration {
     public static final MachineTradeType MACHINE_POWER = MachineTradeType.of(MapleBankTrade.id("machine_power"));
     public static final MachineTradeStorage MachinePower = MACHINE_POWER.register();
     /** 全功能交易站默认绑定的类型（顺序 = UI 标签页顺序）。 */
-    public static final List<Identifier> TRADING_STATION_TYPES = List.of(
+    public static final List<ResourceLocation> TRADING_STATION_TYPES = List.of(
             MACHINE_BENCH.id(),
             MACHINE_WASHER.id(),
             MACHINE_FORGE.id(),
@@ -58,7 +58,7 @@ public class TradeTypeRegistration {
     public static final MachineTradeType MACHINE_ITEM_DESK = MachineTradeType.of(MapleBankTrade.id("machine_item_desk"));
     public static final MachineTradeStorage MachineItemDesk = MACHINE_ITEM_DESK.register();
     /** 物品+卡贸易站绑定的类型。 */
-    public static final List<Identifier> ITEM_CARD_TRADING_STATION_TYPES = List.of(
+    public static final List<ResourceLocation> ITEM_CARD_TRADING_STATION_TYPES = List.of(
             MACHINE_ITEM_DESK.id());
     /**
      * 自动出售：矿物 / 原矿 / 矿锭 + 岩浆 → 硬币。
@@ -73,7 +73,7 @@ public class TradeTypeRegistration {
     public static final MachineTradeType AUTO_SELL_MOB_DROPS = MachineTradeType.of(MapleBankTrade.id("auto_sell_mob_drops"), true);
     public static final MachineTradeStorage AutoSellMobDrops = AUTO_SELL_MOB_DROPS.register();
     /** 自动贸易站绑定的类型（顺序 = UI 标签页顺序）。 */
-    public static final List<Identifier> AUTO_TRADING_STATION_TYPES = List.of(
+    public static final List<ResourceLocation> AUTO_TRADING_STATION_TYPES = List.of(
             AUTO_SELL_ORES_LAVA.id(),
             AUTO_SELL_MOB_DROPS.id());
 }

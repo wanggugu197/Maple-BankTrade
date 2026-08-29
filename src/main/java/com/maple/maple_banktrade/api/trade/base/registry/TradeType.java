@@ -1,6 +1,6 @@
 package com.maple.maple_banktrade.api.trade.base.registry;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 
@@ -12,7 +12,7 @@ import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 public interface TradeType<S extends TradeStorage> extends IPersistedSerializable {
 
     /** 交易类型实例 ID，同时作为注册表键。 */
-    Identifier id();
+    ResourceLocation id();
 
     /** 创建该类型的空存储器。 */
     S createStorage();

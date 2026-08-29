@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.common;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -104,13 +104,13 @@ public class CommonInit {
 
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
-        ServerLevel level = serverPlayer.level();
+        ServerLevel level = serverPlayer.serverLevel();
 
         MinecraftServer server = serverPlayer.level().getServer();
         HolderLookup.Provider provider = server.registryAccess();
 
-        List<Identifier> typeIds = new ArrayList<>();
-        for (Identifier typeId : TradeRegistry.storages().keySet()) {
+        List<ResourceLocation> typeIds = new ArrayList<>();
+        for (ResourceLocation typeId : TradeRegistry.storages().keySet()) {
             TradeStorage storage = TradeRegistry.storages().get(typeId);
             if (storage instanceof AbstractTradeEntryStorage<?> entryStorage && !entryStorage.isEmpty()) {
                 typeIds.add(typeId);
@@ -130,7 +130,7 @@ public class CommonInit {
                 if (subRef[0] != null) subRef[0].unsubscribe();
                 return;
             }
-            Identifier typeId = typeIds.get(index[0]++);
+            ResourceLocation typeId = typeIds.get(index[0]++);
             TradeStorage storage = TradeRegistry.storages().get(typeId);
             if (storage instanceof AbstractTradeEntryStorage<?> entryStorage) {
                 ListTag listTag = new ListTag();

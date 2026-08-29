@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:make_wallet"
+        "recipe": "maple_banktrade:make_wallet"
       },
       "trigger": "minecraft:recipe_unlocked"
     },
@@ -19,7 +19,7 @@
   ],
   "rewards": {
     "recipes": [
-      "minecraft:make_wallet"
+      "maple_banktrade:make_wallet"
     ]
   }
 }

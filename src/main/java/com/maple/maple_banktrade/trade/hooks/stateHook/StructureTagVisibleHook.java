@@ -2,7 +2,7 @@ package com.maple.maple_banktrade.trade.hooks.stateHook;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
@@ -23,11 +23,11 @@ import static com.maple.maple_banktrade.api.trade.machine.MachineTradeHooks.FLAG
 public final class StructureTagVisibleHook extends MachineTradeHooks.StateHook {
 
     @Persisted
-    private Identifier tagId;
+    private ResourceLocation tagId;
     @Persisted
     private boolean flip;
 
-    public StructureTagVisibleHook(Identifier tagId) {
+    public StructureTagVisibleHook(ResourceLocation tagId) {
         this(tagId, false);
     }
 

@@ -13,4 +13,11 @@ dependencies {
     compileOnly(forge.ftbLibrary)
     compileOnly(forge.ftbTeams)
     compileOnly(forge.ftbQuests)
+
+    localRuntime(forge.ftbLibrary)
+    localRuntime(forge.ftbTeams)
+    localRuntime(forge.ftbQuests)
+
+    // org.jspecify 注解（Minecraft 1.21.1 使用，需显式声明）
+    compileOnly 'org.jspecify:jspecify:1.0.0'
 }

@@ -2,10 +2,11 @@ package com.maple.maple_banktrade.collaboration.ftbq.task;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import com.maple.maple_banktrade.api.bank.BankHelper;
@@ -15,11 +16,9 @@ import com.maple.maple_banktrade.api.bank.base.BankCardFactory;
 import com.maple.maple_banktrade.api.bank.data.InfoList;
 import com.maple.maple_banktrade.api.bank.data.InfoList.InfoEntry;
 import com.maple.maple_banktrade.bank.cards.TaggedBankCard;
-import de.marhali.json5.Json5Object;
-import dev.ftb.mods.ftblibrary.client.config.EditableConfigGroup;
+import dev.ftb.mods.ftblibrary.config.ConfigGroup;
+import dev.ftb.mods.ftblibrary.config.NameMap;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.json5.Json5Util;
-import dev.ftb.mods.ftblibrary.util.NameMap;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.TeamData;
 import dev.ftb.mods.ftbquests.quest.task.AbstractBooleanTask;
@@ -38,7 +37,7 @@ import java.util.Set;
  */
 public class TaggedProgressTask extends AbstractBooleanTask {
 
-    private static final Identifier DEFAULT = Identifier.withDefaultNamespace("default");
+    private static final ResourceLocation DEFAULT = ResourceLocation.withDefaultNamespace("default");
 
     // 检测模式枚举
     public enum Mode {
@@ -51,7 +50,7 @@ public class TaggedProgressTask extends AbstractBooleanTask {
 
     @Getter
     @Setter
-    private Identifier nameIndex = DEFAULT;
+    private ResourceLocation nameIndex = DEFAULT;
     @Getter
     @Setter
     private Mode mode = Mode.TOTAL_COUNT;
@@ -73,28 +72,37 @@ public class TaggedProgressTask extends AbstractBooleanTask {
 
     // ---------- 序列化 ----------
     @Override
-    public void writeData(@NonNull Json5Object json, HolderLookup.@NonNull Provider provider) {
-        super.writeData(json, provider);
-        Json5Util.store(json, "name_index", Identifier.CODEC, nameIndex);
-        json.addProperty("mode", mode.name());
-        json.addProperty("tier", tier);
-        json.addProperty("target_value", targetValue);
+    public void writeData(@NonNull CompoundTag tag, HolderLookup.@NonNull Provider provider) {
+        super.writeData(tag, provider);
+        tag.putString("name_index", nameIndex.toString());
+        tag.putString("mode", mode.name());
+        tag.putInt("tier", tier);
+        tag.putInt("target_value", targetValue);
     }
 
     @Override
-    public void readData(@NonNull Json5Object json, HolderLookup.@NonNull Provider provider) {
-        super.readData(json, provider);
-        nameIndex = Json5Util.fetch(json, "name_index", Identifier.CODEC).orElse(DEFAULT);
-        mode = Enum.valueOf(Mode.class, Json5Util.getString(json, "mode").orElse(Mode.TOTAL_COUNT.name()));
-        tier = Json5Util.getInt(json, "tier").orElse(1);
-        targetValue = Json5Util.getInt(json, "target_value").orElse(1);
+    public void readData(@NonNull CompoundTag tag, HolderLookup.@NonNull Provider provider) {
+        super.readData(tag, provider);
+        if (tag.contains("name_index")) {
+            ResourceLocation parsed = ResourceLocation.tryParse(tag.getString("name_index"));
+            nameIndex = parsed == null ? DEFAULT : parsed;
+        } else {
+            nameIndex = DEFAULT;
+        }
+        try {
+            mode = Enum.valueOf(Mode.class, tag.contains("mode") ? tag.getString("mode") : Mode.TOTAL_COUNT.name());
+        } catch (IllegalArgumentException e) {
+            mode = Mode.TOTAL_COUNT;
+        }
+        tier = tag.contains("tier") ? tag.getInt("tier") : 1;
+        targetValue = tag.contains("target_value") ? tag.getInt("target_value") : 1;
     }
 
     // ---------- 网络同步 ----------
     @Override
     public void writeNetData(@NonNull RegistryFriendlyByteBuf buffer) {
         super.writeNetData(buffer);
-        buffer.writeIdentifier(nameIndex);
+        buffer.writeResourceLocation(nameIndex);
         buffer.writeEnum(mode);
         buffer.writeVarInt(tier);
         buffer.writeVarInt(targetValue);
@@ -103,7 +111,7 @@ public class TaggedProgressTask extends AbstractBooleanTask {
     @Override
     public void readNetData(@NonNull RegistryFriendlyByteBuf buffer) {
         super.readNetData(buffer);
-        nameIndex = buffer.readIdentifier();
+        nameIndex = buffer.readResourceLocation();
         mode = buffer.readEnum(Mode.class);
         tier = buffer.readVarInt();
         targetValue = buffer.readVarInt();
@@ -111,19 +119,19 @@ public class TaggedProgressTask extends AbstractBooleanTask {
 
     // ---------- 配置界面 ----------
     @Override
-    public void fillConfigGroup(@NonNull EditableConfigGroup config) {
+    public void fillConfigGroup(@NonNull ConfigGroup config) {
         super.fillConfigGroup(config);
 
         // nameIndex 选择
-        List<Identifier> available = BankCardFactory.values().stream()
+        List<ResourceLocation> available = BankCardFactory.values().stream()
                 .map(BankCardFactory::nameIndex)
-                .sorted(Comparator.comparing(Identifier::toString))
+                .sorted(Comparator.comparing(ResourceLocation::toString))
                 .toList();
         if (!available.isEmpty()) {
-            NameMap<Identifier> nameMap = NameMap.of(available.getFirst(), available.toArray(new Identifier[0]))
+            NameMap<ResourceLocation> nameMap = NameMap.of(available.getFirst(), available.toArray(new ResourceLocation[0]))
                     .name(id -> Component.translatable(BankCardFactory.getBankCardFactoryTranslationKey(id))
                             .append(" · ").append(id.toString()))
-                    .icon(_ -> Icon.getIcon("maple_banktrade:item/bank_permissions_card_builder"))
+                    .icon(ignored -> Icon.getIcon("maple_banktrade:item/bank_permissions_card_builder"))
                     .create();
             config.addEnum("name_index", nameIndex, v -> nameIndex = v, nameMap)
                     .setNameKey("maple_banktrade.task.tagged_progress.name_index");
@@ -188,7 +196,7 @@ public class TaggedProgressTask extends AbstractBooleanTask {
     // ---------- 核心完成条件 ----------
     @Override
     public boolean canSubmit(@NonNull TeamData teamData, ServerPlayer player) {
-        BankCard card = MBTBankStates.getBankCards(player.level())
+        BankCard card = MBTBankStates.getBankCards(player.serverLevel())
                 .getUsableCardsForPlayer(BankHelper.getUuid(player))
                 .stream()
                 .filter(c -> c.getNameIndex().equals(nameIndex))
